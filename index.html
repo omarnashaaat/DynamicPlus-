@@ -422,11 +422,26 @@
         const Attendance = ({ employees, attendanceLog, setAttendanceLog, shifts }) => {
             const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
             const [previewData, setPreviewData] = useState(null);
+            const [searchQuery, setSearchQuery] = useState('');
             const fileInputRef = useRef(null);
 
             const updateRecord = (empId, field, value) => {
                 const dateRecords = attendanceLog[selectedDate] || {};
-                const currentRecord = dateRecords[empId] || { arrivalTime: '', departureTime: '', deduction: 0, lateDeduction: 0, earlyDeduction: 0, shift: '', notes: '' };
+                const emp = employees.find(e => e.id === empId);
+                const defaultShift = emp?.shift || Object.values(shifts)[0]?.name || '';
+                
+                const currentRecord = dateRecords[empId] || { 
+                    arrivalTime: '', 
+                    departureTime: '', 
+                    deduction: 0, 
+                    lateDeduction: 0, 
+                    earlyDeduction: 0, 
+                    shift: defaultShift, 
+                    overtimeHours: 0,
+                    overtimeValue: 0,
+                    notes: '' 
+                };
+
                 if (field === 'shift') {
                     Object.values(shifts).forEach(s => {
                         if (value === s.name.split(' (')[0] || value === s.name) {
@@ -434,12 +449,20 @@
                         }
                     });
                 }
+                
                 const newRecord = { ...currentRecord, [field]: value };
                 
+                // Auto-calculate delay and overtime if times are present
+                if (field === 'arrivalTime' || field === 'departureTime' || field === 'shift') {
+                    const shiftObj = Object.values(shifts).find(s => s.name === newRecord.shift);
+                    if (shiftObj && newRecord.arrivalTime && newRecord.departureTime) {
+                        // Logic for auto-calculating delay/overtime could go here
+                        // For now, we keep manual entry but allow the fields
+                    }
+                }
+
                 if (field === 'lateDeduction' || field === 'earlyDeduction') {
                     newRecord.deduction = (parseFloat(newRecord.lateDeduction) || 0) + (parseFloat(newRecord.earlyDeduction) || 0);
-                } else if (field === 'arrivalTime' || field === 'departureTime') {
-                    // Manual override requested
                 }
 
                 setAttendanceLog(prev => {
@@ -772,6 +795,16 @@
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="بحث بالاسم أو الكود..." 
+                                    className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all w-48 md:w-64"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
                             <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFingerprintUpload} />
                             <button 
                                 onClick={() => fileInputRef.current.click()}
@@ -817,7 +850,9 @@
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y">
-                                        {employees.map(emp => {
+                                        {employees
+                                            .filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
+                                            .map(emp => {
                                             const record = (attendanceLog[selectedDate] && attendanceLog[selectedDate][emp.id]) || { arrivalTime: '', departureTime: '', deduction: 0, lateDeduction: 0, earlyDeduction: 0, shift: '', notes: '' };
                                             return (
                                                 <tr key={emp.id} className="hover:bg-blue-50/30">
@@ -888,6 +923,7 @@
             const [startDateStr, setStartDateStr] = useState('');
             const [endDateStr, setEndDateStr] = useState('');
             const [isSinglePage, setIsSinglePage] = useState(true);
+            const [searchQuery, setSearchQuery] = useState('');
 
             const handlePrint = () => {
                 if (isSinglePage) document.body.classList.add('single-page-mode');
@@ -921,7 +957,9 @@
             };
 
             const reportRecords = useMemo(() => {
-                const emps = selectedEmpId === 'all' ? employees : employees.filter(e => e.id === selectedEmpId);
+                const emps = selectedEmpId === 'all' 
+                    ? employees.filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
+                    : employees.filter(e => e.id === selectedEmpId);
                 
                 return emps.map(emp => {
                     const records = monthData.map((dateObj, idx) => {
@@ -1025,6 +1063,17 @@
                                 )}
                             </div>
 
+                            <div className="relative">
+                                <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="بحث بالاسم أو الكود..." 
+                                    className="bg-white border border-slate-200 rounded-xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all w-48"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+
                             <select value={selectedEmpId} onChange={(e) => setSelectedEmpId(e.target.value)} className="bg-white border p-2.5 rounded-xl font-bold outline-none text-sm">
                                 <option value="all">كافة الموظفين</option>
                                 {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
@@ -1044,7 +1093,9 @@
                     </div>
 
                     <div className="space-y-12 print:space-y-0 max-w-[1200px] mx-auto p-4 md:p-8 print:p-0">
-                        {reportRecords.map(({ emp, records, totalDeduction, presentDays, totalOTStr }) => (
+                        {reportRecords
+                            .filter(({ emp }) => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
+                            .map(({ emp, records, totalDeduction, presentDays, totalOTStr }) => (
                             <div key={emp.id} className="report-container bg-white text-slate-900" style={{ pageBreakAfter: 'always' }}>
                                 {/* Report Header Matching Image */}
                                 <div className="text-center space-y-1 mb-4 print:mb-0.5 print:space-y-0">
@@ -1506,6 +1557,7 @@
             const [startDateStr, setStartDateStr] = useState('');
             const [endDateStr, setEndDateStr] = useState('');
             const [isSinglePage, setIsSinglePage] = useState(true);
+            const [searchQuery, setSearchQuery] = useState('');
 
             // Link Attendance Deductions Automatically
             useEffect(() => {
@@ -1539,7 +1591,11 @@
                     if (!updatedRecords[monthKey]) updatedRecords[monthKey] = {};
                     if (!updatedRecords[monthKey][emp.id]) {
                         updatedRecords[monthKey][emp.id] = {
+                            basicSalary: emp.salary || 0,
                             grossSalary: emp.salary || 0,
+                            mobileAllowance: 0,
+                            transportAllowance: 0,
+                            overtimeAllowance: 0,
                             leaveCount: 0, leaveVal: 0,
                             penaltyCount: 0, penaltyVal: 0,
                             absenceCount: 0, absenceVal: 0,
@@ -1552,7 +1608,8 @@
                         changed = true;
                     } else if (updatedRecords[monthKey][emp.id].lateCount !== totalLateHours) {
                         updatedRecords[monthKey][emp.id].lateCount = totalLateHours;
-                        updatedRecords[monthKey][emp.id].lateVal = totalLateHours * ((updatedRecords[monthKey][emp.id].grossSalary || 0) / 30 / 8);
+                        const baseForLate = updatedRecords[monthKey][emp.id].basicSalary || updatedRecords[monthKey][emp.id].grossSalary || 0;
+                        updatedRecords[monthKey][emp.id].lateVal = totalLateHours * (baseForLate / 30 / 8);
                         changed = true;
                     }
                 });
@@ -1602,9 +1659,9 @@
                     const basicDayRate = (updated.basicSalary || 0) / 30;
                     
                     // Manual override requested for all deductions
-                    // if (field === 'leaveCount' || field === 'basicSalary' || field === 'mobileAllowance' || field === 'transportAllowance' || field === 'overtimeAllowance') updated.leaveVal = (updated.leaveCount || 0) * dayRate;
-                    // if (field === 'absenceCount' || field === 'basicSalary' || field === 'mobileAllowance' || field === 'transportAllowance' || field === 'overtimeAllowance') updated.absenceVal = (updated.absenceCount || 0) * dayRate;
-                    // if (field === 'lateCount' || field === 'basicSalary') updated.lateVal = (updated.lateCount || 0) * (basicDayRate / 8);
+                    if (field === 'leaveCount' || field === 'basicSalary' || field === 'mobileAllowance' || field === 'transportAllowance' || field === 'overtimeAllowance') updated.leaveVal = (updated.leaveCount || 0) * dayRate;
+                    if (field === 'absenceCount' || field === 'basicSalary' || field === 'mobileAllowance' || field === 'transportAllowance' || field === 'overtimeAllowance') updated.absenceVal = (updated.absenceCount || 0) * dayRate;
+                    if (field === 'lateCount' || field === 'basicSalary') updated.lateVal = (updated.lateCount || 0) * (basicDayRate / 8);
                 }
 
                 setPayrollRecords(prev => ({
@@ -1674,6 +1731,16 @@
                             </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-3">
+                            <div className="relative no-print">
+                                <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="بحث بالاسم أو الكود..." 
+                                    className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all w-48 md:w-64"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
                             <button 
                                 onClick={() => setIsSinglePage(!isSinglePage)}
                                 className={`px-4 py-2 rounded-2xl font-black text-xs transition-all border-2 ${isSinglePage ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 text-slate-400'}`}
@@ -1729,8 +1796,9 @@
                                         <th colSpan="2" className="bg-rose-600 text-white w-[6%]">الجزاءات</th>
                                         <th colSpan="2" className="bg-orange-500 text-white w-[6%]">الغياب</th>
                                         <th colSpan="2" className="bg-sky-500 text-white w-[6%]">التأخير</th>
-                                        <th colSpan="2" className="bg-emerald-500 text-white w-[6%]">السُلف</th>
+                                        <th rowSpan="2" className="bg-emerald-500 text-white w-[4%]">قسط السُلفة</th>
                                         <th colSpan="2" className="bg-indigo-500 text-white w-[6%]">تسويات</th>
+                                        <th rowSpan="2" className="px-1 py-2 bg-emerald-50 text-emerald-600 w-[6%] font-black">إجمالي السُلفة</th>
                                         <th rowSpan="2" className="px-1 py-2 bg-rose-50 text-rose-700 w-[7%]">إجمالي استقطاع</th>
                                         <th rowSpan="2" className="px-1 py-2 bg-emerald-50 text-emerald-700 font-black text-[10px] w-[8%]">صافي الراتب</th>
                                         <th rowSpan="2" className="px-1 py-2 bg-slate-50 w-[7%]">ملاحظات</th>
@@ -1741,12 +1809,13 @@
                                         <th className="bg-rose-100">عدد</th><th className="bg-rose-100">قيمة</th>
                                         <th className="bg-orange-100">عدد</th><th className="bg-orange-100">قيمة</th>
                                         <th className="bg-sky-100">عدد</th><th className="bg-sky-100">قيمة</th>
-                                        <th className="bg-emerald-100">قسط</th><th className="bg-emerald-100">إجمالي</th>
                                         <th className="bg-indigo-100">خصم</th><th className="bg-indigo-100">إضافة</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200">
-                                    {employees.map((emp, i) => {
+                                    {employees
+                                        .filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
+                                        .map((emp, i) => {
                                         const record = (payrollRecords[currentMonthKey] && payrollRecords[currentMonthKey][emp.id]) || { settlements: [] };
                                         const { totalDeductions, netSalary } = calculateTotals(record);
                                         return (
@@ -1783,8 +1852,7 @@
                                                 <td className="px-1 py-1 bg-sky-50/30"><input type="number" value={record.lateCount || ''} onChange={e => updateField(emp.id, 'lateCount', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
                                                 <td className="px-1 py-1 bg-sky-50/30 font-bold"><input type="number" value={Math.round(record.lateVal) || ''} onChange={e => updateField(emp.id, 'lateVal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-emerald-50/30"><input type="number" value={record.advanceInstallment || ''} onChange={e => updateField(emp.id, 'advanceInstallment', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
-                                                <td className="px-1 py-1 bg-emerald-50/30 font-bold"><input type="number" value={record.advanceTotal || ''} onChange={e => updateField(emp.id, 'advanceTotal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+                                                <td className="px-1 py-1 bg-emerald-50/30 font-bold"><input type="number" value={record.advanceInstallment || ''} onChange={e => updateField(emp.id, 'advanceInstallment', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
 
                                                 <td className="px-1 py-1 bg-indigo-50/50">
                                                     <div className="flex flex-col items-center">
@@ -1808,6 +1876,8 @@
                                                         {record.settlements?.filter(s => s.type === 'addition').length > 0 && <span className="text-[7px] text-slate-400 no-print">({record.settlements.filter(s => s.type === 'addition').length})</span>}
                                                     </div>
                                                 </td>
+                                                
+                                                <td className="px-1 py-1 bg-emerald-50/30 font-bold"><input type="number" value={record.advanceTotal || ''} onChange={e => updateField(emp.id, 'advanceTotal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
                                                 
                                                 <td className="px-1 py-2 bg-rose-50/50 font-black text-rose-700 print:text-[8px]">{Math.round(totalDeductions)}</td>
                                                 <td className="px-1 py-2 bg-emerald-50/50 font-black text-emerald-700 text-[10px] print:text-[14px]">{Math.round(netSalary)}</td>
@@ -2145,6 +2215,7 @@
         const Leaves = ({ employees, onUpdateEmployee }) => {
             const [editingId, setEditingId] = useState(null);
             const [editData, setEditData] = useState({});
+            const [searchQuery, setSearchQuery] = useState('');
             
             const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
@@ -2181,6 +2252,16 @@
                             </h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">إدارة الرصيد واستهلاك الأيام والكسور (0.5)</p>
                         </div>
+                        <div className="relative">
+                            <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input 
+                                type="text" 
+                                placeholder="بحث بالاسم أو الكود..." 
+                                className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-pink-500/20 transition-all w-48 md:w-64"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                         {editingId ? (
                             <div className="flex gap-3">
                                 <button onClick={saveEdit} className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all flex items-center gap-2">
@@ -2212,7 +2293,9 @@
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {employees.map(emp => {
+                                    {employees
+                                        .filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
+                                        .map(emp => {
                                         const isEditing = editingId === emp.id;
                                         const data = isEditing ? editData : emp;
                                         const consumed = calculateTotalConsumed(data.monthlyLeaves);
@@ -2310,6 +2393,7 @@
         const Contracts = ({ employees, contractRecords, setContractRecords }) => {
             const [editingId, setEditingId] = useState(null);
             const [formData, setFormData] = useState({});
+            const [searchQuery, setSearchQuery] = useState('');
 
             const startEditing = (emp) => {
                 const record = contractRecords[emp.id] || {
@@ -2335,6 +2419,16 @@
                         <div>
                             <h2 className="text-3xl font-black text-slate-800">إدارة عقود العمل</h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">تفاصيل التعيين والعقود القانونية</p>
+                        </div>
+                        <div className="relative">
+                            <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input 
+                                type="text" 
+                                placeholder="بحث بالاسم أو الكود..." 
+                                className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-teal-500/20 transition-all w-48 md:w-64"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
                     </div>
 
@@ -2450,6 +2544,7 @@
         const Insurance = ({ employees, insuranceRecords, setInsuranceRecords }) => {
             const [editingId, setEditingId] = useState(null);
             const [formData, setFormData] = useState({});
+            const [searchQuery, setSearchQuery] = useState('');
 
             const startEditing = (emp) => {
                 const record = insuranceRecords[emp.id] || {
@@ -2494,6 +2589,16 @@
                             <h2 className="text-3xl font-black text-slate-800">التأمينات الاجتماعية</h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">إدارة ملفات التأمين وحصص المساهمة</p>
                         </div>
+                        <div className="relative">
+                            <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input 
+                                type="text" 
+                                placeholder="بحث بالاسم أو الكود..." 
+                                className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all w-48 md:w-64"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-emerald-500 p-8 rounded-[40px] text-white shadow-xl shadow-emerald-200">
@@ -2529,7 +2634,9 @@
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
-                                    {employees.map(emp => {
+                                    {employees
+                                        .filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
+                                        .map(emp => {
                                         const record = insuranceRecords[emp.id] || { status: 'غير مؤمن عليه' };
                                         const isEditing = editingId === emp.id;
                                         return (
@@ -2800,6 +2907,7 @@
         const Archive = ({ employees }) => {
             const [view, setView] = useState('folders');
             const [docsState, setDocsState] = useState({});
+            const [searchQuery, setSearchQuery] = useState('');
             const docHeaders = ["صورة البطاقة", "إقرار استلام العمل", "أصل المؤهل الدراسي", "أصل شهادة الميلاد", "الكشف الطبي (111)", "صحيفة الحالة الجنائية", "الموقف من التجنيد", "الصور الشخصية (6)", "كعب العمل", "أصل العقد الموقع", "استمارة س1", "شهادة قياس المهارة", "تراخيص / نقابة", "الشهادة الصحية"];
             const toggleDoc = (empId, docIdx) => { const key = `${empId}-${docIdx}`; setDocsState(prev => ({ ...prev, [key]: !prev[key] })); };
             const folders = [{ id: 'hiring_docs', title: 'مسوغات التعيين', icon: 'folder-open', color: 'bg-amber-600' }, { id: 'contracts', title: 'أرشيف العقود', icon: 'file-text', color: 'bg-indigo-600' }, { id: 'insurance', title: 'مستندات التأمينات', icon: 'shield-check', color: 'bg-sky-600' }, { id: 'payroll_archive', title: 'سجلات الرواتب', icon: 'banknote', color: 'bg-emerald-600' }];
@@ -2813,7 +2921,25 @@
             }
             return (
                 <div className="space-y-6 animate-fade-in" key="archive-matrix">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print"><div><h2 className="text-2xl font-black text-slate-800">سجل استلام مسوغات التعيين</h2><p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">متابعة الوثائق المكتملة لكل موظف</p></div><div className="flex gap-3"><button onClick={() => setView('folders')} className="px-6 py-3 bg-white text-slate-800 border-2 border-slate-200 rounded-2xl font-black">العودة للمجلدات</button></div></div>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-800">سجل استلام مسوغات التعيين</h2>
+                            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">متابعة الوثائق المكتملة لكل موظف</p>
+                        </div>
+                        <div className="flex gap-3 items-center">
+                            <div className="relative">
+                                <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="بحث بالاسم أو الكود..." 
+                                    className="bg-white border border-slate-200 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500/20 transition-all w-48 md:w-64"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <button onClick={() => setView('folders')} className="px-6 py-3 bg-white text-slate-800 border-2 border-slate-200 rounded-2xl font-black">العودة للمجلدات</button>
+                        </div>
+                    </div>
                     <div className="rounded-[30px] shadow-2xl overflow-hidden border bg-white border-slate-200 print-container">
                         <div className="overflow-x-auto">
                             <table className="w-full text-center border-collapse">
@@ -2827,7 +2953,11 @@
                                         {docHeaders.map((h, i) => (<th key={i} className="p-0 border-b border-l min-w-[50px] relative"><div className="writing-mode-vertical transform -rotate-180 h-48 flex items-center justify-center font-black leading-tight px-1 text-[9px]">{h}</div></th>))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200">{employees.map(emp => (<tr key={emp.id} className="hover:bg-amber-500/5 transition-colors group"><td className="px-2 py-4 border-l font-mono font-bold text-indigo-500 sticky right-0 z-10 bg-white group-hover:bg-amber-50/50">{emp.code}</td><td className="px-4 py-4 border-l font-black text-right sticky right-[60px] z-10 bg-white group-hover:bg-amber-50/50 text-slate-800">{emp.name}</td><td className="px-2 py-4 border-l text-[11px] font-bold text-slate-500">{emp.department}</td><td className="px-2 py-4 border-l text-[11px] font-bold text-slate-500">{emp.jobTitle}</td><td className="px-2 py-4 border-l text-[11px] font-mono text-slate-400">{emp.joinDate}</td>{docHeaders.map((_, i) => { const key = `${emp.id}-${i}`; const checked = docsState[key]; return (<td key={i} onClick={() => toggleDoc(emp.id, i)} className={`px-1 py-4 border-l cursor-pointer transition-all hover:bg-emerald-500/10 ${checked ? 'bg-emerald-500/10' : ''}`}><div className="flex justify-center items-center h-8">{checked ? (<div className="text-emerald-500 animate-fade-in"><Icon name="check" size={24} /></div>) : (<div className="w-6 h-6 rounded-lg border-2 border-slate-200 opacity-20 no-print"></div>)}</div></td>); })}</tr>))}</tbody>
+                                <tbody className="divide-y divide-slate-200">
+                                    {employees
+                                        .filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
+                                        .map(emp => (
+                                            <tr key={emp.id} className="hover:bg-amber-500/5 transition-colors group"><td className="px-2 py-4 border-l font-mono font-bold text-indigo-500 sticky right-0 z-10 bg-white group-hover:bg-amber-50/50">{emp.code}</td><td className="px-4 py-4 border-l font-black text-right sticky right-[60px] z-10 bg-white group-hover:bg-amber-50/50 text-slate-800">{emp.name}</td><td className="px-2 py-4 border-l text-[11px] font-bold text-slate-500">{emp.department}</td><td className="px-2 py-4 border-l text-[11px] font-bold text-slate-500">{emp.jobTitle}</td><td className="px-2 py-4 border-l text-[11px] font-mono text-slate-400">{emp.joinDate}</td>{docHeaders.map((_, i) => { const key = `${emp.id}-${i}`; const checked = docsState[key]; return (<td key={i} onClick={() => toggleDoc(emp.id, i)} className={`px-1 py-4 border-l cursor-pointer transition-all hover:bg-emerald-500/10 ${checked ? 'bg-emerald-500/10' : ''}`}><div className="flex justify-center items-center h-8">{checked ? (<div className="text-emerald-500 animate-fade-in"><Icon name="check" size={24} /></div>) : (<div className="w-6 h-6 rounded-lg border-2 border-slate-200 opacity-20 no-print"></div>)}</div></td>); })}</tr>))}</tbody>
                             </table>
                         </div>
                     </div>
@@ -2945,10 +3075,23 @@
             const [editingEmp, setEditingEmp] = useState(null);
             const [warningEmp, setWarningEmp] = useState(null);
             const [selectedDept, setSelectedDept] = useState('all');
+            const [searchQuery, setSearchQuery] = useState('');
             const fileInputRef = useRef(null);
             const [formData, setFormData] = useState({ name: '', code: '', joinDate: '', department: '', jobTitle: '', nationalId: '', phone: '', address: '', shift: Object.values(shifts)[0]?.name || '' });
+            
             const departmentsList = useMemo(() => ['all', ...new Set(employees.map(e => e.department).filter(Boolean))], [employees]);
-            const filteredEmployees = useMemo(() => selectedDept === 'all' ? employees : employees.filter(e => e.department === selectedDept), [employees, selectedDept]);
+            
+            const filteredEmployees = useMemo(() => {
+                let filtered = selectedDept === 'all' ? employees : employees.filter(e => e.department === selectedDept);
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    filtered = filtered.filter(e => 
+                        e.name.toLowerCase().includes(q) || 
+                        e.code.toString().includes(q)
+                    );
+                }
+                return filtered;
+            }, [employees, selectedDept, searchQuery]);
             const normalizeText = (t) => t ? t.toString().trim().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ') : "";
             const handleExcelUpload = (e) => { 
                 const file = e.target.files[0]; 
@@ -3055,6 +3198,7 @@
         };
 
         const Recruitment = () => {
+            const [activeSubTab, setActiveSubTab] = useState('board'); // 'board' or 'ats'
             const STAGES = [
                 { id: 'applied', title: 'فرز السير الذاتية', color: 'border-slate-100' },
                 { id: 'interview', title: 'المقابلات', color: 'border-blue-50' },
@@ -3181,21 +3325,23 @@
                             </div>
                             <h1 className="text-2xl font-black text-slate-800 tracking-tighter">إدارة التوظيف</h1>
                         </div>
-                        <div className="flex-1 max-w-xl relative">
-                            <Icon name="search" size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input 
-                                type="text" 
-                                placeholder="بحث سريع..." 
-                                className="w-full bg-white border border-slate-100 rounded-2xl py-3 pr-12 pl-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-100 rounded-2xl text-xs font-black text-slate-600 hover:bg-slate-50 transition-all">
-                                <Icon name="filter" size={16} />
-                                <span>كل الأولويات</span>
+                        
+                        <div className="flex bg-slate-100 p-1 rounded-2xl">
+                            <button 
+                                onClick={() => setActiveSubTab('board')}
+                                className={`px-6 py-2 rounded-xl font-black transition-all ${activeSubTab === 'board' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                لوحة المتابعة
                             </button>
+                            <button 
+                                onClick={() => setActiveSubTab('ats')}
+                                className={`px-6 py-2 rounded-xl font-black transition-all ${activeSubTab === 'ats' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                الماسح الذكي ATS
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-3">
                             <button onClick={() => setShowAddModal(true)} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all">
                                 <Icon name="plus" size={18} />
                                 <span>إضافة مرشح</span>
@@ -3203,8 +3349,25 @@
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {stats.map((stat, i) => (
+                    {activeSubTab === 'ats' ? (
+                        <ATS onCandidateSaved={fetchCandidates} />
+                    ) : (
+                        <>
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div className="relative flex-1 max-w-xl">
+                                    <Icon name="search" size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="بحث سريع..." 
+                                        className="w-full bg-white border border-slate-100 rounded-2xl py-3 pr-12 pl-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {stats.map((stat, i) => (
                             <div key={i} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -3221,7 +3384,13 @@
 
                     <div className="flex gap-6 overflow-x-auto pb-6 min-h-[700px]">
                         {STAGES.map(stage => {
-                            const stageCandidates = candidates.filter(c => c.status === stage.id);
+                            const stageCandidates = candidates.filter(c => {
+                                const matchesStage = c.status === stage.id;
+                                const matchesSearch = !searchQuery || 
+                                    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    (c.role && c.role.toLowerCase().includes(searchQuery.toLowerCase()));
+                                return matchesStage && matchesSearch;
+                            });
                             return (
                                 <div key={stage.id} className="flex-1 min-w-[320px] flex flex-col gap-4">
                                     <div className="flex items-center justify-between px-2">
@@ -3314,6 +3483,8 @@
                             );
                         })}
                     </div>
+                </>
+            )}
 
                     {showAddModal && (
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
@@ -3452,6 +3623,7 @@
             const [jobDescription, setJobDescription] = useState('');
             const [files, setFiles] = useState([]);
             const [results, setResults] = useState([]);
+            const [searchQuery, setSearchQuery] = useState('');
             const [isAnalyzing, setIsAnalyzing] = useState(false);
             const [analysisProgress, setAnalysisProgress] = useState(0);
             const fileInputRef = useRef(null);
@@ -3881,7 +4053,7 @@
             if (results.length > 0 && !isAnalyzing) {
                 return (
                     <div className="space-y-8 animate-fade-in">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                             <div className="flex items-center gap-4">
                                 <button onClick={() => setResults([])} className="p-3 rounded-2xl bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-indigo-600 transition-all">
                                     <Icon name="arrow-right" size={24} />
@@ -3890,6 +4062,16 @@
                                     <h2 className="text-3xl font-black text-slate-800">ATS</h2>
                                     <p className="text-slate-400 text-xs font-bold">تم تحليل {results.length} موظف</p>
                                 </div>
+                            </div>
+                            <div className="relative flex-1 max-w-md">
+                                <Icon name="search" size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="بحث بالاسم..." 
+                                    className="w-full bg-white border border-slate-100 rounded-2xl py-3 pr-12 pl-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
                             </div>
                         </div>
 
@@ -3927,7 +4109,11 @@
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
-                                        {results.map((res, idx) => (
+                                        {results.filter(res => 
+                                            !searchQuery || 
+                                            res.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            (res.fileName && res.fileName.toLowerCase().includes(searchQuery.toLowerCase()))
+                                        ).map((res, idx) => (
                                             <tr key={res.id} className="hover:bg-slate-50 transition-colors group">
                                                 <td className="px-6 py-4 text-center">
                                                     <span className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto font-black text-sm">{idx + 1}</span>
@@ -4106,6 +4292,50 @@
             });
             const [currentTime, setCurrentTime] = useState(new Date());
             const [isSaving, setIsSaving] = useState(false);
+
+            // Keyboard Navigation Logic
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    const active = document.activeElement;
+                    if (!active || !['INPUT', 'SELECT', 'TEXTAREA'].includes(active.tagName)) return;
+
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const form = active.closest('form') || document;
+                        const focusable = Array.from(form.querySelectorAll('input, select, textarea, button')).filter(el => !el.disabled && el.tabIndex !== -1);
+                        const index = focusable.indexOf(active);
+                        if (index > -1 && index < focusable.length - 1) {
+                            focusable[index + 1].focus();
+                        }
+                    }
+
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                        const cell = active.closest('td');
+                        if (!cell) return;
+                        const row = cell.parentElement;
+                        const table = row.closest('table');
+                        const colIndex = Array.from(row.children).indexOf(cell);
+                        const rowIndex = Array.from(table.querySelectorAll('tbody tr')).indexOf(row);
+
+                        if (e.key === 'ArrowDown') {
+                            const nextRow = table.querySelectorAll('tbody tr')[rowIndex + 1];
+                            if (nextRow) nextRow.children[colIndex].querySelector('input, select')?.focus();
+                        } else if (e.key === 'ArrowUp') {
+                            const prevRow = table.querySelectorAll('tbody tr')[rowIndex - 1];
+                            if (prevRow) prevRow.children[colIndex].querySelector('input, select')?.focus();
+                        } else if (e.key === 'ArrowRight') {
+                            const nextCell = row.children[colIndex - 1];
+                            if (nextCell) nextCell.querySelector('input, select')?.focus();
+                        } else if (e.key === 'ArrowLeft') {
+                            const prevCell = row.children[colIndex + 1];
+                            if (prevCell) prevCell.querySelector('input, select')?.focus();
+                        }
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, []);
 
             useEffect(() => {
                 const save = () => {
