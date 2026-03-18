@@ -348,12 +348,36 @@
             return Object.values(shifts).find(s => s.name === idOrName) || Object.values(shifts)[0];
         };
 
-        const calculateDeduction = (arrival, departure, empShiftId = '1', shifts = INITIAL_SHIFTS) => {
+        const calculateDeduction = (arrival, departure, empShiftId = '1', shifts = INITIAL_SHIFTS, rules = null) => {
             const shift = getShiftByAny(empShiftId, shifts);
             const [sH, sM] = shift.start.split(':').map(Number);
             const [eH, eM] = shift.end.split(':').map(Number);
             const shiftStartMinutes = sH * 60 + sM;
             const shiftEndMinutes = eH * 60 + eM;
+
+            // Default rules if not provided
+            const activeRules = rules || {
+                lateGracePeriod: 15,
+                earlyDepartureGrace: 0,
+                absencePenalty: 8,
+                lateTiers: [
+                    { min: 16, max: 30, penalty: 0.5 },
+                    { min: 31, max: 60, penalty: 1 },
+                    { min: 61, max: 90, penalty: 1.5 },
+                    { min: 91, max: 120, penalty: 2 },
+                    { min: 121, max: 150, penalty: 3 },
+                    { min: 151, max: 180, penalty: 4 }
+                ],
+                earlyTiers: [
+                    { min: 1, max: 15, penalty: 0.5 },
+                    { min: 16, max: 30, penalty: 1 },
+                    { min: 31, max: 60, penalty: 1 },
+                    { min: 61, max: 90, penalty: 1.5 },
+                    { min: 91, max: 120, penalty: 2 },
+                    { min: 121, max: 150, penalty: 3 },
+                    { min: 151, max: 180, penalty: 4 }
+                ]
+            };
 
             let lateDeduction = 0;
             if (arrival) {
@@ -361,12 +385,18 @@
                 const totalMinutes = h * 60 + m;
                 const diff = totalMinutes - shiftStartMinutes;
 
-                if (diff <= 15) lateDeduction = 0;
-                else if (diff <= 30) lateDeduction = 0.25;
-                else if (diff <= 60) lateDeduction = 0.5;
-                else if (diff <= 120) lateDeduction = 1;
-                else if (totalMinutes <= 12 * 60) lateDeduction = 4; // Half day
-                else lateDeduction = 8; // Full day
+                if (diff <= activeRules.lateGracePeriod) {
+                    lateDeduction = 0;
+                } else {
+                    const tier = activeRules.lateTiers.find(t => diff >= t.min && diff <= t.max);
+                    if (tier) {
+                        lateDeduction = tier.penalty;
+                    } else if (diff > 180) {
+                        lateDeduction = activeRules.absencePenalty;
+                    }
+                }
+            } else {
+                lateDeduction = activeRules.absencePenalty;
             }
 
             let earlyDeduction = 0;
@@ -375,17 +405,24 @@
                 const totalMinutes = h * 60 + m;
                 const diff = shiftEndMinutes - totalMinutes;
 
-                if (diff <= 0) earlyDeduction = 0;
-                else if (diff <= 15) earlyDeduction = 0.25;
-                else if (diff <= 60) earlyDeduction = 0.5;
-                else if (diff <= 120) earlyDeduction = 1;
-                else if (totalMinutes >= shiftEndMinutes - 240) earlyDeduction = 4; // Half day
-                else earlyDeduction = 8; // Full day
+                if (diff > activeRules.earlyDepartureGrace) {
+                    const tier = activeRules.earlyTiers?.find(t => diff >= t.min && diff <= t.max);
+                    if (tier) {
+                        earlyDeduction = tier.penalty;
+                    } else if (diff > 180) {
+                        earlyDeduction = activeRules.absencePenalty / 2;
+                    }
+                }
             }
-            return lateDeduction + earlyDeduction;
+            
+            return {
+                late: lateDeduction,
+                early: earlyDeduction,
+                total: lateDeduction + earlyDeduction
+            };
         };
 
-        const calculateDetailedAttendance = (arrival, departure, empShiftId = '1', shifts = INITIAL_SHIFTS) => {
+        const calculateDetailedAttendance = (arrival, departure, empShiftId = '1', shifts = INITIAL_SHIFTS, rules = null) => {
             if (!arrival || !departure) return { total: '0:00', late: '0.00', early: '0.00', ot: '0:00' };
             
             const shift = getShiftByAny(empShiftId, shifts);
@@ -404,11 +441,28 @@
             const totalMins = totalMin % 60;
             const totalStr = `${totalHours}:${totalMins.toString().padStart(2, '0')}`;
 
+            const activeRules = rules || {
+                lateGracePeriod: 15,
+                earlyDepartureGrace: 15,
+                absencePenalty: 1,
+                lateTiers: [
+                    { min: 16, max: 30, penalty: 0.25 },
+                    { min: 31, max: 60, penalty: 0.5 },
+                    { min: 61, max: 120, penalty: 1 }
+                ]
+            };
+
             let late = 0;
-            if (arrivalMin > shiftStartMin) late = (arrivalMin - shiftStartMin) / 60;
+            const lateDiff = arrivalMin - shiftStartMin;
+            if (lateDiff > activeRules.lateGracePeriod) {
+                late = lateDiff / 60;
+            }
 
             let early = 0;
-            if (departureMin < shiftEndMin) early = (shiftEndMin - departureMin) / 60;
+            const earlyDiff = shiftEndMin - departureMin;
+            if (earlyDiff > activeRules.earlyDepartureGrace) {
+                early = earlyDiff / 60;
+            }
 
             let otMin = 0;
             if (departureMin > shiftEndMin) otMin = departureMin - shiftEndMin;
@@ -419,7 +473,7 @@
             return { total: totalStr, late: late.toFixed(2), early: early.toFixed(2), ot: otStr };
         };
 
-        const Attendance = ({ employees, attendanceLog, setAttendanceLog, shifts }) => {
+        const Attendance = ({ employees, attendanceLog, setAttendanceLog, shifts, rules }) => {
             const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
             const [previewData, setPreviewData] = useState(null);
             const [searchQuery, setSearchQuery] = useState('');
@@ -442,37 +496,39 @@
                     notes: '' 
                 };
 
+                let finalValue = value;
                 if (field === 'shift') {
                     Object.values(shifts).forEach(s => {
                         if (value === s.name.split(' (')[0] || value === s.name) {
-                            value = s.name;
+                            finalValue = s.name;
                         }
                     });
                 }
-                
-                const newRecord = { ...currentRecord, [field]: value };
-                
-                // Auto-calculate delay and overtime if times are present
+
+                const updated = { ...currentRecord, [field]: finalValue };
+
+                // Auto-recalculate deduction if times or shift change
                 if (field === 'arrivalTime' || field === 'departureTime' || field === 'shift') {
-                    const shiftObj = Object.values(shifts).find(s => s.name === newRecord.shift);
-                    if (shiftObj && newRecord.arrivalTime && newRecord.departureTime) {
-                        // Logic for auto-calculating delay/overtime could go here
-                        // For now, we keep manual entry but allow the fields
-                    }
+                    const d = calculateDeduction(
+                        updated.arrivalTime, 
+                        updated.departureTime, 
+                        updated.shift, 
+                        shifts, 
+                        rules
+                    );
+                    updated.lateDeduction = d.late;
+                    updated.earlyDeduction = d.early;
+                    updated.deduction = d.total;
                 }
 
                 if (field === 'lateDeduction' || field === 'earlyDeduction') {
-                    newRecord.deduction = (parseFloat(newRecord.lateDeduction) || 0) + (parseFloat(newRecord.earlyDeduction) || 0);
+                    updated.deduction = (parseFloat(updated.lateDeduction) || 0) + (parseFloat(updated.earlyDeduction) || 0);
                 }
 
-                setAttendanceLog(prev => {
-                    const updated = {
-                        ...prev,
-                        [selectedDate]: { ...dateRecords, [empId]: newRecord }
-                    };
-                    localStorage.setItem('hr_attendance', JSON.stringify(updated));
-                    return updated;
-                });
+                setAttendanceLog(prev => ({
+                    ...prev,
+                    [selectedDate]: { ...dateRecords, [empId]: updated }
+                }));
             };
 
             const handleFingerprintUpload = (e) => {
@@ -511,7 +567,8 @@
                             if (h) row[h] = rowArray[idx];
                         });
 
-                        const code = row['كود البصمه'] || row['كود'] || row['code'] || row['id'] || row['رقم الموظف'] || row['م'] || row['رقم'] || row['اسم الموظف'] || row['الاسم'] || row['اسم'] || row['name'];
+                        const codeRaw = row['كود البصمه'] || row['كود'] || row['code'] || row['id'] || row['رقم الموظف'] || row['م'] || row['رقم'] || row['اسم الموظف'] || row['الاسم'] || row['اسم'] || row['name'];
+                        const code = codeRaw?.toString().split('.')[0].trim(); // Handle float strings like "123.0"
                         const dateVal = row['التاريخ'] || row['date'] || row['تاريخ'] || row['يوم'];
                         const entry = row['وقت الدخول'] || row['حضور'] || row['entry'] || row['دخول'] || row['بصمه حضور'] || row['الحضور'] || row['in'] || row['time in'];
                         const exit = row['وقت الخروج'] || row['انصراف'] || row['exit'] || row['خروج'] || row['بصمه انصراف'] || row['الانصراف'] || row['out'] || row['time out'];
@@ -531,7 +588,7 @@
 
                         if (!code || !dateVal) continue;
 
-                        let emp = employees.find(e => e.code.toString().trim() === code.toString().trim());
+                        let emp = employees.find(e => e.code.toString().trim() === code || e.code.toString().trim().padStart(code.length, '0') === code || code.padStart(e.code.toString().trim().length, '0') === e.code.toString().trim());
                         if (!emp) {
                             emp = employees.find(e => normalizeText(e.name) === normalizeText(code));
                         }
@@ -601,6 +658,8 @@
                         const arrivalTime = formatTime(entry);
                         const departureTime = formatTime(exit);
 
+                        const d = calculateDeduction(arrivalTime, departureTime, finalShift, shifts, rules);
+
                         parsedRecords.push({
                             empId: emp.id,
                             empName: emp.name,
@@ -608,9 +667,9 @@
                             date: formattedDate,
                             arrivalTime,
                             departureTime,
-                            lateDeduction: lateVal !== undefined ? parseFloat(lateVal) : 0,
-                            earlyDeduction: earlyVal !== undefined ? parseFloat(earlyVal) : 0,
-                            deduction: dedVal !== undefined ? parseFloat(dedVal) : 0,
+                            lateDeduction: lateVal !== undefined ? parseFloat(lateVal) : d.late,
+                            earlyDeduction: earlyVal !== undefined ? parseFloat(earlyVal) : d.early,
+                            deduction: dedVal !== undefined ? parseFloat(dedVal) : d.total,
                             shift: finalShift || '',
                             lateHours: lateVal?.toString() || undefined,
                             earlyHours: earlyVal?.toString() || undefined,
@@ -618,12 +677,6 @@
                             totalHours: totalVal?.toString() || undefined,
                             notes: row['ملاحظات'] || ''
                         });
-                        
-                        // Recalculate total deduction if it was not provided but late/early were
-                        const last = parsedRecords[parsedRecords.length - 1];
-                        if (dedVal === undefined && (lateVal !== undefined || earlyVal !== undefined)) {
-                            last.deduction = (parseFloat(last.lateDeduction) || 0) + (parseFloat(last.earlyDeduction) || 0);
-                        }
                     }
 
                     if (parsedRecords.length === 0) {
@@ -661,11 +714,22 @@
             const updatePreviewRow = (idx, field, value) => {
                 const newData = [...previewData];
                 newData[idx] = { ...newData[idx], [field]: value };
+                
                 if (field === 'lateDeduction' || field === 'earlyDeduction') {
                     newData[idx].deduction = (parseFloat(newData[idx].lateDeduction) || 0) + (parseFloat(newData[idx].earlyDeduction) || 0);
-                } else if (field === 'arrivalTime' || field === 'departureTime') {
-                    // Manual override requested
+                } else if (field === 'arrivalTime' || field === 'departureTime' || field === 'shift') {
+                    const d = calculateDeduction(
+                        newData[idx].arrivalTime, 
+                        newData[idx].departureTime, 
+                        newData[idx].shift, 
+                        shifts, 
+                        rules
+                    );
+                    newData[idx].lateDeduction = d.late;
+                    newData[idx].earlyDeduction = d.early;
+                    newData[idx].deduction = d.total;
                 }
+                
                 setPreviewData(newData);
             };
 
@@ -916,7 +980,7 @@
             );
         };
 
-        const MonthlyReport = ({ employees, attendanceLog, setAttendanceLog, shifts }) => {
+        const MonthlyReport = ({ employees, attendanceLog, setAttendanceLog, shifts, rules }) => {
             const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
             const [selectedEmpId, setSelectedEmpId] = useState('all');
             const [customRange, setCustomRange] = useState(false);
@@ -968,7 +1032,7 @@
                         
                         // Calculate Late/Early/Total for the report
                         const empShift = record?.shift || emp.shift || Object.values(shifts)[0].name;
-                        const details = calculateDetailedAttendance(record?.arrivalTime, record?.departureTime, empShift, shifts);
+                        const details = calculateDetailedAttendance(record?.arrivalTime, record?.departureTime, empShift, shifts, rules);
 
                         return { 
                             no: idx + 1,
@@ -982,7 +1046,7 @@
                             lateDed: record?.lateDeduction || 0,
                             earlyDed: record?.earlyDeduction || 0,
                             shift: empShift,
-                            ded: record?.deduction !== undefined ? record.deduction : (record ? calculateDeduction(record.arrivalTime, record.departureTime, empShift, shifts) : 0),
+                            ded: record?.deduction !== undefined ? record.deduction : (record ? calculateDeduction(record.arrivalTime, record.departureTime, empShift, shifts, rules).total : 0),
                             ot: record?.overtimeHours !== undefined ? record.overtimeHours : details.ot,
                             notes: record?.notes || '',
                             isWeekend: dateObj.getDay() === 5 || dateObj.getDay() === 6
@@ -1087,7 +1151,7 @@
                             </button>
                             
                             <button onClick={handlePrint} className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-800 transition-all">
-                                <Icon name="printer" size={18} /> طباعة
+                                <Icon name="printer" size={18} /> طباعة / PDF
                             </button>
                         </div>
                     </div>
@@ -1354,7 +1418,7 @@
             const calculateTotals = (record) => {
                 const r = record || {};
                 const additions = (r.grossSalary || 0) + (r.adjAddition || 0);
-                const deductions = (r.leaveVal || 0) + (r.penaltyVal || 0) + (r.absenceVal || 0) + (r.lateVal || 0) + (r.advanceInstallment || 0) + (r.adjDeduction || 0);
+                const deductions = (r.leaveVal || 0) + (r.penaltyVal || 0) + (r.absenceVal || 0) + (r.lateVal || 0) + (r.earlyVal || 0) + (r.advanceInstallment || 0) + (r.adjDeduction || 0);
                 return { additions, deductions, net: additions - deductions };
             };
             const { additions, deductions, net } = calculateTotals(record);
@@ -1496,6 +1560,12 @@
                                                 <span className="text-rose-600 font-bold">-{Math.round(record.lateVal).toLocaleString()}</span>
                                             </div>
                                         )}
+                                        {record.earlyVal > 0 && (
+                                            <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                                                <span className="text-slate-600">انصراف مبكر ({record.earlyCount} ساعة):</span>
+                                                <span className="text-rose-600 font-bold">-{Math.round(record.earlyVal).toLocaleString()}</span>
+                                            </div>
+                                        )}
                                         {record.advanceInstallment > 0 && (
                                             <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                                                 <span className="text-slate-600">قسط سلفة:</span>
@@ -1549,7 +1619,7 @@
             );
         };
 
-        const Payroll = ({ employees, payrollRecords, setPayrollRecords, attendanceLog, setActiveTab }) => {
+        const Payroll = ({ employees, payrollRecords, setPayrollRecords, attendanceLog, setActiveTab, rules }) => {
             const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); 
             const [settlementTarget, setSettlementTarget] = useState(null);
             const [payslipTarget, setPayslipTarget] = useState(null);
@@ -1583,10 +1653,12 @@
                 const monthKey = customRange ? `${startDateStr}_${endDateStr}` : selectedMonth;
 
                 employees.forEach(emp => {
-                    const totalLateHours = days.reduce((acc, date) => {
+                    const totals = days.reduce((acc, date) => {
                         const rec = (attendanceLog[date] && attendanceLog[date][emp.id]);
-                        return acc + (rec?.deduction || 0);
-                    }, 0);
+                        acc.late += (rec?.lateDeduction || 0);
+                        acc.early += (rec?.earlyDeduction || 0);
+                        return acc;
+                    }, { late: 0, early: 0 });
 
                     if (!updatedRecords[monthKey]) updatedRecords[monthKey] = {};
                     if (!updatedRecords[monthKey][emp.id]) {
@@ -1599,17 +1671,20 @@
                             leaveCount: 0, leaveVal: 0,
                             penaltyCount: 0, penaltyVal: 0,
                             absenceCount: 0, absenceVal: 0,
-                            lateCount: totalLateHours, lateVal: totalLateHours * ((emp.salary || 0) / 30 / 8),
+                            lateCount: totals.late, lateVal: totals.late * ((emp.salary || 0) / 30 / 8),
+                            earlyCount: totals.early, earlyVal: totals.early * ((emp.salary || 0) / 30 / 8),
                             advanceInstallment: 0, advanceTotal: 0,
                             adjDeduction: 0, adjAddition: 0,
                             notes: '',
                             settlements: []
                         };
                         changed = true;
-                    } else if (updatedRecords[monthKey][emp.id].lateCount !== totalLateHours) {
-                        updatedRecords[monthKey][emp.id].lateCount = totalLateHours;
+                    } else if (updatedRecords[monthKey][emp.id].lateCount !== totals.late || updatedRecords[monthKey][emp.id].earlyCount !== totals.early) {
+                        updatedRecords[monthKey][emp.id].lateCount = totals.late;
+                        updatedRecords[monthKey][emp.id].earlyCount = totals.early;
                         const baseForLate = updatedRecords[monthKey][emp.id].basicSalary || updatedRecords[monthKey][emp.id].grossSalary || 0;
-                        updatedRecords[monthKey][emp.id].lateVal = totalLateHours * (baseForLate / 30 / 8);
+                        updatedRecords[monthKey][emp.id].lateVal = totals.late * (baseForLate / 30 / 8);
+                        updatedRecords[monthKey][emp.id].earlyVal = totals.early * (baseForLate / 30 / 8);
                         changed = true;
                     }
                 });
@@ -1661,7 +1736,9 @@
                     // Manual override requested for all deductions
                     if (field === 'leaveCount' || field === 'basicSalary' || field === 'mobileAllowance' || field === 'transportAllowance' || field === 'overtimeAllowance') updated.leaveVal = (updated.leaveCount || 0) * dayRate;
                     if (field === 'absenceCount' || field === 'basicSalary' || field === 'mobileAllowance' || field === 'transportAllowance' || field === 'overtimeAllowance') updated.absenceVal = (updated.absenceCount || 0) * dayRate;
+                    if (field === 'penaltyCount' || field === 'basicSalary' || field === 'mobileAllowance' || field === 'transportAllowance' || field === 'overtimeAllowance') updated.penaltyVal = (updated.penaltyCount || 0) * dayRate;
                     if (field === 'lateCount' || field === 'basicSalary') updated.lateVal = (updated.lateCount || 0) * (basicDayRate / 8);
+                    if (field === 'earlyCount' || field === 'basicSalary') updated.earlyVal = (updated.earlyCount || 0) * (basicDayRate / 8);
                 }
 
                 setPayrollRecords(prev => ({
@@ -1672,7 +1749,7 @@
 
             const calculateTotals = (record) => {
                 const r = record || {};
-                const totalDeductions = (r.leaveVal || 0) + (r.penaltyVal || 0) + (r.absenceVal || 0) + (r.lateVal || 0) + (r.advanceInstallment || 0) + (r.adjDeduction || 0);
+                const totalDeductions = (r.leaveVal || 0) + (r.penaltyVal || 0) + (r.absenceVal || 0) + (r.lateVal || 0) + (r.earlyVal || 0) + (r.advanceInstallment || 0) + (r.adjDeduction || 0);
                 const netSalary = (r.grossSalary || 0) + (r.adjAddition || 0) - totalDeductions;
                 return { totalDeductions, netSalary };
             };
@@ -1751,7 +1828,7 @@
                                 onClick={handlePrint}
                                 className="bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-800 transition-all"
                             >
-                                <Icon name="printer" size={18} /> طباعة الكشف الكامل
+                                <Icon name="printer" size={18} /> طباعة الكشف الكامل / PDF
                             </button>
                             
                             <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
@@ -1796,9 +1873,9 @@
                                         <th colSpan="2" className="bg-rose-600 text-white w-[6%]">الجزاءات</th>
                                         <th colSpan="2" className="bg-orange-500 text-white w-[6%]">الغياب</th>
                                         <th colSpan="2" className="bg-sky-500 text-white w-[6%]">التأخير</th>
+                                        <th colSpan="2" className="bg-teal-500 text-white w-[6%]">انصراف مبكر</th>
                                         <th rowSpan="2" className="bg-emerald-500 text-white w-[4%]">قسط السُلفة</th>
                                         <th colSpan="2" className="bg-indigo-500 text-white w-[6%]">تسويات</th>
-                                        <th rowSpan="2" className="px-1 py-2 bg-emerald-50 text-emerald-600 w-[6%] font-black">إجمالي السُلفة</th>
                                         <th rowSpan="2" className="px-1 py-2 bg-rose-50 text-rose-700 w-[7%]">إجمالي استقطاع</th>
                                         <th rowSpan="2" className="px-1 py-2 bg-emerald-50 text-emerald-700 font-black text-[10px] w-[8%]">صافي الراتب</th>
                                         <th rowSpan="2" className="px-1 py-2 bg-slate-50 w-[7%]">ملاحظات</th>
@@ -1809,6 +1886,7 @@
                                         <th className="bg-rose-100">عدد</th><th className="bg-rose-100">قيمة</th>
                                         <th className="bg-orange-100">عدد</th><th className="bg-orange-100">قيمة</th>
                                         <th className="bg-sky-100">عدد</th><th className="bg-sky-100">قيمة</th>
+                                        <th className="bg-teal-100">عدد</th><th className="bg-teal-100">قيمة</th>
                                         <th className="bg-indigo-100">خصم</th><th className="bg-indigo-100">إضافة</th>
                                     </tr>
                                 </thead>
@@ -1852,6 +1930,9 @@
                                                 <td className="px-1 py-1 bg-sky-50/30"><input type="number" value={record.lateCount || ''} onChange={e => updateField(emp.id, 'lateCount', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
                                                 <td className="px-1 py-1 bg-sky-50/30 font-bold"><input type="number" value={Math.round(record.lateVal) || ''} onChange={e => updateField(emp.id, 'lateVal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
                                                 
+                                                <td className="px-1 py-1 bg-teal-50/30"><input type="number" value={record.earlyCount || ''} onChange={e => updateField(emp.id, 'earlyCount', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+                                                <td className="px-1 py-1 bg-teal-50/30 font-bold"><input type="number" value={Math.round(record.earlyVal) || ''} onChange={e => updateField(emp.id, 'earlyVal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+
                                                 <td className="px-1 py-1 bg-emerald-50/30 font-bold"><input type="number" value={record.advanceInstallment || ''} onChange={e => updateField(emp.id, 'advanceInstallment', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
 
                                                 <td className="px-1 py-1 bg-indigo-50/50">
@@ -1876,8 +1957,6 @@
                                                         {record.settlements?.filter(s => s.type === 'addition').length > 0 && <span className="text-[7px] text-slate-400 no-print">({record.settlements.filter(s => s.type === 'addition').length})</span>}
                                                     </div>
                                                 </td>
-                                                
-                                                <td className="px-1 py-1 bg-emerald-50/30 font-bold"><input type="number" value={record.advanceTotal || ''} onChange={e => updateField(emp.id, 'advanceTotal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
                                                 
                                                 <td className="px-1 py-2 bg-rose-50/50 font-black text-rose-700 print:text-[8px]">{Math.round(totalDeductions)}</td>
                                                 <td className="px-1 py-2 bg-emerald-50/50 font-black text-emerald-700 text-[10px] print:text-[14px]">{Math.round(netSalary)}</td>
@@ -2169,10 +2248,20 @@
             { id: 10, title: 'Eius et cum.', date: '2026-03-29', type: 'OTHER' },
         ];
 
-        const Dashboard = ({ setActiveTab, userName }) => {
+        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog }) => {
+            const [candidatesCount, setCandidatesCount] = useState(0);
+
+            useEffect(() => {
+                fetch('/api/candidates')
+                    .then(res => res.json())
+                    .then(data => setCandidatesCount(data.length))
+                    .catch(err => console.error(err));
+            }, []);
+
             const menuItems = [
                 { id: 'employees', title: 'فريق العمل', sub: 'جميع ملفات الموظفين', icon: 'users', color: 'bg-indigo-600' },
                 { id: 'attendance', title: 'الحضور والإنصراف', sub: 'سجلات الحضور اليومية', icon: 'clock', color: 'bg-blue-600' },
+                { id: 'attendance_rules', title: 'لائحة الحضور', sub: 'قواعد التأخير والجزاءات', icon: 'scroll-text', color: 'bg-rose-600' },
                 { id: 'monthly_report', title: 'التقرير الشهري', sub: 'ملخص حضور الموظفين', icon: 'file-bar-chart', color: 'bg-indigo-700' },
                 { id: 'payroll', title: 'المرتبات والمكافآت', sub: 'إدارة كشوف الرواتب', icon: 'banknote', color: 'bg-emerald-600' },
                 { id: 'calendar', title: 'التقويم السنوي', sub: 'إدارة المواعيد والاجتماعات', icon: 'calendar', color: 'bg-indigo-500' },
@@ -2185,6 +2274,13 @@
                 { id: 'settings', title: 'إعدادات النظام', sub: 'النسخ الاحتياطي والتهيئة', icon: 'settings', color: 'bg-slate-600' },
             ];
 
+            const stats = [
+                { label: 'إجمالي الموظفين', value: employees.length, icon: 'users', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                { label: 'حضور اليوم', value: Object.keys(attendanceLog[new Date().toISOString().split('T')[0]] || {}).length, icon: 'check-circle', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'طلبات التوظيف', value: candidatesCount, icon: 'briefcase', color: 'text-amber-600', bg: 'bg-amber-50' },
+                { label: 'إجازات معلقة', value: 0, icon: 'clock', color: 'text-rose-600', bg: 'bg-rose-50' },
+            ];
+
             return (
                 <div className="space-y-10 animate-fade-in">
                     <div className="flex justify-between items-end">
@@ -2193,6 +2289,21 @@
                             <p className="text-slate-500 font-bold tracking-wide">إدارة أسهل… لقرارات أدق.</p>
                         </div>
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {stats.map((stat, i) => (
+                            <div key={i} className="bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm flex items-center gap-4">
+                                <div className={`p-4 ${stat.bg} ${stat.color} rounded-2xl`}>
+                                    <Icon name={stat.icon} size={24} />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-wider">{stat.label}</p>
+                                    <p className="text-2xl font-black text-slate-800">{stat.value}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {menuItems.map((item) => (
                             <button 
@@ -2995,7 +3106,7 @@
                                     {isSinglePage ? 'وضع الصفحة الواحدة: مفعل' : 'وضع الصفحة الواحدة: معطل'}
                                 </button>
                                 <button onClick={handlePrint} className="flex-1 sm:flex-none justify-center px-4 md:px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all">
-                                    <Icon name="printer" size={18}/> طباعة PDF
+                                    <Icon name="printer" size={18}/> طباعة / PDF
                                 </button>
                                 <button onClick={onClose} className="p-2.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all shrink-0">
                                     <Icon name="x" size={24}/>
@@ -3197,7 +3308,7 @@
             );
         };
 
-        const Recruitment = () => {
+        const Recruitment = ({ employees }) => {
             const [activeSubTab, setActiveSubTab] = useState('board'); // 'board' or 'ats'
             const STAGES = [
                 { id: 'applied', title: 'فرز السير الذاتية', color: 'border-slate-100' },
@@ -3619,7 +3730,7 @@
             );
         };
 
-        const ATS = () => {
+        const ATS = ({ employees }) => {
             const [jobDescription, setJobDescription] = useState('');
             const [files, setFiles] = useState([]);
             const [results, setResults] = useState([]);
@@ -4042,7 +4153,7 @@
                                 </div>
 
                                 <button onClick={() => window.print()} className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 no-print">
-                                    طباعة التقرير
+                                    طباعة التقرير / PDF
                                 </button>
                             </div>
                         </div>
@@ -4251,6 +4362,202 @@
             );
         };
 
+        const AttendanceRules = ({ rules, setRules }) => {
+            const saveSettings = () => {
+                alert('تم حفظ إعدادات اللائحة بنجاح!');
+            };
+
+            const updateTier = (index, field, value) => {
+                const newTiers = [...rules.lateTiers];
+                newTiers[index] = { ...newTiers[index], [field]: parseFloat(value) || 0 };
+                setRules({ ...rules, lateTiers: newTiers });
+            };
+
+            const addTier = () => {
+                setRules({
+                    ...rules,
+                    lateTiers: [...rules.lateTiers, { min: 0, max: 0, penalty: 0 }]
+                });
+            };
+
+            const removeTier = (index) => {
+                const newTiers = rules.lateTiers.filter((_, i) => i !== index);
+                setRules({ ...rules, lateTiers: newTiers });
+            };
+
+            const updateEarlyTier = (index, field, value) => {
+                const newTiers = [...(rules.earlyTiers || [])];
+                newTiers[index] = { ...newTiers[index], [field]: parseFloat(value) || 0 };
+                setRules({ ...rules, earlyTiers: newTiers });
+            };
+
+            const addEarlyTier = () => {
+                setRules({
+                    ...rules,
+                    earlyTiers: [...(rules.earlyTiers || []), { min: 0, max: 0, penalty: 0 }]
+                });
+            };
+
+            const removeEarlyTier = (index) => {
+                const newTiers = (rules.earlyTiers || []).filter((_, i) => i !== index);
+                setRules({ ...rules, earlyTiers: newTiers });
+            };
+
+            return (
+                <div className="p-8 space-y-8 animate-fade-in" dir="rtl">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">إعدادات لائحة الحضور</h2>
+                            <p className="text-slate-500 font-bold mt-1">تخصيص قواعد التأخير، الانصراف المبكر، والغياب.</p>
+                        </div>
+                        <button 
+                            onClick={saveSettings}
+                            className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2"
+                        >
+                            <Icon name="save" size={20} />
+                            حفظ الإعدادات
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-amber-50 rounded-2xl text-amber-600">
+                                        <Icon name="clock" size={24} />
+                                    </div>
+                                    <h3 className="text-xl font-black text-slate-800">سياسة التأخير</h3>
+                                </div>
+                                <button 
+                                    onClick={addTier}
+                                    className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"
+                                    title="إضافة شريحة"
+                                >
+                                    <Icon name="plus" size={20} />
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase mb-2">فترة السماح (بالدقائق)</label>
+                                    <input 
+                                        type="number" 
+                                        value={rules.lateGracePeriod}
+                                        onChange={(e) => setRules({...rules, lateGracePeriod: parseInt(e.target.value) || 0})}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <p className="text-sm font-black text-slate-700">شرائح الخصم:</p>
+                                    {rules.lateTiers.map((tier, i) => (
+                                        <div key={i} className="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
+                                            <span className="text-xs font-bold text-slate-500">من</span>
+                                            <input 
+                                                type="number" 
+                                                value={tier.min} 
+                                                onChange={(e) => updateTier(i, 'min', e.target.value)}
+                                                className="w-16 bg-white border rounded-lg p-1 text-center font-bold" 
+                                            />
+                                            <span className="text-xs font-bold text-slate-500">إلى</span>
+                                            <input 
+                                                type="number" 
+                                                value={tier.max} 
+                                                onChange={(e) => updateTier(i, 'max', e.target.value)}
+                                                className="w-16 bg-white border rounded-lg p-1 text-center font-bold" 
+                                            />
+                                            <span className="text-xs font-bold text-slate-500">دقيقة =</span>
+                                            <input 
+                                                type="number" 
+                                                step="0.25" 
+                                                value={tier.penalty} 
+                                                onChange={(e) => updateTier(i, 'penalty', e.target.value)}
+                                                className="w-16 bg-white border rounded-lg p-1 text-center font-bold text-rose-600" 
+                                            />
+                                            <span className="text-xs font-bold text-slate-500">ساعة خصم</span>
+                                            <button 
+                                                onClick={() => removeTier(i)}
+                                                className="absolute -left-2 top-1/2 -translate-y-1/2 p-1.5 bg-rose-50 text-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
+                                            >
+                                                <Icon name="trash-2" size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-blue-50 rounded-2xl text-blue-600">
+                                        <Icon name="log-out" size={24} />
+                                    </div>
+                                    <h3 className="text-xl font-black text-slate-800">الانصراف المبكر والغياب</h3>
+                                </div>
+                                <button 
+                                    onClick={addEarlyTier}
+                                    className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"
+                                    title="إضافة شريحة"
+                                >
+                                    <Icon name="plus" size={20} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase mb-2">جزاء الغياب (بالساعات)</label>
+                                    <input 
+                                        type="number" 
+                                        value={rules.absencePenalty}
+                                        onChange={(e) => setRules({...rules, absencePenalty: parseFloat(e.target.value) || 0})}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <p className="text-sm font-black text-slate-700">شرائح الانصراف المبكر:</p>
+                                    {(rules.earlyTiers || []).map((tier, i) => (
+                                        <div key={i} className="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
+                                            <span className="text-xs font-bold text-slate-500">من</span>
+                                            <input 
+                                                type="number" 
+                                                value={tier.min} 
+                                                onChange={(e) => updateEarlyTier(i, 'min', e.target.value)}
+                                                className="w-16 bg-white border rounded-lg p-1 text-center font-bold" 
+                                            />
+                                            <span className="text-xs font-bold text-slate-500">إلى</span>
+                                            <input 
+                                                type="number" 
+                                                value={tier.max} 
+                                                onChange={(e) => updateEarlyTier(i, 'max', e.target.value)}
+                                                className="w-16 bg-white border rounded-lg p-1 text-center font-bold" 
+                                            />
+                                            <span className="text-xs font-bold text-slate-500">دقيقة =</span>
+                                            <input 
+                                                type="number" 
+                                                step="0.25" 
+                                                value={tier.penalty} 
+                                                onChange={(e) => updateEarlyTier(i, 'penalty', e.target.value)}
+                                                className="w-16 bg-white border rounded-lg p-1 text-center font-bold text-rose-600" 
+                                            />
+                                            <span className="text-xs font-bold text-slate-500">ساعة خصم</span>
+                                            <button 
+                                                onClick={() => removeEarlyTier(i)}
+                                                className="absolute -left-2 top-1/2 -translate-y-1/2 p-1.5 bg-rose-50 text-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
+                                            >
+                                                <Icon name="trash-2" size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const App = () => {
             const [isLoggedIn, setIsLoggedIn] = useState(() => {
                 return localStorage.getItem('hr_isLoggedIn') === 'true';
@@ -4289,6 +4596,31 @@
                     return INITIAL_SHIFTS;
                 }
                 return parsed;
+            });
+            const [attendanceRules, setAttendanceRules] = useState(() => {
+                const saved = localStorage.getItem('hr_attendance_rules');
+                return saved ? JSON.parse(saved) : {
+                    lateGracePeriod: 15,
+                    earlyDepartureGrace: 0,
+                    absencePenalty: 8,
+                    lateTiers: [
+                        { min: 16, max: 30, penalty: 0.5 },
+                        { min: 31, max: 60, penalty: 1 },
+                        { min: 61, max: 90, penalty: 1.5 },
+                        { min: 91, max: 120, penalty: 2 },
+                        { min: 121, max: 150, penalty: 3 },
+                        { min: 151, max: 180, penalty: 4 }
+                    ],
+                    earlyTiers: [
+                        { min: 1, max: 15, penalty: 0.5 },
+                        { min: 16, max: 30, penalty: 1 },
+                        { min: 31, max: 60, penalty: 1 },
+                        { min: 61, max: 90, penalty: 1.5 },
+                        { min: 91, max: 120, penalty: 2 },
+                        { min: 121, max: 150, penalty: 3 },
+                        { min: 151, max: 180, penalty: 4 }
+                    ]
+                };
             });
             const [currentTime, setCurrentTime] = useState(new Date());
             const [isSaving, setIsSaving] = useState(false);
@@ -4347,13 +4679,14 @@
                     localStorage.setItem('hr_payroll', JSON.stringify(payrollRecords));
                     localStorage.setItem('hr_calendar', JSON.stringify(calendarEvents));
                     localStorage.setItem('hr_shifts', JSON.stringify(shifts));
+                    localStorage.setItem('hr_attendance_rules', JSON.stringify(attendanceRules));
                     
                     setIsSaving(true);
                     const timer = setTimeout(() => setIsSaving(false), 1500);
                     return () => clearTimeout(timer);
                 };
                 save();
-            }, [isLoggedIn, employees, insuranceRecords, contractRecords, attendanceLog, payrollRecords, calendarEvents]);
+            }, [isLoggedIn, employees, insuranceRecords, contractRecords, attendanceLog, payrollRecords, calendarEvents, shifts, attendanceRules]);
 
             useEffect(() => {
                 const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -4429,15 +4762,10 @@
                                     {id: 'dashboard', label: 'الرئيسية'},
                                     {id: 'employees', label: 'الموظفين'},
                                     {id: 'attendance', label: 'الحضور'},
-                                    {id: 'monthly_report', label: 'التقرير'},
+                                    {id: 'attendance_rules', label: 'اللائحة'},
                                     {id: 'payroll', label: 'المرتبات'},
                                     {id: 'recruitment', label: 'التوظيف'},
-                                    {id: 'ats', label: 'ATS'},
-                                    {id: 'calendar', label: 'التقويم'},
                                     {id: 'leaves', label: 'الإجازات'},
-                                    {id: 'archive', label: 'الأرشيف'},
-                                    {id: 'insurance', label: 'التأمينات'},
-                                    {id: 'contracts', label: 'العقود'},
                                     {id: 'settings', label: 'الإعدادات'}
                                 ].map((l, i) => (
                                     <button key={i} onClick={() => setActiveTab(l.id)} className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${activeTab === l.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>{l.label}</button>
@@ -4465,29 +4793,31 @@
                     </header>
                     <main className="flex-1">
                         {activeTab === 'dashboard' ? (
-                            <Dashboard setActiveTab={setActiveTab} userName="المدير" />
+                            <Dashboard setActiveTab={setActiveTab} userName="المدير" employees={employees} attendanceLog={attendanceLog} />
                         ) : activeTab === 'employees' ? (
                             <EmployeeTable employees={employees} onAddEmployee={addEmployee} onUpdateEmployee={updateEmployee} onDeleteEmployee={deleteEmployee} onBulkAdd={bulkAddEmployees} setActiveTab={setActiveTab} shifts={shifts} />
                         ) : activeTab === 'attendance' ? (
-                            <Attendance employees={employees} attendanceLog={attendanceLog} setAttendanceLog={setAttendanceLog} shifts={shifts} />
+                            <Attendance employees={employees} attendanceLog={attendanceLog} setAttendanceLog={setAttendanceLog} shifts={shifts} rules={attendanceRules} />
                         ) : activeTab === 'monthly_report' ? (
-                            <MonthlyReport employees={employees} attendanceLog={attendanceLog} setAttendanceLog={setAttendanceLog} shifts={shifts} />
+                            <MonthlyReport employees={employees} attendanceLog={attendanceLog} setAttendanceLog={setAttendanceLog} shifts={shifts} rules={attendanceRules} />
+                        ) : activeTab === 'attendance_rules' ? (
+                            <AttendanceRules rules={attendanceRules} setRules={setAttendanceRules} />
                         ) : activeTab === 'payroll' ? (
-                            <Payroll employees={employees} payrollRecords={payrollRecords} setPayrollRecords={setPayrollRecords} attendanceLog={attendanceLog} setActiveTab={setActiveTab} />
+                            <Payroll employees={employees} payrollRecords={payrollRecords} setPayrollRecords={setPayrollRecords} attendanceLog={attendanceLog} setActiveTab={setActiveTab} rules={attendanceRules} />
                         ) : activeTab === 'recruitment' ? (
-                            <Recruitment />
+                            <Recruitment employees={employees} />
                         ) : activeTab === 'ats' ? (
-                            <ATS />
-                        ) : activeTab === 'leaves' ? (
-                            <Leaves employees={employees} onUpdateEmployee={updateEmployee} />
+                            <ATS employees={employees} />
+                        ) : activeTab === 'calendar' ? (
+                            <Calendar employees={employees} calendarEvents={calendarEvents} setCalendarEvents={setCalendarEvents} />
                         ) : activeTab === 'archive' ? (
                             <Archive employees={employees} />
                         ) : activeTab === 'insurance' ? (
                             <Insurance employees={employees} insuranceRecords={insuranceRecords} setInsuranceRecords={setInsuranceRecords} />
                         ) : activeTab === 'contracts' ? (
                             <Contracts employees={employees} contractRecords={contractRecords} setContractRecords={setContractRecords} />
-                        ) : activeTab === 'calendar' ? (
-                            <Calendar employees={employees} calendarEvents={calendarEvents} setCalendarEvents={setCalendarEvents} />
+                        ) : activeTab === 'leaves' ? (
+                            <Leaves employees={employees} onUpdateEmployee={updateEmployee} />
                         ) : activeTab === 'settings' ? (
                             <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, shifts }} onRestore={handleRestore} onClear={handleClear} shifts={shifts} setShifts={setShifts} />
                         ) : (
