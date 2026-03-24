@@ -87,7 +87,8 @@
                 height: 275mm !important;
                 box-sizing: border-box !important;
                 box-shadow: none !important;
-                background: white !important;
+                background: #f1f5f9 !important;
+                -webkit-print-color-adjust: exact;
                 display: flex !important;
                 flex-direction: column !important;
                 overflow: hidden !important;
@@ -188,8 +189,8 @@
             body.single-page-mode .warning-box,
             body.single-page-mode .report-container {
                 width: 210mm !important;
-                height: 297mm !important;
-                max-height: 297mm !important;
+                min-height: 297mm !important;
+                height: auto !important;
                 padding: 5mm !important;
                 margin: 0 !important;
                 border: 2px solid #000 !important;
@@ -199,7 +200,7 @@
                 zoom: 1.0; /* Full A4 Portrait */
                 transform: scale(1.0);
                 transform-origin: top center;
-                overflow: hidden !important;
+                overflow: visible !important;
                 background: white !important;
             }
 
@@ -242,14 +243,17 @@
             /* Attendance Report Specific */
             .report-container {
                 border: 2px solid #000 !important;
-                padding: 20px !important;
+                padding: 15px !important;
                 margin: 0 auto !important;
                 width: 190mm !important;
-                height: 275mm !important;
+                min-height: 275mm !important;
+                height: auto !important;
                 box-sizing: border-box !important;
                 page-break-after: always !important;
                 display: flex !important;
                 flex-direction: column !important;
+                background: #f1f5f9 !important;
+                -webkit-print-color-adjust: exact;
             }
             .report-container table {
                 font-size: 8pt !important;
@@ -971,7 +975,7 @@
                                                         <select 
                                                             value={record.shift || ''} 
                                                             onChange={(e) => updateRecord(emp.id, 'shift', e.target.value)} 
-                                                            className="w-32 bg-slate-50 p-2 rounded-xl text-[10px] font-bold border border-slate-100 outline-none focus:ring-2 focus:ring-blue-500/20"
+                                                            className="w-32 bg-slate-50 p-2 rounded-xl text-[10px] font-black text-black border border-slate-100 outline-none focus:ring-2 focus:ring-blue-500/20"
                                                         >
                                                             <option value="">اختر الوردية</option>
                                                             {Object.values(shifts).map(s => (
@@ -980,10 +984,10 @@
                                                         </select>
                                                     </td>
                                                     <td className="px-4 py-4">
-                                                        <input type="time" value={record.arrivalTime} onChange={(e) => updateRecord(emp.id, 'arrivalTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100" />
+                                                        <input type="time" value={record.arrivalTime} onChange={(e) => updateRecord(emp.id, 'arrivalTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-black text-black border border-slate-100" />
                                                     </td>
                                                     <td className="px-4 py-4">
-                                                        <input type="time" value={record.departureTime} onChange={(e) => updateRecord(emp.id, 'departureTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100" />
+                                                        <input type="time" value={record.departureTime} onChange={(e) => updateRecord(emp.id, 'departureTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-black text-black border border-slate-100" />
                                                     </td>
                                                     <td className="px-4 py-4 text-center">
                                                         <input 
@@ -991,7 +995,7 @@
                                                             step="0.5"
                                                             value={record.lateDeduction || 0} 
                                                             onChange={(e) => updateRecord(emp.id, 'lateDeduction', e.target.value)} 
-                                                            className="w-16 bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100 text-center" 
+                                                            className="w-16 bg-slate-50 p-2 rounded-xl text-xs font-black text-black border border-slate-100 text-center" 
                                                         />
                                                     </td>
                                                     <td className="px-4 py-4 text-center">
@@ -1000,7 +1004,7 @@
                                                             step="0.5"
                                                             value={record.earlyDeduction || 0} 
                                                             onChange={(e) => updateRecord(emp.id, 'earlyDeduction', e.target.value)} 
-                                                            className="w-16 bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100 text-center" 
+                                                            className="w-16 bg-slate-50 p-2 rounded-xl text-xs font-black text-black border border-slate-100 text-center" 
                                                         />
                                                     </td>
                                                     <td className="px-4 py-4 text-center">
@@ -1009,7 +1013,13 @@
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-4">
-                                                        <input type="text" value={record.notes} onChange={(e) => updateRecord(emp.id, 'notes', e.target.value)} className="w-full bg-transparent border-b text-xs" />
+                                                        <input 
+                                                            type="text" 
+                                                            value={record.notes} 
+                                                            onChange={(e) => updateRecord(emp.id, 'notes', e.target.value)} 
+                                                            className="w-full bg-slate-50 p-2 rounded-xl text-xs font-black text-black border border-slate-100 text-right focus:bg-slate-100" 
+                                                            placeholder="..."
+                                                        />
                                                     </td>
                                                 </tr>
                                             );
@@ -1203,7 +1213,7 @@
                         {reportRecords
                             .filter(({ emp }) => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
                             .map(({ emp, records, totalDeduction, presentDays, totalOTStr }) => (
-                            <div key={emp.id} className="report-container bg-white text-slate-900" style={{ pageBreakAfter: 'always' }}>
+                            <div key={emp.id} className="report-container bg-slate-100 text-slate-900" style={{ pageBreakAfter: 'always' }}>
                                 {/* Report Header Matching Image */}
                                 <div className="text-center space-y-1 mb-4 print:mb-0.5 print:space-y-0">
                                     <h1 className="text-xl print:text-sm font-bold uppercase tracking-widest">Monthly Attendance Report</h1>
@@ -1249,7 +1259,7 @@
                                                             type="text" 
                                                             value={r.shift} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'shift', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0">
@@ -1257,7 +1267,7 @@
                                                             type="time" 
                                                             value={r.in} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'arrivalTime', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0">
@@ -1265,7 +1275,7 @@
                                                             type="time" 
                                                             value={r.out} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'departureTime', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0">
@@ -1273,7 +1283,7 @@
                                                             type="text" 
                                                             value={r.total} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'totalHours', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0 font-bold">
@@ -1282,7 +1292,7 @@
                                                             step="0.5"
                                                             value={r.lateDed || 0} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'lateDeduction', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0 font-bold">
@@ -1291,7 +1301,7 @@
                                                             step="0.5"
                                                             value={r.earlyDed || 0} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'earlyDeduction', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0 font-bold text-rose-600">
@@ -1299,7 +1309,7 @@
                                                             type="number" 
                                                             value={r.ded} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'deduction', parseFloat(e.target.value) || 0)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0">
@@ -1307,15 +1317,15 @@
                                                             type="text" 
                                                             value={r.ot} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'overtimeHours', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
-                                                    <td className="py-1 print:py-0 text-right px-2 text-[9px]">
+                                                    <td className="py-1 print:py-0 text-right px-2 text-[9px] bg-slate-100/50 print:bg-slate-200/50">
                                                         <input 
                                                             type="text" 
                                                             value={r.notes} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'notes', e.target.value)}
-                                                            className="w-full text-right bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-slate-900"
+                                                            className="w-full text-right bg-transparent outline-none focus:bg-slate-200 print:text-[8px] print:h-auto font-black text-black"
                                                             placeholder="..."
                                                         />
                                                     </td>
@@ -1338,12 +1348,6 @@
                                         <p className="flex justify-between gap-8"><span>إجمالي الخصم:</span> <span className="text-rose-700">{totalDeduction} ساعة</span></p>
                                         <p className="flex justify-between gap-8"><span>إجمالي الإضافي:</span> <span className="text-emerald-700">{totalOTStr}</span></p>
                                     </div>
-                                </div>
-
-                                <div className="print-only print-signatures mt-8">
-                                    <div>إعداد / شؤون العاملين</div>
-                                    <div>مراجعة / الحسابات</div>
-                                    <div>اعتماد / المدير العام</div>
                                 </div>
                             </div>
                         ))}
@@ -1950,28 +1954,28 @@
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td className="px-1 py-1"><input type="number" value={record.basicSalary || ''} onChange={e => updateField(emp.id, 'basicSalary', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none" /></td>
-                                                <td className="px-1 py-1"><input type="number" value={record.mobileAllowance || ''} onChange={e => updateField(emp.id, 'mobileAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none" /></td>
-                                                <td className="px-1 py-1"><input type="number" value={record.transportAllowance || ''} onChange={e => updateField(emp.id, 'transportAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none" /></td>
-                                                <td className="px-1 py-1"><input type="number" value={record.overtimeAllowance || ''} onChange={e => updateField(emp.id, 'overtimeAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none" /></td>
+                                                <td className="px-1 py-1"><input type="number" value={record.basicSalary || ''} onChange={e => updateField(emp.id, 'basicSalary', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1"><input type="number" value={record.mobileAllowance || ''} onChange={e => updateField(emp.id, 'mobileAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1"><input type="number" value={record.transportAllowance || ''} onChange={e => updateField(emp.id, 'transportAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1"><input type="number" value={record.overtimeAllowance || ''} onChange={e => updateField(emp.id, 'overtimeAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-black" /></td>
                                                 <td className="px-1 py-1 bg-slate-50"><input type="number" value={record.grossSalary || ''} readOnly className="w-full text-center bg-transparent outline-none font-bold cursor-default" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-yellow-50/30"><input type="number" value={record.leaveCount || ''} onChange={e => updateField(emp.id, 'leaveCount', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
-                                                <td className="px-1 py-1 bg-yellow-50/30 font-bold"><input type="number" value={Math.round(record.leaveVal) || ''} onChange={e => updateField(emp.id, 'leaveVal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+                                                <td className="px-1 py-1 bg-yellow-50/30"><input type="number" value={record.leaveCount || ''} onChange={e => updateField(emp.id, 'leaveCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-yellow-50/30 font-bold"><input type="number" value={Math.round(record.leaveVal) || ''} onChange={e => updateField(emp.id, 'leaveVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-rose-50/30"><input type="number" value={record.penaltyCount || ''} onChange={e => updateField(emp.id, 'penaltyCount', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
-                                                <td className="px-1 py-1 bg-rose-50/30 font-bold"><input type="number" value={record.penaltyVal || ''} onChange={e => updateField(emp.id, 'penaltyVal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+                                                <td className="px-1 py-1 bg-rose-50/30"><input type="number" value={record.penaltyCount || ''} onChange={e => updateField(emp.id, 'penaltyCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-rose-50/30 font-bold"><input type="number" value={record.penaltyVal || ''} onChange={e => updateField(emp.id, 'penaltyVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-orange-50/30"><input type="number" value={record.absenceCount || ''} onChange={e => updateField(emp.id, 'absenceCount', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
-                                                <td className="px-1 py-1 bg-orange-50/30 font-bold"><input type="number" value={Math.round(record.absenceVal) || ''} onChange={e => updateField(emp.id, 'absenceVal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+                                                <td className="px-1 py-1 bg-orange-50/30"><input type="number" value={record.absenceCount || ''} onChange={e => updateField(emp.id, 'absenceCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-orange-50/30 font-bold"><input type="number" value={Math.round(record.absenceVal) || ''} onChange={e => updateField(emp.id, 'absenceVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
 
-                                                <td className="px-1 py-1 bg-sky-50/30"><input type="number" value={record.lateCount || ''} onChange={e => updateField(emp.id, 'lateCount', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
-                                                <td className="px-1 py-1 bg-sky-50/30 font-bold"><input type="number" value={Math.round(record.lateVal) || ''} onChange={e => updateField(emp.id, 'lateVal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+                                                <td className="px-1 py-1 bg-sky-50/30"><input type="number" value={record.lateCount || ''} onChange={e => updateField(emp.id, 'lateCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-sky-50/30 font-bold"><input type="number" value={Math.round(record.lateVal) || ''} onChange={e => updateField(emp.id, 'lateVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-teal-50/30"><input type="number" value={record.earlyCount || ''} onChange={e => updateField(emp.id, 'earlyCount', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
-                                                <td className="px-1 py-1 bg-teal-50/30 font-bold"><input type="number" value={Math.round(record.earlyVal) || ''} onChange={e => updateField(emp.id, 'earlyVal', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+                                                <td className="px-1 py-1 bg-teal-50/30"><input type="number" value={record.earlyCount || ''} onChange={e => updateField(emp.id, 'earlyCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-teal-50/30 font-bold"><input type="number" value={Math.round(record.earlyVal) || ''} onChange={e => updateField(emp.id, 'earlyVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
 
-                                                <td className="px-1 py-1 bg-emerald-50/30 font-bold"><input type="number" value={record.advanceInstallment || ''} onChange={e => updateField(emp.id, 'advanceInstallment', e.target.value)} className="w-full text-center bg-transparent outline-none" /></td>
+                                                <td className="px-1 py-1 bg-emerald-50/30 font-bold"><input type="number" value={record.advanceInstallment || ''} onChange={e => updateField(emp.id, 'advanceInstallment', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
 
                                                 <td className="px-1 py-1 bg-indigo-50/50">
                                                     <div className="flex flex-col items-center">
@@ -1979,7 +1983,7 @@
                                                             type="number" 
                                                             value={record.adjDeduction || ''} 
                                                             onChange={e => updateField(emp.id, 'adjDeduction', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none text-rose-600 font-bold" 
+                                                            className="w-full text-center bg-transparent outline-none text-rose-600 font-black" 
                                                         />
                                                         {record.settlements?.filter(s => s.type === 'deduction').length > 0 && <span className="text-[7px] text-slate-400 no-print">({record.settlements.filter(s => s.type === 'deduction').length})</span>}
                                                     </div>
@@ -1990,7 +1994,7 @@
                                                             type="number" 
                                                             value={record.adjAddition || ''} 
                                                             onChange={e => updateField(emp.id, 'adjAddition', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none text-emerald-600 font-bold" 
+                                                            className="w-full text-center bg-transparent outline-none text-emerald-600 font-black" 
                                                         />
                                                         {record.settlements?.filter(s => s.type === 'addition').length > 0 && <span className="text-[7px] text-slate-400 no-print">({record.settlements.filter(s => s.type === 'addition').length})</span>}
                                                     </div>
@@ -2002,7 +2006,7 @@
                                                 <td className="px-1 py-1">
                                                     <textarea 
                                                         rows="1"
-                                                        className="w-full bg-transparent focus:bg-white border-none outline-none text-[8px] resize-none" 
+                                                        className="w-full bg-slate-50 p-1 rounded-lg focus:bg-white border border-slate-100 outline-none text-[8px] resize-none font-black text-black" 
                                                         value={record.notes || ''} 
                                                         onChange={e => updateField(emp.id, 'notes', e.target.value)}
                                                         placeholder="..."
@@ -3171,7 +3175,7 @@
                         </div>
 
                         {/* Print View */}
-                        <div className="hidden print:flex flex-col warning-box">
+                        <div className="hidden print:flex flex-col warning-box bg-slate-100">
                             <div className="text-center mb-8 border-b-4 border-slate-900 pb-6">
                                 <h1 className="text-5xl font-black text-slate-900 mb-2">{type === 'warning' ? 'إنذار إداري' : 'ملاحظة إدارية'}</h1>
                                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">{type === 'warning' ? 'Administrative Warning' : 'Administrative Note'}</p>
