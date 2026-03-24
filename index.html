@@ -348,7 +348,15 @@
             return Object.values(shifts).find(s => s.name === idOrName) || Object.values(shifts)[0];
         };
 
-        const calculateDeduction = (arrival, departure, empShiftId = '1', shifts = INITIAL_SHIFTS, rules = null) => {
+        const calculateDeduction = (arrival, departure, empShiftId = '1', shifts = INITIAL_SHIFTS, rules = null, date = null) => {
+            // Friday (5) and Saturday (6) are holidays with no deductions
+            if (date) {
+                const d = new Date(date);
+                if (d.getDay() === 5 || d.getDay() === 6) {
+                    return { late: 0, early: 0, total: 0 };
+                }
+            }
+
             const shift = getShiftByAny(empShiftId, shifts);
             const [sH, sM] = shift.start.split(':').map(Number);
             const [eH, eM] = shift.end.split(':').map(Number);
@@ -422,7 +430,38 @@
             };
         };
 
-        const calculateDetailedAttendance = (arrival, departure, empShiftId = '1', shifts = INITIAL_SHIFTS, rules = null) => {
+        const calculateDetailedAttendance = (arrival, departure, empShiftId = '1', shifts = INITIAL_SHIFTS, rules = null, date = null) => {
+            if (date) {
+                const d = new Date(date);
+                if (d.getDay() === 5 || d.getDay() === 6) {
+                    // Weekend: No late/early deductions
+                    const shift = getShiftByAny(empShiftId, shifts);
+                    const [sH, sM] = shift.start.split(':').map(Number);
+                    const [eH, eM] = shift.end.split(':').map(Number);
+                    const shiftEndMin = eH * 60 + eM;
+
+                    if (!arrival || !departure) return { total: '0:00', late: '0.00', early: '0.00', ot: '0:00' };
+                    
+                    const [aH, aM] = arrival.split(':').map(Number);
+                    const [dH, dM] = departure.split(':').map(Number);
+                    const arrivalMin = aH * 60 + aM;
+                    const departureMin = dH * 60 + dM;
+
+                    const totalMin = Math.max(0, departureMin - arrivalMin);
+                    const totalHours = Math.floor(totalMin / 60);
+                    const totalMins = totalMin % 60;
+                    const totalStr = `${totalHours}:${totalMins.toString().padStart(2, '0')}`;
+
+                    let otMin = 0;
+                    if (departureMin > shiftEndMin) otMin = departureMin - shiftEndMin;
+                    const otHours = Math.floor(otMin / 60);
+                    const otMins = otMin % 60;
+                    const otStr = `${otHours}:${otMins.toString().padStart(2, '0')}`;
+
+                    return { total: totalStr, late: '0.00', early: '0.00', ot: otStr };
+                }
+            }
+
             if (!arrival || !departure) return { total: '0:00', late: '0.00', early: '0.00', ot: '0:00' };
             
             const shift = getShiftByAny(empShiftId, shifts);
@@ -514,7 +553,8 @@
                         updated.departureTime, 
                         updated.shift, 
                         shifts, 
-                        rules
+                        rules,
+                        selectedDate
                     );
                     updated.lateDeduction = d.late;
                     updated.earlyDeduction = d.early;
@@ -597,7 +637,9 @@
                         let formattedDate;
                         try {
                             if (dateVal instanceof Date) {
-                                formattedDate = dateVal.toISOString().split('T')[0];
+                                // Use local date components to avoid timezone shifts
+                                const d = dateVal;
+                                formattedDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                             } else if (typeof dateVal === 'number') {
                                 const d = XLSX.SSF.parse_date_code(dateVal);
                                 formattedDate = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
@@ -614,14 +656,14 @@
                                     }
                                     const parsedDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
                                     if (!isNaN(parsedDate.getTime())) {
-                                        formattedDate = parsedDate.toISOString().split('T')[0];
+                                        formattedDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
                                     }
                                 }
                                 
                                 if (!formattedDate) {
                                     const d = new Date(dateVal);
                                     if (!isNaN(d.getTime())) {
-                                        formattedDate = d.toISOString().split('T')[0];
+                                        formattedDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                                     } else {
                                         continue;
                                     }
@@ -658,7 +700,7 @@
                         const arrivalTime = formatTime(entry);
                         const departureTime = formatTime(exit);
 
-                        const d = calculateDeduction(arrivalTime, departureTime, finalShift, shifts, rules);
+                        const d = calculateDeduction(arrivalTime, departureTime, finalShift, shifts, rules, formattedDate);
 
                         parsedRecords.push({
                             empId: emp.id,
@@ -723,7 +765,8 @@
                         newData[idx].departureTime, 
                         newData[idx].shift, 
                         shifts, 
-                        rules
+                        rules,
+                        newData[idx].date
                     );
                     newData[idx].lateDeduction = d.late;
                     newData[idx].earlyDeduction = d.early;
@@ -1032,7 +1075,7 @@
                         
                         // Calculate Late/Early/Total for the report
                         const empShift = record?.shift || emp.shift || Object.values(shifts)[0].name;
-                        const details = calculateDetailedAttendance(record?.arrivalTime, record?.departureTime, empShift, shifts, rules);
+                        const details = calculateDetailedAttendance(record?.arrivalTime, record?.departureTime, empShift, shifts, rules, dateStr);
 
                         return { 
                             no: idx + 1,
@@ -1046,7 +1089,7 @@
                             lateDed: record?.lateDeduction || 0,
                             earlyDed: record?.earlyDeduction || 0,
                             shift: empShift,
-                            ded: record?.deduction !== undefined ? record.deduction : (record ? calculateDeduction(record.arrivalTime, record.departureTime, empShift, shifts, rules).total : 0),
+                            ded: record?.deduction !== undefined ? record.deduction : (record ? calculateDeduction(record.arrivalTime, record.departureTime, empShift, shifts, rules, dateStr).total : 0),
                             ot: record?.overtimeHours !== undefined ? record.overtimeHours : details.ot,
                             notes: record?.notes || '',
                             isWeekend: dateObj.getDay() === 5 || dateObj.getDay() === 6
@@ -1272,7 +1315,7 @@
                                                             type="text" 
                                                             value={r.notes} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'notes', e.target.value)}
-                                                            className="w-full text-right bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                            className="w-full text-right bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-slate-900"
                                                             placeholder="..."
                                                         />
                                                     </td>
@@ -1283,10 +1326,6 @@
                                 </div>
                                 
                                 <div className="mt-4 print:mt-0.5 flex justify-between px-10 print:px-2">
-                                    <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 no-print">
-                                        <p className="text-[9px] font-black text-emerald-600 uppercase">أيام الحضور</p>
-                                        <p className="text-xl font-black text-emerald-700">{presentDays}</p>
-                                    </div>
                                     <div className="bg-rose-50 p-3 rounded-xl border border-rose-100 no-print">
                                         <p className="text-[9px] font-black text-rose-600 uppercase">إجمالي الخصم</p>
                                         <p className="text-xl font-black text-rose-700">{totalDeduction} ساعة</p>
@@ -1296,7 +1335,6 @@
                                         <p className="text-xl font-black text-indigo-700">{totalOTStr}</p>
                                     </div>
                                     <div className="hidden print:block text-lg font-black space-y-2 border-t-2 border-slate-900 pt-4">
-                                        <p className="flex justify-between gap-8"><span>أيام الحضور:</span> <span>{presentDays}</span></p>
                                         <p className="flex justify-between gap-8"><span>إجمالي الخصم:</span> <span className="text-rose-700">{totalDeduction} ساعة</span></p>
                                         <p className="flex justify-between gap-8"><span>إجمالي الإضافي:</span> <span className="text-emerald-700">{totalOTStr}</span></p>
                                     </div>
