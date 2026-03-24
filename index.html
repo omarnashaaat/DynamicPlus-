@@ -563,6 +563,12 @@
                     updated.lateDeduction = d.late;
                     updated.earlyDeduction = d.early;
                     updated.deduction = d.total;
+                    
+                    // Clear excel-imported hours so they are recalculated dynamically
+                    updated.lateHours = undefined;
+                    updated.earlyHours = undefined;
+                    updated.totalHours = undefined;
+                    updated.overtimeHours = undefined;
                 }
 
                 if (field === 'lateDeduction' || field === 'earlyDeduction') {
@@ -775,6 +781,12 @@
                     newData[idx].lateDeduction = d.late;
                     newData[idx].earlyDeduction = d.early;
                     newData[idx].deduction = d.total;
+                    
+                    // Clear excel-imported hours so they are recalculated dynamically
+                    newData[idx].lateHours = undefined;
+                    newData[idx].earlyHours = undefined;
+                    newData[idx].totalHours = undefined;
+                    newData[idx].overtimeHours = undefined;
                 }
                 
                 setPreviewData(newData);
@@ -819,12 +831,16 @@
                                                 <tr key={idx} className="hover:bg-blue-50/30">
                                                     <td className="px-4 py-3"><span className="font-black block text-xs">{rec.empName}</span><span className="text-[9px] text-slate-400">كود: {rec.empCode}</span></td>
                                                     <td className="px-4 py-3">
-                                                        <input 
-                                                            type="text" 
+                                                        <select 
                                                             value={rec.shift || ''} 
                                                             onChange={(e) => updatePreviewRow(idx, 'shift', e.target.value)}
-                                                            className="w-16 bg-slate-50 p-1.5 rounded-lg text-[10px] font-bold border border-slate-100 outline-none"
-                                                        />
+                                                            className="w-16 bg-slate-50 p-1.5 rounded-lg text-[10px] font-bold border border-slate-100 outline-none appearance-none"
+                                                        >
+                                                            <option value="">اختر</option>
+                                                            {Object.values(shifts).map(s => (
+                                                                <option key={s.id} value={s.name}>{s.name}</option>
+                                                            ))}
+                                                        </select>
                                                     </td>
                                                     <td className="px-4 py-3 text-xs font-bold">{rec.date}</td>
                                                     <td className="px-4 py-3">
@@ -1143,8 +1159,24 @@
                 
                 if (field === 'lateDeduction' || field === 'earlyDeduction') {
                     newLog[date][empId].deduction = (parseFloat(newLog[date][empId].lateDeduction) || 0) + (parseFloat(newLog[date][empId].earlyDeduction) || 0);
-                } else if (field === 'arrivalTime' || field === 'departureTime') {
-                    // Manual override
+                } else if (field === 'arrivalTime' || field === 'departureTime' || field === 'shift') {
+                    const d = calculateDeduction(
+                        newLog[date][empId].arrivalTime, 
+                        newLog[date][empId].departureTime, 
+                        newLog[date][empId].shift || employees.find(e => e.id === empId)?.shift || Object.values(shifts)[0].name, 
+                        shifts, 
+                        rules,
+                        date
+                    );
+                    newLog[date][empId].lateDeduction = d.late;
+                    newLog[date][empId].earlyDeduction = d.early;
+                    newLog[date][empId].deduction = d.total;
+                    
+                    // Clear excel-imported hours so they are recalculated dynamically
+                    newLog[date][empId].lateHours = undefined;
+                    newLog[date][empId].earlyHours = undefined;
+                    newLog[date][empId].totalHours = undefined;
+                    newLog[date][empId].overtimeHours = undefined;
                 }
                 
                 setAttendanceLog(newLog);
@@ -1255,12 +1287,16 @@
                                                     <td className="border-r border-slate-200 py-1 print:py-0">{new Date(r.date).toLocaleDateString('en-GB')}</td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0 font-bold">{r.day}</td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0">
-                                                        <input 
-                                                            type="text" 
+                                                        <select 
                                                             value={r.shift} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'shift', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
-                                                        />
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black appearance-none"
+                                                        >
+                                                            <option value="">اختر</option>
+                                                            {Object.values(shifts).map(s => (
+                                                                <option key={s.id} value={s.name}>{s.name}</option>
+                                                            ))}
+                                                        </select>
                                                     </td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0">
                                                         <input 
@@ -4604,7 +4640,9 @@
             const [isLoggedIn, setIsLoggedIn] = useState(() => {
                 return localStorage.getItem('hr_isLoggedIn') === 'true';
             });
-            const [password, setPassword] = useState('');
+            const [username, setUsername] = useState(() => {
+                return localStorage.getItem('hr_username') || '';
+            });
             const [activeTab, setActiveTab] = useState('dashboard');
             const [employees, setEmployees] = useState(() => {
                 const saved = localStorage.getItem('hr_employees');
@@ -4714,6 +4752,7 @@
             useEffect(() => {
                 const save = () => {
                     localStorage.setItem('hr_isLoggedIn', isLoggedIn);
+                    localStorage.setItem('hr_username', username);
                     localStorage.setItem('hr_employees', JSON.stringify(employees));
                     localStorage.setItem('hr_insurance', JSON.stringify(insuranceRecords));
                     localStorage.setItem('hr_contracts', JSON.stringify(contractRecords));
@@ -4775,13 +4814,13 @@
                             <p className="text-slate-500 mb-10 font-bold uppercase tracking-widest text-xs">نظام إدارة الموارد البشرية المتكامل</p>
                             <form onSubmit={(e) => { 
                                 e.preventDefault(); 
-                                if(password === '2362001') {
+                                if(username.trim() !== '') {
                                     setIsLoggedIn(true);
                                 } else {
-                                    alert('كلمة السر غير صحيحة');
+                                    alert('الرجاء إدخال الاسم');
                                 }
                             }} className="space-y-6">
-                                <input required type="password" placeholder="كلمة السر" className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-5 px-8 text-slate-800 text-center text-xl font-bold focus:outline-none" value={password} onChange={(e) => setPassword(e.target.value)} />
+                                <input required type="text" placeholder="الاسم" className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-5 px-8 text-slate-800 text-center text-xl font-bold focus:outline-none" value={username} onChange={(e) => setUsername(e.target.value)} />
                                 <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl flex items-center justify-center gap-3 text-xl">دخول النظام <Icon name="arrow-left" size={24} /></button>
                             </form>
                         </div>
@@ -4835,7 +4874,7 @@
                     </header>
                     <main className="flex-1">
                         {activeTab === 'dashboard' ? (
-                            <Dashboard setActiveTab={setActiveTab} userName="المدير" employees={employees} attendanceLog={attendanceLog} />
+                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} />
                         ) : activeTab === 'employees' ? (
                             <EmployeeTable employees={employees} onAddEmployee={addEmployee} onUpdateEmployee={updateEmployee} onDeleteEmployee={deleteEmployee} onBulkAdd={bulkAddEmployees} setActiveTab={setActiveTab} shifts={shifts} />
                         ) : activeTab === 'attendance' ? (
