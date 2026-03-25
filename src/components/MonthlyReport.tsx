@@ -410,7 +410,6 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                             <div>مدير حسابات</div>
                             <div>مدير الموارد البشرية</div>
                             <div>المدير التنفيذى</div>
-                            <div>اعتماد</div>
                         </div>
                     </div>
                 ))}

@@ -452,7 +452,6 @@ export const Payroll = React.memo(({ employees, payrollRecords, setPayrollRecord
                     <div>مدير حسابات</div>
                     <div>مدير الموارد البشرية</div>
                     <div>المدير التنفيذى</div>
-                    <div>اعتماد</div>
                 </div>
             </div>
         </div>
