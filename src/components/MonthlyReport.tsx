@@ -235,9 +235,14 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                                         </div>
                                     `;
                                 }).join('')}
+                                <div class="print-signatures" style="margin-top: 50px; display: flex; justify-content: space-between; gap: 40px; width: 100%; padding: 0 40px 40px 40px;">
+                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">مدير حسابات</div>
+                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">مدير الموارد البشرية</div>
+                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">المدير التنفيذى</div>
+                                </div>
                             `;
                             const opt = {
-                                margin: 0,
+                                margin: 5,
                                 filename: `monthly-report-${selectedMonth}.pdf`,
                                 image: { type: 'jpeg' as const, quality: 0.98 },
                                 html2canvas: { scale: 2, useCORS: true },
@@ -272,7 +277,7 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto border border-slate-300">
+                        <div className="overflow-x-auto border border-slate-300 report-table-wrapper">
                             <table className="w-full text-center text-[11px] print:text-[12px] border-collapse">
                                 <thead>
                                     <tr className="bg-slate-100 border-b border-slate-300">
@@ -406,6 +411,7 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                             </div>
                         </div>
 
+                        <div className="flex-1"></div>
                         <div className="print-only print-signatures px-8 pb-8">
                             <div>مدير حسابات</div>
                             <div>مدير الموارد البشرية</div>

@@ -293,11 +293,15 @@
                 border: 1px solid #000 !important;
             }
 
+            .payroll-print-wrapper, .report-table-wrapper {
+                flex: 1 !important;
+            }
             .print-signatures {
                 display: flex !important;
                 justify-content: space-between !important;
                 gap: 60px !important;
-                margin-top: 30px !important;
+                margin-top: auto !important;
+                padding-bottom: 20px !important;
                 text-align: center !important;
                 width: 100% !important;
             }
@@ -1780,6 +1784,7 @@
                                 </div>
                             )}
 
+                            <div className="flex-1"></div>
                             {/* Signatures */}
                             <div className="print-only print-signatures">
                                 <div>مدير حسابات</div>

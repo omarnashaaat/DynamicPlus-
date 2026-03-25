@@ -136,7 +136,7 @@ body {
     
     /* Hide any extra elements that might cause a second page */
     body.single-page-mode .print-signatures {
-        margin-top: 10px !important;
+        margin-top: auto !important;
     }
     /* Attendance Report Specific */
     .report-container {
@@ -159,17 +159,25 @@ body {
         border: 1px solid #000 !important;
     }
 
+    .payroll-print-wrapper, .report-table-wrapper {
+        flex: 1 !important;
+    }
     .print-signatures {
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 40px !important;
-        margin-top: 50px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 60px !important;
+        margin-top: auto !important;
+        padding-bottom: 20px !important;
         text-align: center !important;
+        width: 100% !important;
     }
     .print-signatures > div {
+        flex: 1 !important;
         border-top: 2px solid #000 !important;
-        padding-top: 10px !important;
+        padding-top: 12px !important;
         font-weight: 900 !important;
+        font-size: 11pt !important;
+        color: #000 !important;
     }
 }
 
