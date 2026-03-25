@@ -375,11 +375,11 @@ export const Attendance = React.memo(({ employees, attendanceLog, setAttendanceL
                             element.className = 'pdf-container';
                             element.innerHTML = `
                                 <div class="pdf-header">
-                                    <div class="pdf-title">تقرير الحضور والانصراف اليومي</div>
-                                    <div style="text-align: left">
-                                        <div style="font-weight: 900; font-size: 14px">شركة النور للتجارة</div>
+                                    <div style="text-align: right">
+                                        <div style="font-weight: 900; font-size: 14px">شركة طيبة للاستثمار العقارى والتطوير العمراني</div>
                                         <div style="font-size: 10px; color: #64748b">التاريخ: ${selectedDate}</div>
                                     </div>
+                                    <div class="pdf-title">تقرير الحضور والانصراف اليومي</div>
                                 </div>
                                 <table class="pdf-table">
                                     <thead>

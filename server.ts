@@ -19,14 +19,32 @@ db.exec(`
     score INTEGER,
     createdAt INTEGER,
     notes TEXT
-  )
+  );
+
+  CREATE TABLE IF NOT EXISTS employees (
+    id TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    updatedAt INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS attendance (
+    date TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    updatedAt INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updatedAt INTEGER NOT NULL
+  );
 `);
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: '50mb' }));
 
   // API Routes
   app.get("/api/candidates", (req, res) => {
@@ -61,6 +79,92 @@ async function startServer() {
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ error: "Failed to delete candidate" });
+    }
+  });
+
+  // Employees Sync
+  app.get("/api/employees", (req, res) => {
+    try {
+      const employees = db.prepare("SELECT * FROM employees").all();
+      res.json(employees.map(e => JSON.parse(e.data)));
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch employees" });
+    }
+  });
+
+  app.post("/api/employees", (req, res) => {
+    const { employees } = req.body;
+    try {
+      const stmt = db.prepare("INSERT OR REPLACE INTO employees (id, data, updatedAt) VALUES (?, ?, ?)");
+      const transaction = db.transaction((emps) => {
+        for (const emp of emps) {
+          stmt.run(emp.id, JSON.stringify(emp), Date.now());
+        }
+      });
+      transaction(employees);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to sync employees" });
+    }
+  });
+
+  // Attendance Sync
+  app.get("/api/attendance", (req, res) => {
+    try {
+      const attendance = db.prepare("SELECT * FROM attendance").all();
+      const result = {};
+      attendance.forEach(row => {
+        result[row.date] = JSON.parse(row.data);
+      });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch attendance" });
+    }
+  });
+
+  app.post("/api/attendance", (req, res) => {
+    const { attendance } = req.body;
+    try {
+      const stmt = db.prepare("INSERT OR REPLACE INTO attendance (date, data, updatedAt) VALUES (?, ?, ?)");
+      const transaction = db.transaction((data) => {
+        for (const date in data) {
+          stmt.run(date, JSON.stringify(data[date]), Date.now());
+        }
+      });
+      transaction(attendance);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to sync attendance" });
+    }
+  });
+
+  // Settings Sync
+  app.get("/api/settings", (req, res) => {
+    try {
+      const settings = db.prepare("SELECT * FROM app_settings").all();
+      const result = {};
+      settings.forEach(row => {
+        result[row.key] = JSON.parse(row.value);
+      });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/settings", (req, res) => {
+    const { settings } = req.body;
+    try {
+      const stmt = db.prepare("INSERT OR REPLACE INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)");
+      const transaction = db.transaction((data) => {
+        for (const key in data) {
+          stmt.run(key, JSON.stringify(data[key]), Date.now());
+        }
+      });
+      transaction(settings);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to sync settings" });
     }
   });
 

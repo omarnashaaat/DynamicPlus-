@@ -65,6 +65,7 @@ export const WarningModal = ({ emp, onClose }: WarningModalProps) => {
                 {/* Print View */}
                 <div className="hidden print:flex flex-col warning-box">
                     <div className="text-center mb-8 border-b-4 border-slate-900 pb-6">
+                        <h2 className="text-sm font-black text-indigo-600 mb-1">شركة طيبة للاستثمار العقارى والتطوير العمراني</h2>
                         <h1 className="text-5xl font-black text-slate-900 mb-2">{type === 'warning' ? 'إنذار إداري' : 'ملاحظة إدارية'}</h1>
                         <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">{type === 'warning' ? 'Administrative Warning' : 'Administrative Note'}</p>
                     </div>
@@ -77,10 +78,6 @@ export const WarningModal = ({ emp, onClose }: WarningModalProps) => {
                         <div className="detail-row">
                             <span className="font-bold text-slate-900">السيد / السيدة:</span>
                             <span className="font-black text-2xl">{emp.name}</span>
-                        </div>
-                        <div className="detail-row">
-                            <span className="font-bold text-slate-900">الكود الوظيفي:</span>
-                            <span className="font-mono font-black">{emp.code}</span>
                         </div>
                         <div className="detail-row">
                             <span className="font-bold text-slate-900">الإدارة / القسم:</span>

@@ -22,6 +22,41 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- html2pdf.js for direct PDF download -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+    <script>
+        window.downloadPDF = (elementId, filename, isSinglePage = true, orientation = 'portrait') => {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            if (isSinglePage) document.body.classList.add('single-page-mode');
+            
+            const opt = {
+                margin: 5,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                if (isSinglePage) document.body.classList.remove('single-page-mode');
+            });
+        };
+    </script>
     <style>
         body {
             font-family: 'Cairo', sans-serif;
@@ -44,10 +79,10 @@
             }
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            background: rgba(255, 255, 255, 1);
+            backdrop-filter: none;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
         @media print {
@@ -70,7 +105,7 @@
                 color: black !important; 
                 margin: 0;
                 padding: 0;
-                font-size: 10pt;
+                font-size: 11pt;
             }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
@@ -98,20 +133,18 @@
                 padding: 10px !important;
                 border: 1px solid #eee !important;
             }
-            .dashboard-item icon {
-                size: 20px !important;
-            }
             
             /* Unified Document Box Style (Payslip & Warning) */
             .payslip-box, .warning-box {
                 border: 2px solid #000 !important;
-                padding: 40px !important;
+                padding: 30px !important;
                 margin: 0 auto !important;
                 width: 190mm !important;
-                height: 275mm !important;
+                min-height: 275mm !important;
+                height: auto !important;
                 box-sizing: border-box !important;
                 box-shadow: none !important;
-                background: #f1f5f9 !important;
+                background: white !important;
                 -webkit-print-color-adjust: exact;
                 display: flex !important;
                 flex-direction: column !important;
@@ -122,10 +155,8 @@
             }
             
             /* Force Portrait for these */
-            @media print {
-                .payslip-box, .warning-box, .report-container {
-                    page: portrait;
-                }
+            .payslip-box, .warning-box, .report-container {
+                page: portrait;
             }
 
             .payslip-box *, .warning-box * {
@@ -133,7 +164,7 @@
             }
             .payslip-box .detail-row, .warning-box .detail-row {
                 border-bottom: 1px solid #e2e8f0 !important;
-                padding: 12px 0 !important;
+                padding: 8px 0 !important;
                 display: flex !important;
                 justify-content: space-between !important;
                 align-items: center !important;
@@ -146,8 +177,8 @@
                 border: 3px solid #000 !important;
                 background-color: #f8fafc !important;
                 -webkit-print-color-adjust: exact;
-                padding: 20px !important;
-                margin-top: 20px !important;
+                padding: 15px !important;
+                margin-top: 15px !important;
             }
             .net-salary-box-print * {
                 color: #000 !important;
@@ -164,22 +195,17 @@
                 page-break-after: always !important;
                 display: flex !important;
                 flex-direction: column !important;
-            }
-            
-            @media print {
-                .landscape-page {
-                    page: landscape;
-                }
+                page: landscape;
             }
 
             .payroll-table {
                 width: 100% !important;
-                font-size: 8pt !important;
+                font-size: 7.5pt !important;
                 border-collapse: collapse !important;
                 table-layout: fixed !important;
             }
             .payroll-table th, .payroll-table td {
-                padding: 3px !important;
+                padding: 2px !important;
                 border: 1px solid #000 !important;
             }
             .payroll-table thead tr {
@@ -189,13 +215,13 @@
 
             .print-signatures {
                 display: none !important;
-                margin-top: 20px !important;
-                padding-top: 10px !important;
+                margin-top: 15px !important;
+                padding-top: 8px !important;
                 border-top: 1px solid #000 !important;
                 width: 100% !important;
                 justify-content: space-around !important;
                 font-weight: bold !important;
-                font-size: 10pt !important;
+                font-size: 9pt !important;
             }
             .print-only.print-signatures {
                 display: flex !important;
@@ -204,45 +230,46 @@
                 text-align: center !important;
                 width: 30% !important;
             }
+            
             /* Single Page PDF Mode - Guaranteed One Page Fit */
             body.single-page-mode {
-                overflow: hidden !important;
+                overflow: visible !important;
             }
             
             body.single-page-mode .payslip-box, 
             body.single-page-mode .warning-box,
             body.single-page-mode .report-container {
                 width: 210mm !important;
-                min-height: 297mm !important;
-                height: auto !important;
-                padding: 5mm !important;
+                height: 297mm !important;
+                max-height: 297mm !important;
+                padding: 10mm !important;
                 margin: 0 !important;
-                border: 2px solid #000 !important;
+                border: none !important;
                 box-sizing: border-box !important;
                 page-break-after: avoid !important;
                 page-break-inside: avoid !important;
-                zoom: 1.0; /* Full A4 Portrait */
-                transform: scale(1.0);
-                transform-origin: top center;
-                overflow: visible !important;
+                overflow: hidden !important;
                 background: white !important;
+                display: flex !important;
+                flex-direction: column !important;
             }
 
             body.single-page-mode .landscape-page {
                 width: 297mm !important;
                 height: 210mm !important;
                 max-height: 210mm !important;
-                padding: 3mm !important;
+                padding: 5mm !important;
                 margin: 0 !important;
-                border: 2px solid #000 !important;
+                border: none !important;
                 box-sizing: border-box !important;
                 page-break-after: avoid !important;
                 page-break-inside: avoid !important;
-                zoom: 0.92; /* Maximized for A4 Landscape */
-                transform: scale(0.92);
-                transform-origin: top center;
                 overflow: hidden !important;
                 background: white !important;
+            }
+
+            body.single-page-mode .report-container table {
+                font-size: 7pt !important;
             }
 
             body.single-page-mode .net-salary-box-print {
@@ -251,19 +278,15 @@
             }
 
             body.single-page-mode .detail-row {
-                padding: 6px 0 !important;
-                font-size: 1.1rem !important;
+                padding: 4px 0 !important;
+                font-size: 1rem !important;
             }
 
             body.single-page-mode h1 {
-                font-size: 1.6rem !important;
-                margin-bottom: 15px !important;
+                font-size: 1.4rem !important;
+                margin-bottom: 10px !important;
             }
             
-            /* Hide any extra elements that might cause a second page */
-            body.single-page-mode .print-signatures {
-                margin-top: 10px !important;
-            }
             /* Attendance Report Specific */
             .report-container {
                 border: 2px solid #000 !important;
@@ -276,30 +299,72 @@
                 page-break-after: always !important;
                 display: flex !important;
                 flex-direction: column !important;
-                background: #f1f5f9 !important;
+                background: white !important;
                 -webkit-print-color-adjust: exact;
             }
             .report-container table {
-                font-size: 8pt !important;
+                font-size: 8.5pt !important;
                 width: 100% !important;
             }
             .report-container th, .report-container td {
-                padding: 2px !important;
+                padding: 3px !important;
                 border: 1px solid #000 !important;
             }
 
             .print-signatures {
                 display: grid !important;
                 grid-template-columns: repeat(3, 1fr) !important;
-                gap: 40px !important;
-                margin-top: 50px !important;
+                gap: 20px !important;
+                margin-top: 30px !important;
                 text-align: center !important;
             }
             .print-signatures > div {
                 border-top: 2px solid #000 !important;
-                padding-top: 10px !important;
+                padding-top: 8px !important;
                 font-weight: 900 !important;
+                font-size: 10pt !important;
             }
+        }
+        .print-only { display: none; }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; border: 2px solid #f1f5f9; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Screen Visibility Improvements */
+        .report-container:not(.print-only) {
+            background: white !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 24px !important;
+            padding: 2rem !important;
+            width: 100% !important;
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+        }
+
+        .report-container table:not(.print-only) {
+            font-size: 13px !important;
+        }
+
+        .report-container th:not(.print-only), .report-container td:not(.print-only) {
+            padding: 12px 8px !important;
+            border: 1px solid #f1f5f9 !important;
+        }
+
+        .report-container thead tr:not(.print-only) {
+            background-color: #f8fafc !important;
+            color: #475569 !important;
+        }
+
+        .payslip-box:not(.print-only) {
+            background: white !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 32px !important;
+            padding: 3rem !important;
+            width: 100% !important;
+            max-width: 800px !important;
+            margin: 0 auto !important;
         }
         .print-only { display: none; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -988,7 +1053,7 @@
                         <div className="lg:col-span-3">
                             <div className="rounded-[40px] shadow-2xl overflow-x-auto overflow-y-hidden border bg-white border-slate-100">
                                 <table className="w-full text-right">
-                                    <thead className="bg-slate-50 text-slate-500 text-[11px] font-black uppercase border-b">
+                                    <thead className="bg-slate-800 text-white text-[11px] font-black uppercase border-b">
                                         <tr>
                                             <th className="px-6 py-5">الموظف</th>
                                             <th className="px-4 py-5">الوردية</th>
@@ -1000,22 +1065,22 @@
                                             <th className="px-4 py-5">ملاحظات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y">
+                                    <tbody className="divide-y divide-slate-100">
                                         {employees
                                             .filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
                                             .map(emp => {
                                             const record = (attendanceLog[selectedDate] && attendanceLog[selectedDate][emp.id]) || { arrivalTime: '', departureTime: '', deduction: 0, lateDeduction: 0, earlyDeduction: 0, shift: '', notes: '' };
                                             return (
-                                                <tr key={emp.id} className="hover:bg-blue-50/30">
-                                                    <td className="px-6 py-4">
-                                                        <span className="font-black block">{emp.name}</span>
-                                                        <span className="text-[10px] text-slate-400">كود: {emp.code}</span>
+                                                <tr key={emp.id} className="hover:bg-blue-50/50 transition-colors">
+                                                    <td className="px-6 py-4 border-l border-slate-50">
+                                                        <span className="font-black block text-slate-800">{emp.name}</span>
+                                                        <span className="text-[10px] text-slate-500">كود: {emp.code}</span>
                                                     </td>
                                                     <td className="px-4 py-4">
                                                         <select 
                                                             value={record.shift || ''} 
                                                             onChange={(e) => updateRecord(emp.id, 'shift', e.target.value)} 
-                                                            className="w-32 bg-slate-50 p-2 rounded-xl text-[10px] font-black text-black border border-slate-100 outline-none focus:ring-2 focus:ring-blue-500/20"
+                                                            className="w-32 bg-slate-50 p-2 rounded-xl text-[10px] font-black text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20"
                                                         >
                                                             <option value="">اختر الوردية</option>
                                                             {Object.values(shifts).map(s => (
@@ -1024,10 +1089,10 @@
                                                         </select>
                                                     </td>
                                                     <td className="px-4 py-4">
-                                                        <input type="time" value={record.arrivalTime} onChange={(e) => updateRecord(emp.id, 'arrivalTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-black text-black border border-slate-100" />
+                                                        <input type="time" value={record.arrivalTime} onChange={(e) => updateRecord(emp.id, 'arrivalTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-black text-slate-700 border border-slate-200" />
                                                     </td>
                                                     <td className="px-4 py-4">
-                                                        <input type="time" value={record.departureTime} onChange={(e) => updateRecord(emp.id, 'departureTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-black text-black border border-slate-100" />
+                                                        <input type="time" value={record.departureTime} onChange={(e) => updateRecord(emp.id, 'departureTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-black text-slate-700 border border-slate-200" />
                                                     </td>
                                                     <td className="px-4 py-4 text-center">
                                                         <input 
@@ -1048,7 +1113,7 @@
                                                         />
                                                     </td>
                                                     <td className="px-4 py-4 text-center">
-                                                        <span className={`px-4 py-2 rounded-full font-black text-xs ${record.deduction > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                                                        <span className={`px-4 py-2 rounded-2xl font-black text-xs ${record.deduction > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}`}>
                                                             {record.deduction} س
                                                         </span>
                                                     </td>
@@ -1259,8 +1324,27 @@
                                 {isSinglePage ? 'صفحة واحدة: مفعل' : 'صفحة واحدة: معطل'}
                             </button>
                             
+                            <button 
+                                onClick={() => {
+                                    if (selectedEmpId === 'all') {
+                                        reportRecords
+                                            .filter(({ emp }) => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
+                                            .forEach(({ emp }) => {
+                                                downloadPDF(`report-${emp.id}`, `Report_${emp.name}_${monthName}.pdf`, isSinglePage, 'portrait');
+                                            });
+                                    } else {
+                                        const emp = employees.find(e => e.id === selectedEmpId);
+                                        if (emp) {
+                                            downloadPDF(`report-${emp.id}`, `Report_${emp.name}_${monthName}.pdf`, isSinglePage, 'portrait');
+                                        }
+                                    }
+                                }}
+                                className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all"
+                            >
+                                <Icon name="download" size={18} /> تحميل PDF
+                            </button>
                             <button onClick={handlePrint} className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-800 transition-all">
-                                <Icon name="printer" size={18} /> طباعة / PDF
+                                <Icon name="printer" size={18} /> طباعة
                             </button>
                         </div>
                     </div>
@@ -1269,7 +1353,7 @@
                         {reportRecords
                             .filter(({ emp }) => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
                             .map(({ emp, records, totalDeduction, presentDays, totalOTStr }) => (
-                            <div key={emp.id} className="report-container bg-slate-100 text-slate-900" style={{ pageBreakAfter: 'always' }}>
+                            <div key={emp.id} id={`report-${emp.id}`} className="report-container bg-slate-100 text-slate-900" style={{ pageBreakAfter: 'always' }}>
                                 {/* Report Header Matching Image */}
                                 <div className="text-center space-y-1 mb-4 print:mb-0.5 print:space-y-0">
                                     <h1 className="text-xl print:text-sm font-bold uppercase tracking-widest">Monthly Attendance Report</h1>
@@ -1306,10 +1390,10 @@
                                         </thead>
                                         <tbody>
                                             {records.map((r) => (
-                                                <tr key={r.date} className={`border-b border-slate-200 ${r.isWeekend ? 'bg-emerald-50/50' : ''}`}>
-                                                    <td className="border-r border-slate-200 py-1 print:py-0 font-bold">{r.no}</td>
-                                                    <td className="border-r border-slate-200 py-1 print:py-0">{new Date(r.date).toLocaleDateString('en-GB')}</td>
-                                                    <td className="border-r border-slate-200 py-1 print:py-0 font-bold">{r.day}</td>
+                                                <tr key={r.date} className={`border-b border-slate-300 ${r.isWeekend ? 'bg-emerald-50/70' : ''}`}>
+                                                    <td className="border-r border-slate-300 py-1 print:py-0 font-black text-slate-900">{r.no}</td>
+                                                    <td className="border-r border-slate-300 py-1 print:py-0 font-black text-slate-900">{new Date(r.date).toLocaleDateString('en-GB')}</td>
+                                                    <td className="border-r border-slate-300 py-1 print:py-0 font-black text-slate-900">{r.day}</td>
                                                     <td className="border-r border-slate-200 py-1 print:py-0">
                                                         <select 
                                                             value={r.shift} 
@@ -1338,46 +1422,46 @@
                                                             className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
                                                         />
                                                     </td>
-                                                    <td className="border-r border-slate-200 py-1 print:py-0">
+                                                    <td className="border-r border-slate-300 py-1 print:py-0 font-black text-slate-900">
                                                         <input 
                                                             type="text" 
                                                             value={r.total} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'totalHours', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-slate-900"
                                                         />
                                                     </td>
-                                                    <td className="border-r border-slate-200 py-1 print:py-0 font-bold">
+                                                    <td className="border-r border-slate-300 py-1 print:py-0 font-black text-rose-600">
                                                         <input 
                                                             type="number" 
                                                             step="0.5"
                                                             value={r.lateDed || 0} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'lateDeduction', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-rose-600"
                                                         />
                                                     </td>
-                                                    <td className="border-r border-slate-200 py-1 print:py-0 font-bold">
+                                                    <td className="border-r border-slate-300 py-1 print:py-0 font-black text-rose-600">
                                                         <input 
                                                             type="number" 
                                                             step="0.5"
                                                             value={r.earlyDed || 0} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'earlyDeduction', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-rose-600"
                                                         />
                                                     </td>
-                                                    <td className="border-r border-slate-200 py-1 print:py-0 font-bold text-rose-600">
+                                                    <td className="border-r border-slate-300 py-1 print:py-0 font-black text-rose-700">
                                                         <input 
                                                             type="number" 
                                                             value={r.ded} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'deduction', parseFloat(e.target.value) || 0)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-rose-700"
                                                         />
                                                     </td>
-                                                    <td className="border-r border-slate-200 py-1 print:py-0">
+                                                    <td className="border-r border-slate-300 py-1 print:py-0 font-black text-emerald-600">
                                                         <input 
                                                             type="text" 
                                                             value={r.ot} 
                                                             onChange={(e) => updateReportRecord(r.date, emp.id, 'overtimeHours', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-black"
+                                                            className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto font-black text-emerald-600"
                                                         />
                                                     </td>
                                                     <td className="py-1 print:py-0 text-right px-2 text-[9px] bg-slate-100/50 print:bg-slate-200/50">
@@ -1549,8 +1633,14 @@
                                 >
                                     {isSinglePage ? 'وضع الصفحة الواحدة: مفعل' : 'وضع الصفحة الواحدة: معطل'}
                                 </button>
+                                <button 
+                                    onClick={() => downloadPDF('payslip-content', `Payslip_${emp.name}_${month}.pdf`, isSinglePage, 'portrait')}
+                                    className="flex-1 sm:flex-none justify-center px-4 md:px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg hover:bg-emerald-700 transition-all"
+                                >
+                                    <Icon name="download" size={18}/> تحميل PDF
+                                </button>
                                 <button onClick={handlePrintSlip} className="flex-1 sm:flex-none justify-center px-4 md:px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all">
-                                    <Icon name="printer" size={18}/> طباعة / PDF
+                                    <Icon name="printer" size={18}/> طباعة
                                 </button>
                                 <button onClick={onClose} className="p-2.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all shrink-0">
                                     <Icon name="x" size={24}/>
@@ -1558,10 +1648,11 @@
                             </div>
                         </div>
 
-                        <div className="p-6 md:p-12 payslip-box print:p-8 overflow-y-auto max-h-[75vh] print:max-h-none print:overflow-visible">
+                        <div id="payslip-content" className="p-6 md:p-12 payslip-box print:p-8 overflow-y-auto max-h-[75vh] print:max-h-none print:overflow-visible bg-white">
                             {/* Header Section */}
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-slate-900 pb-6 md:pb-8 mb-6 md:mb-8 print:pb-6 print:mb-6 gap-4">
                                 <div className="text-right w-full md:w-auto">
+                                    <p className="text-[10px] font-bold text-slate-400 mb-1 print:hidden">شركة طيبة للاستثمار العقارى والتطوير العمراني</p>
                                     <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight print:text-5xl">إشعار صرف راتب</h1>
                                     <p className="text-slate-500 font-bold mt-1 uppercase tracking-[0.2em] text-[10px] md:text-[12px] print:text-black">Payroll Advice Notice</p>
                                 </div>
@@ -1577,10 +1668,6 @@
                                     <div className="detail-row">
                                         <span className="text-slate-500 font-bold print:text-black">اسم الموظف:</span>
                                         <span className="text-slate-900 font-black print:text-xl">{emp.name}</span>
-                                    </div>
-                                    <div className="detail-row">
-                                        <span className="text-slate-500 font-bold print:text-black">الكود الوظيفي:</span>
-                                        <span className="text-slate-900 font-mono font-bold print:text-lg">{emp.code}</span>
                                     </div>
                                     <div className="detail-row">
                                         <span className="text-slate-500 font-bold print:text-black">الوظيفة:</span>
@@ -1700,18 +1787,18 @@
                                 </div>
                             </div>
 
+                            {/* Notes Section */}
+                            {record.notes && (
+                                <div className="mt-8 p-4 bg-slate-50 rounded-2xl border border-slate-100 print:mt-6 print:p-3 print:bg-white print:border-slate-200">
+                                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 print:text-slate-900">ملاحظات إضافية / Additional Notes</div>
+                                    <p className="text-slate-700 text-sm font-bold leading-relaxed whitespace-pre-wrap print:text-xs print:text-black">{record.notes}</p>
+                                </div>
+                            )}
+
                             {/* Signatures */}
                             <div className="mt-10 md:mt-16 flex flex-col md:flex-row justify-between gap-8 md:gap-0 text-[11px] font-bold text-slate-400 border-t border-slate-100 pt-6 md:pt-8 print:mt-10 print:text-[10px] print:text-slate-900 print:flex-row">
                                 <div className="text-center space-y-4">
                                     <p>توقيع الموظف</p>
-                                    <div className="w-32 border-b border-slate-200 mx-auto"></div>
-                                </div>
-                                <div className="text-center space-y-4">
-                                    <p>توقيع المحاسب</p>
-                                    <div className="w-32 border-b border-slate-200 mx-auto"></div>
-                                </div>
-                                <div className="text-center space-y-4">
-                                    <p>توقيع الإدارة</p>
                                     <div className="w-32 border-b border-slate-200 mx-auto"></div>
                                 </div>
                             </div>
@@ -1927,10 +2014,16 @@
                                 {isSinglePage ? 'وضع الصفحة الواحدة: مفعل' : 'وضع الصفحة الواحدة: معطل'}
                             </button>
                             <button 
+                                onClick={() => downloadPDF('payroll-table-container', `Payroll_${currentMonthKey}.pdf`, isSinglePage, 'landscape')}
+                                className="bg-emerald-600 text-white px-6 py-2.5 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-emerald-700 transition-all"
+                            >
+                                <Icon name="download" size={18} /> تحميل PDF
+                            </button>
+                            <button 
                                 onClick={handlePrint}
                                 className="bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-800 transition-all"
                             >
-                                <Icon name="printer" size={18} /> طباعة الكشف الكامل / PDF
+                                <Icon name="printer" size={18} /> طباعة
                             </button>
                             
                             <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
@@ -1954,8 +2047,9 @@
                         </div>
                     </div>
 
-                    <div className="rounded-[30px] shadow-2xl overflow-hidden print:overflow-visible border bg-white border-slate-200 landscape-page">
+                    <div id="payroll-table-container" className="rounded-[30px] shadow-2xl overflow-hidden print:overflow-visible border bg-white border-slate-200 landscape-page">
                         <div className="hidden print:block text-center mb-4 border-b-2 border-slate-900 pb-4">
+                            <h2 className="text-sm font-black text-indigo-600 mb-1">شركة طيبة للاستثمار العقارى والتطوير العمراني</h2>
                             <h1 className="text-3xl font-black text-slate-900">كشف الرواتب الشهري - {selectedMonth}</h1>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-[8px]">Monthly Payroll Register</p>
                         </div>
@@ -1999,43 +2093,43 @@
                                         const record = (payrollRecords[currentMonthKey] && payrollRecords[currentMonthKey][emp.id]) || { settlements: [] };
                                         const { totalDeductions, netSalary } = calculateTotals(record);
                                         return (
-                                            <tr key={emp.id} className="hover:bg-slate-50 transition-colors group">
-                                                <td className="px-1 py-2 font-bold text-slate-400">{i + 1}</td>
-                                                <td className="px-1 py-2 font-mono font-bold text-indigo-600">{emp.code}</td>
-                                                <td className="px-2 py-2 text-right font-black text-slate-800">
+                                            <tr key={emp.id} className="hover:bg-slate-50 transition-colors group border-b border-slate-300">
+                                                <td className="px-1 py-2 font-black text-slate-500 border-r border-slate-300">{i + 1}</td>
+                                                <td className="px-1 py-2 font-mono font-black text-indigo-700 border-r border-slate-300">{emp.code}</td>
+                                                <td className="px-2 py-2 text-right font-black text-slate-900 border-r border-slate-300">
                                                     <div className="flex justify-between items-center gap-1">
                                                         <span>{emp.name}</span>
                                                         <button 
                                                             onClick={() => setSettlementTarget({ emp, record })}
-                                                            className="no-print p-1 text-indigo-400 hover:text-indigo-600 transition-colors"
+                                                            className="no-print p-1 text-indigo-500 hover:text-indigo-700 transition-colors"
                                                             title="إضافة تسوية مالية"
                                                         >
                                                             <Icon name="plus-square" size={14} />
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td className="px-1 py-1"><input type="number" value={record.basicSalary || ''} onChange={e => updateField(emp.id, 'basicSalary', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1"><input type="number" value={record.mobileAllowance || ''} onChange={e => updateField(emp.id, 'mobileAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1"><input type="number" value={record.transportAllowance || ''} onChange={e => updateField(emp.id, 'transportAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1"><input type="number" value={record.overtimeAllowance || ''} onChange={e => updateField(emp.id, 'overtimeAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1 bg-slate-50"><input type="number" value={record.grossSalary || ''} readOnly className="w-full text-center bg-transparent outline-none font-bold cursor-default" /></td>
+                                                <td className="px-1 py-1 border-r border-slate-300"><input type="number" value={record.basicSalary || ''} onChange={e => updateField(emp.id, 'basicSalary', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 border-r border-slate-300"><input type="number" value={record.mobileAllowance || ''} onChange={e => updateField(emp.id, 'mobileAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 border-r border-slate-300"><input type="number" value={record.transportAllowance || ''} onChange={e => updateField(emp.id, 'transportAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 border-r border-slate-300"><input type="number" value={record.overtimeAllowance || ''} onChange={e => updateField(emp.id, 'overtimeAllowance', e.target.value)} className="w-full text-center bg-transparent focus:bg-white outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 bg-slate-100 border-r border-slate-300"><input type="number" value={record.grossSalary || ''} readOnly className="w-full text-center bg-transparent outline-none font-black text-slate-900 cursor-default" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-yellow-50/30"><input type="number" value={record.leaveCount || ''} onChange={e => updateField(emp.id, 'leaveCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1 bg-yellow-50/30 font-bold"><input type="number" value={Math.round(record.leaveVal) || ''} onChange={e => updateField(emp.id, 'leaveVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-yellow-100/50 border-r border-slate-300"><input type="number" value={record.leaveCount || ''} onChange={e => updateField(emp.id, 'leaveCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 bg-yellow-100/50 border-r border-slate-300 font-bold"><input type="number" value={Math.round(record.leaveVal) || ''} onChange={e => updateField(emp.id, 'leaveVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-rose-50/30"><input type="number" value={record.penaltyCount || ''} onChange={e => updateField(emp.id, 'penaltyCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1 bg-rose-50/30 font-bold"><input type="number" value={record.penaltyVal || ''} onChange={e => updateField(emp.id, 'penaltyVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-rose-100/50 border-r border-slate-300"><input type="number" value={record.penaltyCount || ''} onChange={e => updateField(emp.id, 'penaltyCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 bg-rose-100/50 border-r border-slate-300 font-bold"><input type="number" value={record.penaltyVal || ''} onChange={e => updateField(emp.id, 'penaltyVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-orange-50/30"><input type="number" value={record.absenceCount || ''} onChange={e => updateField(emp.id, 'absenceCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1 bg-orange-50/30 font-bold"><input type="number" value={Math.round(record.absenceVal) || ''} onChange={e => updateField(emp.id, 'absenceVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-orange-100/50 border-r border-slate-300"><input type="number" value={record.absenceCount || ''} onChange={e => updateField(emp.id, 'absenceCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 bg-orange-100/50 border-r border-slate-300 font-bold"><input type="number" value={Math.round(record.absenceVal) || ''} onChange={e => updateField(emp.id, 'absenceVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
 
-                                                <td className="px-1 py-1 bg-sky-50/30"><input type="number" value={record.lateCount || ''} onChange={e => updateField(emp.id, 'lateCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1 bg-sky-50/30 font-bold"><input type="number" value={Math.round(record.lateVal) || ''} onChange={e => updateField(emp.id, 'lateVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-sky-100/50 border-r border-slate-300"><input type="number" value={record.lateCount || ''} onChange={e => updateField(emp.id, 'lateCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 bg-sky-100/50 border-r border-slate-300 font-bold"><input type="number" value={Math.round(record.lateVal) || ''} onChange={e => updateField(emp.id, 'lateVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
                                                 
-                                                <td className="px-1 py-1 bg-teal-50/30"><input type="number" value={record.earlyCount || ''} onChange={e => updateField(emp.id, 'earlyCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
-                                                <td className="px-1 py-1 bg-teal-50/30 font-bold"><input type="number" value={Math.round(record.earlyVal) || ''} onChange={e => updateField(emp.id, 'earlyVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-teal-100/50 border-r border-slate-300"><input type="number" value={record.earlyCount || ''} onChange={e => updateField(emp.id, 'earlyCount', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
+                                                <td className="px-1 py-1 bg-teal-100/50 border-r border-slate-300 font-bold"><input type="number" value={Math.round(record.earlyVal) || ''} onChange={e => updateField(emp.id, 'earlyVal', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
 
-                                                <td className="px-1 py-1 bg-emerald-50/30 font-bold"><input type="number" value={record.advanceInstallment || ''} onChange={e => updateField(emp.id, 'advanceInstallment', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-black" /></td>
+                                                <td className="px-1 py-1 bg-emerald-100/50 border-r border-slate-300 font-bold"><input type="number" value={record.advanceInstallment || ''} onChange={e => updateField(emp.id, 'advanceInstallment', e.target.value)} className="w-full text-center bg-transparent outline-none font-black text-slate-900" /></td>
 
                                                 <td className="px-1 py-1 bg-indigo-50/50">
                                                     <div className="flex flex-col items-center">
@@ -2048,25 +2142,25 @@
                                                         {record.settlements?.filter(s => s.type === 'deduction').length > 0 && <span className="text-[7px] text-slate-400 no-print">({record.settlements.filter(s => s.type === 'deduction').length})</span>}
                                                     </div>
                                                 </td>
-                                                <td className="px-1 py-1 bg-indigo-50/50">
+                                                <td className="px-1 py-1 bg-indigo-100/50 border-r border-slate-300">
                                                     <div className="flex flex-col items-center">
                                                         <input 
                                                             type="number" 
                                                             value={record.adjAddition || ''} 
                                                             onChange={e => updateField(emp.id, 'adjAddition', e.target.value)}
-                                                            className="w-full text-center bg-transparent outline-none text-emerald-600 font-black" 
+                                                            className="w-full text-center bg-transparent outline-none text-emerald-700 font-black" 
                                                         />
-                                                        {record.settlements?.filter(s => s.type === 'addition').length > 0 && <span className="text-[7px] text-slate-400 no-print">({record.settlements.filter(s => s.type === 'addition').length})</span>}
+                                                        {record.settlements?.filter(s => s.type === 'addition').length > 0 && <span className="text-[7px] text-slate-500 no-print font-bold">({record.settlements.filter(s => s.type === 'addition').length})</span>}
                                                     </div>
                                                 </td>
                                                 
-                                                <td className="px-1 py-2 bg-rose-50/50 font-black text-rose-700 print:text-[8px]">{Math.round(totalDeductions)}</td>
-                                                <td className="px-1 py-2 bg-emerald-50/50 font-black text-emerald-700 text-[10px] print:text-[14px]">{Math.round(netSalary)}</td>
+                                                <td className="px-1 py-2 bg-rose-200/50 font-black text-rose-800 border-r border-slate-300 print:text-[10px]">{Math.round(totalDeductions)}</td>
+                                                <td className="px-1 py-2 bg-emerald-200/50 font-black text-emerald-800 border-r border-slate-300 text-[11px] print:text-[16px]">{Math.round(netSalary)}</td>
                                                 
                                                 <td className="px-1 py-1">
                                                     <textarea 
                                                         rows="1"
-                                                        className="w-full bg-slate-50 p-1 rounded-lg focus:bg-white border border-slate-100 outline-none text-[8px] resize-none font-black text-black" 
+                                                        className="w-full bg-slate-100 p-1 rounded-lg focus:bg-white border border-slate-300 outline-none text-[9px] resize-none font-black text-slate-900" 
                                                         value={record.notes || ''} 
                                                         onChange={e => updateField(emp.id, 'notes', e.target.value)}
                                                         placeholder="..."
@@ -3042,7 +3136,7 @@
             { id: 10, title: 'Eius et cum.', date: '2026-03-29', type: 'OTHER' },
         ];
 
-        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog, setIsLoggedIn, downloadPDF }) => {
+        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog, setIsLoggedIn, downloadPDF, isOnline, syncStatus }) => {
             const [candidatesCount, setCandidatesCount] = useState(0);
 
             useEffect(() => {
@@ -3084,10 +3178,16 @@
                 <div className="space-y-10 animate-fade-in">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                         <div className="pr-4">
+                            <h3 className="text-indigo-600 font-black text-sm mb-1">شركة طيبة للاستثمار العقارى والتطوير العمراني</h3>
                             <h1 className="text-4xl font-black text-slate-800 mb-2">مرحباً بك يا {userName} 👋</h1>
                             <p className="text-slate-500 font-bold tracking-wide">إدارة أسهل… لقرارات أدق.</p>
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto no-print">
+                            {/* Connection Status Indicator */}
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border shadow-sm transition-all ${isOnline ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'}`}>
+                                <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? (syncStatus === 'syncing' ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-500') : 'bg-rose-500'}`}></div>
+                                <span className="text-xs font-black">{isOnline ? (syncStatus === 'syncing' ? 'جاري المزامنة...' : 'متصل') : 'أوفلاين'}</span>
+                            </div>
                             <button onClick={downloadPDF} className="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-3 rounded-2xl font-black transition-all shadow-lg">
                                 <Icon name="download" size={20} />
                                 تحميل التقرير PDF
@@ -3106,8 +3206,8 @@
                                     <Icon name={stat.icon} size={24} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-wider">{stat.label}</p>
-                                    <p className="text-2xl font-black text-slate-800">{stat.value}</p>
+                                    <p className="text-xs font-black text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                                    <p className="text-3xl font-black text-slate-900">{stat.value}</p>
                                 </div>
                             </div>
                         ))}
@@ -3123,8 +3223,8 @@
                                 <div className={`${item.color} text-white p-6 rounded-[28px] mb-5 shadow-lg group-hover:scale-110 transition-transform duration-500 flex items-center justify-center`}>
                                     <Icon name={item.icon} size={36} />
                                 </div>
-                                <h3 className="text-2xl font-black mb-1 transition-colors text-slate-800 group-hover:text-white">{item.title}</h3>
-                                <p className="text-slate-400 group-hover:text-slate-500 text-xs font-bold uppercase tracking-widest">{item.sub}</p>
+                                <h3 className="text-2xl font-black mb-1 transition-colors text-slate-900 group-hover:text-white">{item.title}</h3>
+                                <p className="text-slate-500 group-hover:text-slate-300 text-xs font-bold uppercase tracking-widest">{item.sub}</p>
                             </button>
                         ))}
                     </div>
@@ -3944,6 +4044,7 @@
                         {/* Print View */}
                         <div className="hidden print:flex flex-col warning-box bg-slate-100">
                             <div className="text-center mb-8 border-b-4 border-slate-900 pb-6">
+                                <h2 className="text-sm font-black text-indigo-600 mb-1">شركة طيبة للاستثمار العقارى والتطوير العمراني</h2>
                                 <h1 className="text-5xl font-black text-slate-900 mb-2">{type === 'warning' ? 'إنذار إداري' : 'ملاحظة إدارية'}</h1>
                                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">{type === 'warning' ? 'Administrative Warning' : 'Administrative Note'}</p>
                             </div>
@@ -3956,10 +4057,6 @@
                                 <div className="detail-row">
                                     <span className="font-bold text-slate-900">السيد / السيدة:</span>
                                     <span className="font-black text-2xl">{emp.name}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="font-bold text-slate-900">الكود الوظيفي:</span>
-                                    <span className="font-mono font-black">{emp.code}</span>
                                 </div>
                                 <div className="detail-row">
                                     <span className="font-bold text-slate-900">الإدارة / القسم:</span>
@@ -4292,14 +4389,31 @@
 
             const [candidates, setCandidates] = useState([]);
             const [isLoading, setIsLoading] = useState(true);
+            const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+            useEffect(() => {
+                const handleOnline = () => setIsOnline(true);
+                const handleOffline = () => setIsOnline(false);
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+                return () => {
+                    window.removeEventListener('online', handleOnline);
+                    window.removeEventListener('offline', handleOffline);
+                };
+            }, []);
 
             const fetchCandidates = async () => {
                 try {
                     const response = await fetch('/api/candidates');
                     const data = await response.json();
                     setCandidates(data);
+                    localStorage.setItem('hr_candidates_cache', JSON.stringify(data));
                 } catch (err) {
                     console.error('Failed to fetch candidates:', err);
+                    const cached = localStorage.getItem('hr_candidates_cache');
+                    if (cached) {
+                        setCandidates(JSON.parse(cached));
+                    }
                 } finally {
                     setIsLoading(false);
                 }
@@ -4319,6 +4433,44 @@
                 priority: 'عادي'
             });
 
+            const [pendingActions, setPendingActions] = useState(() => {
+                const saved = localStorage.getItem('pending_candidates_actions');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            useEffect(() => {
+                if (isOnline && pendingActions.length > 0) {
+                    syncPendingActions();
+                }
+            }, [isOnline, pendingActions]);
+
+            const syncPendingActions = async () => {
+                const actions = [...pendingActions];
+                const failed = [];
+                
+                for (const action of actions) {
+                    try {
+                        if (action.type === 'SAVE') {
+                            await fetch('/api/candidates', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(action.data)
+                            });
+                        } else if (action.type === 'DELETE') {
+                            await fetch(`/api/candidates/${action.id}`, { method: 'DELETE' });
+                        }
+                    } catch (err) {
+                        failed.push(action);
+                    }
+                }
+                
+                setPendingActions(failed);
+                localStorage.setItem('pending_candidates_actions', JSON.stringify(failed));
+                if (failed.length === 0) {
+                    fetchCandidates();
+                }
+            };
+
             const handleAddCandidate = async (e) => {
                 e.preventDefault();
                 const candidate = {
@@ -4332,17 +4484,27 @@
                     notes: ''
                 };
                 
+                // Optimistic update
+                setCandidates(prev => [candidate, ...prev]);
+                setShowAddModal(false);
+                setNewCandidate({ name: '', role: '', experience: '', priority: 'عادي' });
+
                 try {
-                    await fetch('/api/candidates', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(candidate)
-                    });
-                    fetchCandidates();
-                    setShowAddModal(false);
-                    setNewCandidate({ name: '', role: '', experience: '', priority: 'عادي' });
+                    if (isOnline) {
+                        await fetch('/api/candidates', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(candidate)
+                        });
+                    } else {
+                        const newActions = [...pendingActions, { type: 'SAVE', data: candidate }];
+                        setPendingActions(newActions);
+                        localStorage.setItem('pending_candidates_actions', JSON.stringify(newActions));
+                    }
                 } catch (err) {
-                    alert('فشل في إضافة المرشح');
+                    const newActions = [...pendingActions, { type: 'SAVE', data: candidate }];
+                    setPendingActions(newActions);
+                    localStorage.setItem('pending_candidates_actions', JSON.stringify(newActions));
                 }
             };
 
@@ -4350,16 +4512,26 @@
                 e.preventDefault();
                 if (!editingCandidate) return;
                 
+                // Optimistic update
+                setCandidates(prev => prev.map(c => c.id === editingCandidate.id ? editingCandidate : c));
+                setEditingCandidate(null);
+
                 try {
-                    await fetch('/api/candidates', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(editingCandidate)
-                    });
-                    fetchCandidates();
-                    setEditingCandidate(null);
+                    if (isOnline) {
+                        await fetch('/api/candidates', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(editingCandidate)
+                        });
+                    } else {
+                        const newActions = [...pendingActions, { type: 'SAVE', data: editingCandidate }];
+                        setPendingActions(newActions);
+                        localStorage.setItem('pending_candidates_actions', JSON.stringify(newActions));
+                    }
                 } catch (err) {
-                    alert('فشل في تحديث المرشح');
+                    const newActions = [...pendingActions, { type: 'SAVE', data: editingCandidate }];
+                    setPendingActions(newActions);
+                    localStorage.setItem('pending_candidates_actions', JSON.stringify(newActions));
                 }
             };
 
@@ -4370,26 +4542,47 @@
                 const currentIndex = STAGES.findIndex(s => s.id === cand.status);
                 if (currentIndex < STAGES.length - 1) {
                     const updatedCand = { ...cand, status: STAGES[currentIndex + 1].id };
+                    
+                    // Optimistic update
+                    setCandidates(prev => prev.map(c => c.id === id ? updatedCand : c));
+
                     try {
-                        await fetch('/api/candidates', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(updatedCand)
-                        });
-                        fetchCandidates();
+                        if (isOnline) {
+                            await fetch('/api/candidates', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(updatedCand)
+                            });
+                        } else {
+                            const newActions = [...pendingActions, { type: 'SAVE', data: updatedCand }];
+                            setPendingActions(newActions);
+                            localStorage.setItem('pending_candidates_actions', JSON.stringify(newActions));
+                        }
                     } catch (err) {
-                        alert('فشل في نقل المرشح');
+                        const newActions = [...pendingActions, { type: 'SAVE', data: updatedCand }];
+                        setPendingActions(newActions);
+                        localStorage.setItem('pending_candidates_actions', JSON.stringify(newActions));
                     }
                 }
             };
 
             const deleteCandidate = async (id) => {
                 if (confirm('هل أنت متأكد من حذف هذا المرشح؟')) {
+                    // Optimistic update
+                    setCandidates(prev => prev.filter(c => c.id !== id));
+
                     try {
-                        await fetch(`/api/candidates/${id}`, { method: 'DELETE' });
-                        fetchCandidates();
+                        if (isOnline) {
+                            await fetch(`/api/candidates/${id}`, { method: 'DELETE' });
+                        } else {
+                            const newActions = [...pendingActions, { type: 'DELETE', id }];
+                            setPendingActions(newActions);
+                            localStorage.setItem('pending_candidates_actions', JSON.stringify(newActions));
+                        }
                     } catch (err) {
-                        alert('فشل في حذف المرشح');
+                        const newActions = [...pendingActions, { type: 'DELETE', id }];
+                        setPendingActions(newActions);
+                        localStorage.setItem('pending_candidates_actions', JSON.stringify(newActions));
                     }
                 }
             };
@@ -4407,7 +4600,20 @@
                             <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
                                 <Icon name="briefcase" size={20} />
                             </div>
-                            <h1 className="text-2xl font-black text-slate-800 tracking-tighter">إدارة التوظيف</h1>
+                            <div>
+                                <h1 className="text-2xl font-black text-slate-800 tracking-tighter">إدارة التوظيف</h1>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'}`}></div>
+                                    <span className={`text-[10px] font-bold ${isOnline ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        {isOnline ? 'متصل بالخادم' : 'وضع الأوفلاين - سيتم المزامنة لاحقاً'}
+                                    </span>
+                                    {pendingActions.length > 0 && (
+                                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 rounded-md border border-amber-100 animate-pulse">
+                                            {pendingActions.length} عمليات معلقة
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                         
                         <div className="flex bg-slate-100 p-1 rounded-2xl">
@@ -5603,6 +5809,101 @@
             });
             const [currentTime, setCurrentTime] = useState(new Date());
             const [isSaving, setIsSaving] = useState(false);
+            const [isOnline, setIsOnline] = useState(navigator.onLine);
+            const [syncStatus, setSyncStatus] = useState('idle');
+
+            useEffect(() => {
+                const handleOnline = () => setIsOnline(true);
+                const handleOffline = () => setIsOnline(false);
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+                return () => {
+                    window.removeEventListener('online', handleOnline);
+                    window.removeEventListener('offline', handleOffline);
+                };
+            }, []);
+
+            // Initial fetch from backend
+            useEffect(() => {
+                if (isOnline) {
+                    const fetchData = async () => {
+                        try {
+                            const [empRes, attRes, setRes] = await Promise.all([
+                                fetch('/api/employees'),
+                                fetch('/api/attendance'),
+                                fetch('/api/settings')
+                            ]);
+                            
+                            if (empRes.ok) {
+                                const emps = await empRes.json();
+                                if (emps.length > 0) setEmployees(emps);
+                            }
+                            if (attRes.ok) {
+                                const att = await attRes.json();
+                                if (Object.keys(att).length > 0) setAttendanceLog(att);
+                            }
+                            if (setRes.ok) {
+                                const settings = await setRes.json();
+                                if (settings.shifts) setShifts(settings.shifts);
+                                if (settings.attendance_rules) setAttendanceRules(settings.attendance_rules);
+                                if (settings.insurance) setInsuranceRecords(settings.insurance);
+                                if (settings.contracts) setContractRecords(settings.contracts);
+                                if (settings.payroll) setPayrollRecords(settings.payroll);
+                                if (settings.calendar) setCalendarEvents(settings.calendar);
+                                if (settings.resignations) setResignations(settings.resignations);
+                            }
+                        } catch (err) {
+                            console.error('Failed to fetch initial data:', err);
+                        }
+                    };
+                    fetchData();
+                }
+            }, [isOnline]);
+
+            // Sync to backend
+            useEffect(() => {
+                if (!isOnline) return;
+
+                const sync = async () => {
+                    setSyncStatus('syncing');
+                    try {
+                        await Promise.all([
+                            fetch('/api/employees', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ employees })
+                            }),
+                            fetch('/api/attendance', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ attendance: attendanceLog })
+                            }),
+                            fetch('/api/settings', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    settings: {
+                                        shifts,
+                                        attendance_rules: attendanceRules,
+                                        insurance: insuranceRecords,
+                                        contracts: contractRecords,
+                                        payroll: payrollRecords,
+                                        calendar: calendarEvents,
+                                        resignations
+                                    }
+                                })
+                            })
+                        ]);
+                        setSyncStatus('idle');
+                    } catch (err) {
+                        console.error('Sync failed:', err);
+                        setSyncStatus('error');
+                    }
+                };
+
+                const timer = setTimeout(sync, 5000);
+                return () => clearTimeout(timer);
+            }, [isOnline, employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, shifts, attendanceRules, resignations]);
 
             // Keyboard Navigation Logic
             useEffect(() => {
@@ -5805,6 +6106,11 @@
                                 </button>
                             </div>
                             <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
+                                {/* Connection Status Indicator */}
+                                <div className={`flex items-center gap-2 px-3 py-1 rounded-xl transition-all ${isOnline ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                    <div className={`w-2 h-2 rounded-full ${isOnline ? (syncStatus === 'syncing' ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-500') : 'bg-rose-500'}`}></div>
+                                    <span className="text-[10px] font-black">{isOnline ? (syncStatus === 'syncing' ? 'مزامنة...' : 'متصل') : 'أوفلاين'}</span>
+                                </div>
                                 <div className="flex flex-col text-right leading-tight">
                                     <span className="text-[13px] font-bold text-slate-700">{formattedDate}</span>
                                     <span className="text-[11px] font-black text-indigo-600 font-mono">{formattedTime}</span>
@@ -5817,7 +6123,7 @@
                     )}
                     <main className="flex-1">
                         {activeTab === 'dashboard' ? (
-                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} setIsLoggedIn={setIsLoggedIn} downloadPDF={downloadPDF} />
+                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} setIsLoggedIn={setIsLoggedIn} downloadPDF={downloadPDF} isOnline={isOnline} syncStatus={syncStatus} />
                         ) : activeTab === 'employees' ? (
                             <EmployeeTable employees={employees} onAddEmployee={addEmployee} onUpdateEmployee={updateEmployee} onDeleteEmployee={deleteEmployee} onBulkAdd={bulkAddEmployees} setActiveTab={setActiveTab} shifts={shifts} />
                         ) : activeTab === 'attendance' ? (

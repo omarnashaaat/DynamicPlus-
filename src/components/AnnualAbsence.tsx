@@ -90,11 +90,11 @@ export const AnnualAbsence = React.memo(({ employees, attendanceLog }: AnnualAbs
                             element.className = 'pdf-container';
                             element.innerHTML = `
                                 <div class="pdf-header">
-                                    <div class="pdf-title">سجل الغيابات السنوي - ${selectedYear}</div>
-                                    <div style="text-align: left">
-                                        <div style="font-weight: 900; font-size: 14px">شركة النور للتجارة</div>
+                                    <div style="text-align: right">
+                                        <div style="font-weight: 900; font-size: 14px">شركة طيبة للاستثمار العقارى والتطوير العمراني</div>
                                         <div style="font-size: 10px; color: #64748b">تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}</div>
                                     </div>
+                                    <div class="pdf-title">سجل الغيابات السنوي - ${selectedYear}</div>
                                 </div>
                                 ${filteredData.map(item => `
                                     <div style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px">

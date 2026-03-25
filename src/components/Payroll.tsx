@@ -236,11 +236,11 @@ export const Payroll = React.memo(({ employees, payrollRecords, setPayrollRecord
                             element.style.width = '297mm'; 
                             element.innerHTML = `
                                 <div class="pdf-header">
-                                    <div class="pdf-title">كشف الرواتب الشهري - ${selectedMonth}</div>
-                                    <div style="text-align: left">
-                                        <div style="font-weight: 900; font-size: 14px">شركة النور للتجارة</div>
+                                    <div style="text-align: right">
+                                        <div style="font-weight: 900; font-size: 14px">شركة طيبة للاستثمار العقارى والتطوير العمراني</div>
                                         <div style="font-size: 10px; color: #64748b">تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}</div>
                                     </div>
+                                    <div class="pdf-title">كشف الرواتب الشهري - ${selectedMonth}</div>
                                 </div>
                                 <table class="pdf-table" style="font-size: 8px">
                                     <thead>
@@ -314,6 +314,7 @@ export const Payroll = React.memo(({ employees, payrollRecords, setPayrollRecord
 
             <div className={`rounded-[30px] shadow-2xl overflow-hidden print:overflow-visible border bg-white border-slate-200 landscape-page ${isSinglePage ? 'print-one-page' : ''}`}>
                 <div className="hidden print:block text-center mb-4 border-b-2 border-slate-900 pb-4">
+                    <h2 className="text-sm font-black text-indigo-600 mb-1">شركة طيبة للاستثمار العقارى والتطوير العمراني</h2>
                     <h1 className="text-3xl font-black text-slate-900">كشف الرواتب الشهري - {selectedMonth}</h1>
                     <p className="text-slate-500 font-bold uppercase tracking-widest text-[8px]">Monthly Payroll Register</p>
                 </div>
