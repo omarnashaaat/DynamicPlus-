@@ -202,24 +202,28 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                                                 <div style="font-weight: 900; font-size: 14px">${emp.name} (${emp.code})</div>
                                                 <div style="font-size: 10px">${emp.department}</div>
                                             </div>
-                                            <table class="pdf-table" style="font-size: 8px">
+                                            <table class="pdf-table" style="font-size: 8px; width: 100%; border-collapse: collapse;">
                                                 <thead>
                                                     <tr>
-                                                        <th>التاريخ</th>
+                                                        <th style="width: 20px">م</th>
+                                                        <th style="width: 60px">التاريخ</th>
                                                         <th>الحضور</th>
                                                         <th>الانصراف</th>
                                                         <th>تأخير</th>
                                                         <th>مبكر</th>
-                                                        <th>خصم يدوي</th>
+                                                        <th>خصم</th>
                                                         <th>ملاحظات</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    ${days.map(date => {
+                                                    ${days.filter(date => {
                                                         const rec = attendanceLog[date]?.[emp.id] || {};
-                                                        if (!rec.arrivalTime && !rec.departureTime) return '';
+                                                        return rec.arrivalTime || rec.departureTime;
+                                                    }).map((date, idx) => {
+                                                        const rec = attendanceLog[date]?.[emp.id] || {};
                                                         return `
                                                             <tr>
+                                                                <td>${idx + 1}</td>
                                                                 <td>${date}</td>
                                                                 <td>${rec.arrivalTime || '-'}</td>
                                                                 <td>${rec.departureTime || '-'}</td>
@@ -278,26 +282,26 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                         </div>
 
                         <div className="overflow-x-auto border border-slate-300 report-table-wrapper">
-                            <table className="w-full text-center text-[11px] print:text-[12px] border-collapse">
+                            <table className="w-full text-center text-[11px] print:text-[9px] border-collapse">
                                 <thead>
                                     <tr className="bg-slate-100 border-b border-slate-300">
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-8">م</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-20">التاريخ</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-20">اليوم</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">الوردية</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">دخول</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">خروج</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">إجمالي</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">تأخير (س)</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">مبكر (س)</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">خصم</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">إضافي</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-6">م</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-16">التاريخ</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-16">اليوم</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">الوردية</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">دخول</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">خروج</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">إجمالي</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">تأخير</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">مبكر</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">خصم</th>
+                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">إضافي</th>
                                         <th className="py-2 print:py-0.5">ملاحظات</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {records.map((r) => (
-                                        <tr key={r.date} className={`border-b border-slate-200 ${r.isWeekend ? 'bg-emerald-50/50' : ''}`}>
+                                        <tr key={r.date} className={`border-b border-slate-200 ${r.isWeekend ? 'bg-emerald-50/50' : ''} print:leading-tight`}>
                                             <td className="border-r border-slate-200 py-1 print:py-0 font-bold">{r.no}</td>
                                             <td className="border-r border-slate-200 py-1 print:py-0">{new Date(r.date).toLocaleDateString('en-GB')}</td>
                                             <td className="border-r border-slate-200 py-1 print:py-0 font-bold">{r.day}</td>
@@ -413,8 +417,8 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
 
                         <div className="flex-1"></div>
                         <div className="print-only print-signatures px-8 pb-8">
-                            <div>مدير حسابات</div>
                             <div>مدير الموارد البشرية</div>
+                            <div>مدير حسابات</div>
                             <div>المدير التنفيذى</div>
                         </div>
                     </div>

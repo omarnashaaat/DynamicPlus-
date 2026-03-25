@@ -219,8 +219,7 @@
             }
             
             body.single-page-mode .payslip-box, 
-            body.single-page-mode .warning-box,
-            body.single-page-mode .report-container {
+            body.single-page-mode .warning-box {
                 width: 210mm !important;
                 height: 297mm !important;
                 max-height: 297mm !important;
@@ -250,47 +249,85 @@
                 background: white !important;
             }
 
+            body.single-page-mode .report-container {
+                width: 190mm !important;
+                padding: 4mm !important;
+                min-height: auto !important;
+                height: 285mm !important;
+                overflow: hidden !important;
+                margin: 0 auto !important;
+                border: 1px solid #000 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                page-break-after: always !important;
+            }
+
             body.single-page-mode .report-container table {
-                font-size: 7pt !important;
+                font-size: 6pt !important;
             }
 
-            body.single-page-mode .net-salary-box-print {
-                margin-top: 5px !important;
-                padding: 10px !important;
+            body.single-page-mode .report-container td, 
+            body.single-page-mode .report-container th {
+                padding: 1px 1px !important;
+                line-height: 1 !important;
             }
 
-            body.single-page-mode .detail-row {
-                padding: 4px 0 !important;
-                font-size: 1rem !important;
+            body.single-page-mode .print-signatures {
+                margin-top: auto !important;
+                margin-bottom: 10px !important;
+                gap: 10px !important;
+            }
+
+            body.single-page-mode .print-signatures > div {
+                font-size: 8pt !important;
+                padding-top: 3px !important;
+            }
+
+            body.single-page-mode .report-table-wrapper {
+                margin-bottom: 2px !important;
             }
 
             body.single-page-mode h1 {
-                font-size: 1.4rem !important;
-                margin-bottom: 10px !important;
+                font-size: 1rem !important;
+                margin-bottom: 2px !important;
+            }
+
+            body.single-page-mode .hidden.print\:block.text-lg {
+                font-size: 10pt !important;
+                padding-top: 2px !important;
+                margin-top: 2px !important;
+            }
+
+            body.single-page-mode {
+                zoom: 0.9;
             }
             
             /* Attendance Report Specific */
-            .report-container {
+            .report-container, .pdf-container {
                 border: 2px solid #000 !important;
-                padding: 15px !important;
+                padding: 10mm !important;
                 margin: 0 auto !important;
                 width: 190mm !important;
-                min-height: 275mm !important;
-                height: auto !important;
+                min-height: 277mm !important;
                 box-sizing: border-box !important;
                 page-break-after: always !important;
                 display: flex !important;
                 flex-direction: column !important;
                 background: white !important;
                 -webkit-print-color-adjust: exact;
+                position: relative !important;
             }
-            .report-container table {
+            .report-container table, .pdf-container table {
                 font-size: 8.5pt !important;
                 width: 100% !important;
+                border-collapse: collapse !important;
+                table-layout: fixed !important;
             }
-            .report-container th, .report-container td {
-                padding: 3px !important;
+            .report-container th, .report-container td, .pdf-container th, .pdf-container td {
+                padding: 4px 2px !important;
                 border: 1px solid #000 !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
             }
 
             .payroll-print-wrapper, .report-table-wrapper {
@@ -1342,7 +1379,7 @@
                         {reportRecords
                             .filter(({ emp }) => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
                             .map(({ emp, records, totalDeduction, presentDays, totalOTStr }) => (
-                            <div key={emp.id} id={`report-${emp.id}`} className="report-container bg-slate-100 text-slate-900" style={{ pageBreakAfter: 'always' }}>
+                            <div key={emp.id} id={`report-${emp.id}`} className="report-container bg-white text-slate-900" style={{ pageBreakAfter: 'always' }}>
                                 {/* Report Header Matching Image */}
                                 <div className="text-center space-y-1 mb-4 print:mb-0.5 print:space-y-0">
                                     <h1 className="text-xl print:text-sm font-bold uppercase tracking-widest">Monthly Attendance Report</h1>
@@ -1359,27 +1396,27 @@
                                     </div>
                                 </div>
 
-                                <div className="overflow-x-auto border border-slate-300">
-                                    <table className="w-full text-center text-[11px] print:text-[12px] border-collapse">
+                                <div className="overflow-x-auto border border-slate-300 report-table-wrapper">
+                                    <table className="w-full text-center text-[11px] print:text-[9px] border-collapse">
                                         <thead>
                                             <tr className="bg-slate-100 border-b border-slate-300">
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-8">م</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-20">التاريخ</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-20">اليوم</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">الوردية</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">دخول</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">خروج</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">إجمالي</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">تأخير (س)</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">مبكر (س)</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">خصم</th>
-                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-14">إضافي</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-6">م</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-16">التاريخ</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-16">اليوم</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">الوردية</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">دخول</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">خروج</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">إجمالي</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">تأخير</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">مبكر</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">خصم</th>
+                                                <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">إضافي</th>
                                                 <th className="py-2 print:py-0.5">ملاحظات</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {records.map((r) => (
-                                                <tr key={r.date} className={`border-b border-slate-300 ${r.isWeekend ? 'bg-emerald-50/70' : ''}`}>
+                                                <tr key={r.date} className={`border-b border-slate-300 ${r.isWeekend ? 'bg-emerald-50/70' : ''} print:leading-tight`}>
                                                     <td className="border-r border-slate-300 py-1 print:py-0 font-black text-slate-900">{r.no}</td>
                                                     <td className="border-r border-slate-300 py-1 print:py-0 font-black text-slate-900">{new Date(r.date).toLocaleDateString('en-GB')}</td>
                                                     <td className="border-r border-slate-300 py-1 print:py-0 font-black text-slate-900">{r.day}</td>
@@ -1481,6 +1518,13 @@
                                         <p className="flex justify-between gap-8"><span>إجمالي الخصم:</span> <span className="text-rose-700">{totalDeduction} ساعة</span></p>
                                         <p className="flex justify-between gap-8"><span>إجمالي الإضافي:</span> <span className="text-emerald-700">{totalOTStr}</span></p>
                                     </div>
+                                </div>
+
+                                <div className="flex-1"></div>
+                                <div className="print-only print-signatures px-8 pb-8">
+                                    <div>مدير الموارد البشرية</div>
+                                    <div>مدير حسابات</div>
+                                    <div>المدير التنفيذى</div>
                                 </div>
                             </div>
                         ))}
