@@ -300,7 +300,7 @@
                 display: flex !important;
                 justify-content: space-between !important;
                 gap: 60px !important;
-                margin-top: auto !important;
+                margin-bottom: 60px !important;
                 padding-bottom: 20px !important;
                 text-align: center !important;
                 width: 100% !important;
@@ -1787,8 +1787,8 @@
                             <div className="flex-1"></div>
                             {/* Signatures */}
                             <div className="print-only print-signatures">
-                                <div>مدير حسابات</div>
                                 <div>مدير الموارد البشرية</div>
+                                <div>مدير حسابات</div>
                                 <div>المدير التنفيذى</div>
                             </div>
                             
@@ -2049,6 +2049,7 @@
                             <h1 className="text-xl font-black text-slate-900">كشف الرواتب الشهري - {selectedMonth}</h1>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-[7px]">Monthly Payroll Register</p>
                         </div>
+                        
                         <div className="overflow-x-auto print:overflow-visible payroll-print-wrapper scroll-smooth">
                             <table className="w-full text-[10px] md:text-[11px] text-center payroll-table border-collapse min-w-full">
                                 <thead>
@@ -2177,11 +2178,11 @@
                                     })}
                                 </tbody>
                             </table>
-                        </div>
-                        <div className="print-only print-signatures px-8 pb-8">
-                            <div>مدير حسابات</div>
-                            <div>مدير الموارد البشرية</div>
-                            <div>المدير التنفيذى</div>
+                            <div className="print-only print-signatures px-8 mt-16">
+                                <div>مدير الموارد البشرية</div>
+                                <div>مدير حسابات</div>
+                                <div>المدير التنفيذى</div>
+                            </div>
                         </div>
                     </div>
                 </div>
