@@ -2838,7 +2838,7 @@
             { id: 10, title: 'Eius et cum.', date: '2026-03-29', type: 'OTHER' },
         ];
 
-        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog }) => {
+        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog, setIsLoggedIn }) => {
             const [candidatesCount, setCandidatesCount] = useState(0);
 
             useEffect(() => {
@@ -2861,6 +2861,10 @@
                 { id: 'contracts', title: 'عقود العمل', sub: 'إدارة وتجديد العقود', icon: 'file-text', color: 'bg-teal-600' },
                 { id: 'recruitment', title: 'التوظيف والتعيين', sub: 'إدارة طلبات التوظيف', icon: 'briefcase', color: 'bg-violet-600' },
                 { id: 'ats', title: 'ATS', sub: 'الماسح الذكي للسير الذاتية', icon: 'sparkles', color: 'bg-indigo-400' },
+                { id: 'kpis', title: 'مؤشرات الأداء (KPIs)', sub: 'متابعة أداء الموظفين', icon: 'trending-up', color: 'bg-orange-600' },
+                { id: 'evaluations', title: 'تقييم الموظف', sub: 'التقييمات الدورية', icon: 'star', color: 'bg-yellow-500' },
+                { id: 'digital_files', title: 'الأرشيف الرقمي', sub: 'ملفات الموظفين (PDF)', icon: 'folder', color: 'bg-red-500' },
+                { id: 'training', title: 'تدريبات الموظفين', sub: 'الدورات والنتائج', icon: 'graduation-cap', color: 'bg-blue-500' },
                 { id: 'settings', title: 'إعدادات النظام', sub: 'النسخ الاحتياطي والتهيئة', icon: 'settings', color: 'bg-slate-600' },
             ];
 
@@ -2878,6 +2882,10 @@
                             <h1 className="text-4xl font-black text-slate-800 mb-2">مرحباً بك يا {userName} 👋</h1>
                             <p className="text-slate-500 font-bold tracking-wide">إدارة أسهل… لقرارات أدق.</p>
                         </div>
+                        <button onClick={() => setIsLoggedIn(false)} className="flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-100 px-6 py-3 rounded-2xl font-black transition-all shadow-sm">
+                            <Icon name="log-out" size={20} />
+                            تسجيل الخروج
+                        </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -5506,54 +5514,26 @@
 
             return (
                 <div className="min-h-screen flex flex-col desktop-container px-6 py-8">
-                    <header className="glass-card rounded-[35px] py-4 px-10 flex items-center justify-between mb-10 no-print sticky top-4 z-50">
-                        <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-                            <div className="p-3 rounded-2xl shadow-xl bg-slate-900 text-white"><Icon name="layout-grid" size={24} /></div>
-                            <div className="flex flex-col">
-                                <span className="text-2xl font-black tracking-tighter hidden sm:block text-slate-800 leading-none">Dynamic Plus</span>
-                            </div>
-                        </div>
-                        <div className="flex-1 flex justify-center items-center gap-6 px-4">
-                            <nav className="hidden xl:flex items-center gap-1">
-                                {[
-                                    {id: 'dashboard', label: 'الرئيسية'},
-                                    {id: 'employees', label: 'الموظفين'},
-                                    {id: 'attendance', label: 'الحضور'},
-                                    {id: 'payroll', label: 'المرتبات'},
-                                    {id: 'kpis', label: 'KPIs'},
-                                    {id: 'evaluations', label: 'التقييمات'},
-                                    {id: 'digital_files', label: 'الأرشيف'},
-                                    {id: 'training', label: 'التدريب'},
-                                    {id: 'recruitment', label: 'التوظيف'},
-                                    {id: 'leaves', label: 'الإجازات'},
-                                    {id: 'settings', label: 'الإعدادات'}
-                                ].map((l, i) => (
-                                    <button key={i} onClick={() => setActiveTab(l.id)} className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${activeTab === l.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>{l.label}</button>
-                                ))}
-                            </nav>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            {isSaving && (
-                                <div className="hidden sm:flex items-center gap-2 text-emerald-500 font-bold text-[10px] animate-pulse">
-                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                                    جاري الحفظ...
-                                </div>
-                            )}
-                            <div className="hidden xl:flex items-center gap-4 bg-slate-50/80 px-4 py-2 rounded-2xl border border-slate-100 shadow-inner group hover:bg-white transition-all">
+                    {activeTab !== 'dashboard' && (
+                        <div className="mb-6 flex justify-between items-center no-print">
+                            <button onClick={() => setActiveTab('dashboard')} className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl font-black transition-all shadow-sm border border-slate-200">
+                                <Icon name="arrow-right" size={20} />
+                                عودة إلى لوحة التحكم
+                            </button>
+                            <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
                                 <div className="flex flex-col text-right leading-tight">
                                     <span className="text-[13px] font-bold text-slate-700">{formattedDate}</span>
                                     <span className="text-[11px] font-black text-indigo-600 font-mono">{formattedTime}</span>
                                 </div>
-                                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm group-hover:rotate-12 transition-transform">
+                                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                                     <Icon name="calendar" size={18} />
                                 </div>
                             </div>
-                            <button onClick={() => setIsLoggedIn(false)} className="text-rose-500 hover:bg-rose-50 p-3 rounded-2xl transition-all" title="خروج"><Icon name="log-out" size={24} /></button>
                         </div>
-                    </header>
+                    )}
                     <main className="flex-1">
                         {activeTab === 'dashboard' ? (
-                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} />
+                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} setIsLoggedIn={setIsLoggedIn} />
                         ) : activeTab === 'employees' ? (
                             <EmployeeTable employees={employees} onAddEmployee={addEmployee} onUpdateEmployee={updateEmployee} onDeleteEmployee={deleteEmployee} onBulkAdd={bulkAddEmployees} setActiveTab={setActiveTab} shifts={shifts} />
                         ) : activeTab === 'attendance' ? (
