@@ -799,18 +799,18 @@
             return (
                 <div className="space-y-8 animate-fade-in">
                     {previewData && (
-                        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                             <div className="bg-white w-full max-w-6xl rounded-[40px] shadow-2xl overflow-hidden animate-fade-in border border-slate-200 flex flex-col max-h-[90vh]">
-                                <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <div className="p-4 sm:p-8 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
                                     <div>
-                                        <h3 className="text-2xl font-black text-slate-800">مراجعة وتعديل بيانات البصمة</h3>
-                                        <p className="text-slate-500 font-bold text-sm">يمكنك تعديل المواعيد أو حذف السجلات قبل الحفظ</p>
+                                        <h3 className="text-xl sm:text-2xl font-black text-slate-800">مراجعة وتعديل بيانات البصمة</h3>
+                                        <p className="text-slate-500 font-bold text-xs sm:text-sm">يمكنك تعديل المواعيد أو حذف السجلات قبل الحفظ</p>
                                     </div>
-                                    <button onClick={() => setPreviewData(null)} className="p-3 rounded-2xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors">
+                                    <button onClick={() => setPreviewData(null)} className="p-2 sm:p-3 rounded-2xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors self-end sm:self-auto">
                                         <Icon name="x" size={24} />
                                     </button>
                                 </div>
-                                <div className="p-8 overflow-y-auto flex-1">
+                                <div className="p-8 overflow-y-auto overflow-x-auto flex-1">
                                     <table className="w-full text-right border-collapse">
                                         <thead className="bg-slate-100 text-slate-500 text-[10px] font-black uppercase sticky top-0 z-10">
                                             <tr>
@@ -921,13 +921,13 @@
                                 <span className="text-xs font-black text-blue-700">دورة الشهر: من يوم 26 حتى يوم 25 من الشهر التالي</span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
+                        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 w-full md:w-auto">
+                            <div className="relative w-full sm:w-auto">
                                 <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input 
                                     type="text" 
                                     placeholder="بحث بالاسم أو الكود..." 
-                                    className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all w-48 md:w-64"
+                                    className="w-full sm:w-auto bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all md:w-64"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -935,13 +935,13 @@
                             <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFingerprintUpload} />
                             <button 
                                 onClick={() => fileInputRef.current.click()}
-                                className="bg-emerald-600 text-white px-6 py-2.5 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-emerald-700 transition-all"
+                                className="w-full sm:w-auto justify-center bg-emerald-600 text-white px-6 py-2.5 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-emerald-700 transition-all"
                             >
                                 <Icon name="upload" size={18} /> رفع شيت بصمة
                             </button>
-                            <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+                            <div className="w-full sm:w-auto flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
                                 <Icon name="calendar" className="text-slate-400" size={20} />
-                                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="outline-none font-bold text-slate-700 bg-transparent" />
+                                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full outline-none font-bold text-slate-700 bg-transparent" />
                             </div>
                         </div>
                     </div>
@@ -962,7 +962,7 @@
                             </div>
                         </div>
                         <div className="lg:col-span-3">
-                            <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100">
+                            <div className="rounded-[40px] shadow-2xl overflow-x-auto overflow-y-hidden border bg-white border-slate-100">
                                 <table className="w-full text-right">
                                     <thead className="bg-slate-50 text-slate-500 text-[11px] font-black uppercase border-b">
                                         <tr>
@@ -1212,12 +1212,12 @@
                                 )}
                             </div>
 
-                            <div className="relative">
+                            <div className="relative w-full sm:w-auto">
                                 <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input 
                                     type="text" 
                                     placeholder="بحث بالاسم أو الكود..." 
-                                    className="bg-white border border-slate-200 rounded-xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all w-48"
+                                    className="w-full sm:w-auto bg-white border border-slate-200 rounded-xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all md:w-48"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -1414,14 +1414,14 @@
             };
 
             return (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                     <div className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl overflow-hidden animate-fade-in border border-slate-200">
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div className="p-4 sm:p-8 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
                             <div>
-                                <h3 className="text-2xl font-black text-slate-800">إدارة تسويات الموظف</h3>
-                                <p className="text-slate-500 font-bold text-sm">{emp.name} - شهر {month}</p>
+                                <h3 className="text-xl sm:text-2xl font-black text-slate-800">إدارة تسويات الموظف</h3>
+                                <p className="text-slate-500 font-bold text-xs sm:text-sm">{emp.name} - شهر {month}</p>
                             </div>
-                            <button onClick={onClose} className="p-3 rounded-2xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors">
+                            <button onClick={onClose} className="p-2 sm:p-3 rounded-2xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors self-end sm:self-auto">
                                 <Icon name="x" size={24} />
                             </button>
                         </div>
@@ -1508,7 +1508,7 @@
             };
 
             return (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                     <div className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl overflow-hidden animate-fade-in border border-slate-200">
                         <div className="p-4 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
                             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -1885,13 +1885,13 @@
                                 <p className="text-slate-500 font-bold tracking-wide text-xs">إدارة المستحقات، الاستقطاعات، والتسويات المالية لكل موظف</p>
                             </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="relative no-print">
+                        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 w-full md:w-auto">
+                            <div className="relative no-print w-full sm:w-auto">
                                 <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input 
                                     type="text" 
                                     placeholder="بحث بالاسم أو الكود..." 
-                                    className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all w-48 md:w-64"
+                                    className="w-full sm:w-auto bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all md:w-64"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -2110,7 +2110,7 @@
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
-                        <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-x-auto">
                             <table className="w-full text-right border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 border-b border-slate-100">
@@ -2212,7 +2212,7 @@
 
             return (
                 <div className="space-y-8 animate-fade-in">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="p-4 bg-emerald-600 text-white rounded-[25px] shadow-xl -rotate-3">
                                 <Icon name="clipboard-check" size={32} />
@@ -2222,13 +2222,13 @@
                                 <p className="text-slate-500 font-bold text-sm uppercase tracking-wider">نظام التقييم الدوري للأداء</p>
                             </div>
                         </div>
-                        <button onClick={() => setShowForm(true)} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
+                        <button onClick={() => setShowForm(true)} className="w-full sm:w-auto justify-center bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
                             <Icon name="plus" size={20} /> إضافة تقييم جديد
                         </button>
                     </div>
 
                     {showForm && (
-                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                             <div className="bg-white w-full max-w-xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-fade-in">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-2xl font-black text-slate-800">نموذج تقييم جديد</h3>
@@ -2247,7 +2247,7 @@
                                             {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                                         </select>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest">التاريخ</label>
                                             <input 
@@ -2362,7 +2362,7 @@
 
             return (
                 <div className="space-y-8 animate-fade-in">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="p-4 bg-blue-600 text-white rounded-[25px] shadow-xl rotate-6">
                                 <Icon name="folder-open" size={32} />
@@ -2372,17 +2372,17 @@
                                 <p className="text-slate-500 font-bold text-sm uppercase tracking-wider">إدارة ملفات ومستندات الموظفين</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
                             <select 
                                 value={selectedEmp}
                                 onChange={(e) => setSelectedEmp(e.target.value)}
-                                className="bg-white border border-slate-200 rounded-2xl px-6 py-4 font-bold shadow-sm focus:ring-2 focus:ring-indigo-500/20 outline-none min-w-[250px]"
+                                className="w-full sm:w-auto bg-white border border-slate-200 rounded-2xl px-6 py-4 font-bold shadow-sm focus:ring-2 focus:ring-indigo-500/20 outline-none min-w-[250px]"
                             >
                                 <option value="">اختر الموظف لعرض ملفاته...</option>
                                 {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                             </select>
                             {selectedEmp && (
-                                <label className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-3">
+                                <label className="w-full sm:w-auto justify-center bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-3">
                                     <Icon name="upload-cloud" size={20} /> رفع مستند جديد
                                     <input type="file" className="hidden" onChange={handleFileUpload} />
                                 </label>
@@ -2456,7 +2456,7 @@
 
             return (
                 <div className="space-y-8 animate-fade-in">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="p-4 bg-amber-500 text-white rounded-[25px] shadow-xl rotate-12">
                                 <Icon name="graduation-cap" size={32} />
@@ -2466,13 +2466,13 @@
                                 <p className="text-slate-500 font-bold text-sm uppercase tracking-wider">إدارة الدورات التدريبية والتطوير</p>
                             </div>
                         </div>
-                        <button onClick={() => setShowForm(true)} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
+                        <button onClick={() => setShowForm(true)} className="w-full sm:w-auto justify-center bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
                             <Icon name="plus" size={20} /> إضافة دورة تدريبية
                         </button>
                     </div>
 
                     {showForm && (
-                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                             <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-fade-in max-h-[90vh] overflow-y-auto">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-2xl font-black text-slate-800">إضافة دورة تدريبية جديدة</h3>
@@ -2490,7 +2490,7 @@
                                             placeholder="مثال: مهارات التواصل الفعال"
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest">المحاضر</label>
                                             <input 
@@ -2514,7 +2514,7 @@
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest">اختيار الحضور</label>
-                                        <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-40 overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                             {employees.map(e => (
                                                 <label key={e.id} className="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-xl transition-all">
                                                     <input 
@@ -2587,6 +2587,186 @@
             );
         };
 
+        const Resignations = ({ employees, resignations, setResignations, onUpdateEmployee }) => {
+            const [showModal, setShowModal] = useState(false);
+            const [formData, setFormData] = useState({ employeeId: '', date: '', reason: '', notes: '' });
+            const [searchQuery, setSearchQuery] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const emp = employees.find(e => e.id === formData.employeeId);
+                if (!emp) return;
+
+                const newResignation = {
+                    id: Date.now().toString(),
+                    ...formData,
+                    employeeName: emp.name,
+                    employeeCode: emp.code
+                };
+
+                setResignations([...resignations, newResignation]);
+                onUpdateEmployee({ ...emp, status: 'مستقيل' });
+                setShowModal(false);
+                setFormData({ employeeId: '', date: '', reason: '', notes: '' });
+            };
+
+            const deleteResignation = (id) => {
+                const res = resignations.find(r => r.id === id);
+                if (res) {
+                    const emp = employees.find(e => e.id === res.employeeId);
+                    if (emp) {
+                        onUpdateEmployee({ ...emp, status: 'نشط' });
+                    }
+                }
+                setResignations(resignations.filter(r => r.id !== id));
+            };
+
+            const filteredResignations = resignations.filter(r => 
+                r.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                r.employeeCode.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            return (
+                <div className="space-y-8 animate-fade-in">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
+                        <div>
+                            <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+                                <Icon name="user-minus" className="text-rose-500" size={32} /> إدارة الاستقالات
+                            </h2>
+                            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">متابعة الموظفين المستقيلين وأسباب الرحيل</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <div className="relative flex-1 md:w-64">
+                                <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="بحث بالاسم أو الكود..." 
+                                    className="w-full bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-rose-500/20 transition-all"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <button onClick={() => setShowModal(true)} className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-black shadow-lg hover:bg-rose-600 transition-all flex items-center gap-2">
+                                <Icon name="plus" size={18} /> إضافة استقالة
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm flex items-center gap-4">
+                            <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl">
+                                <Icon name="user-minus" size={24} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-wider">إجمالي الاستقالات</p>
+                                <p className="text-2xl font-black text-slate-800">{resignations.length}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-right border-collapse">
+                                <thead className="bg-slate-50 text-slate-500 text-[11px] font-black uppercase tracking-wider border-b border-slate-100">
+                                    <tr>
+                                        <th className="px-6 py-5">الموظف</th>
+                                        <th className="px-6 py-5">تاريخ الاستقالة</th>
+                                        <th className="px-6 py-5">السبب</th>
+                                        <th className="px-6 py-5">ملاحظات</th>
+                                        <th className="px-6 py-5 text-center no-print">إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {filteredResignations.length > 0 ? filteredResignations.map(res => (
+                                        <tr key={res.id} className="hover:bg-slate-50/50 transition-all group">
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-slate-800 font-black text-sm">{res.employeeName}</span>
+                                                    <span className="text-[10px] text-slate-400 font-mono">CODE: {res.employeeCode}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 font-mono text-xs font-bold text-slate-600">{res.date}</td>
+                                            <td className="px-6 py-4 text-xs font-bold text-slate-700">{res.reason}</td>
+                                            <td className="px-6 py-4 text-xs font-bold text-slate-500">{res.notes || '---'}</td>
+                                            <td className="px-6 py-4 text-center no-print">
+                                                <button onClick={() => deleteResignation(res.id)} className="p-2 text-slate-300 hover:text-rose-600 transition-colors">
+                                                    <Icon name="trash-2" size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )) : (
+                                        <tr>
+                                            <td colSpan="5" className="px-6 py-20 text-center text-slate-300 font-black text-xl uppercase tracking-widest">لا توجد بيانات استقالات</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {showModal && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                            <div className="my-auto w-full max-w-lg p-8 rounded-[40px] shadow-2xl animate-fade-in border bg-white border-slate-200">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="text-2xl font-black text-slate-800">تسجيل استقالة جديد</h3>
+                                    <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-rose-500 transition-colors">
+                                        <Icon name="x" size={24} />
+                                    </button>
+                                </div>
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-black text-slate-500 uppercase">الموظف</label>
+                                        <select 
+                                            required 
+                                            className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800 focus:ring-2 focus:ring-rose-500/20 transition-all"
+                                            value={formData.employeeId}
+                                            onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
+                                        >
+                                            <option value="">اختر الموظف...</option>
+                                            {employees.filter(e => e.status === 'نشط').map(e => (
+                                                <option key={e.id} value={e.id}>{e.name} ({e.code})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-black text-slate-500 uppercase">تاريخ الاستقالة</label>
+                                        <input 
+                                            required 
+                                            type="date" 
+                                            className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800 focus:ring-2 focus:ring-rose-500/20 transition-all"
+                                            value={formData.date}
+                                            onChange={(e) => setFormData({...formData, date: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-black text-slate-500 uppercase">السبب</label>
+                                        <input 
+                                            required 
+                                            type="text" 
+                                            placeholder="مثال: ظروف شخصية، عرض عمل آخر..."
+                                            className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800 focus:ring-2 focus:ring-rose-500/20 transition-all"
+                                            value={formData.reason}
+                                            onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-black text-slate-500 uppercase">ملاحظات إضافية</label>
+                                        <textarea 
+                                            className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800 focus:ring-2 focus:ring-rose-500/20 transition-all resize-none"
+                                            rows="3"
+                                            value={formData.notes}
+                                            onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full bg-rose-600 text-white font-black py-4 rounded-3xl text-xl shadow-xl hover:bg-rose-700 transition-all">حفظ الاستقالة</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         const Settings = ({ appData, onRestore, onClear, shifts, setShifts }) => {
             const fileInputRef = useRef(null);
             const [showShiftModal, setShowShiftModal] = useState(false);
@@ -2653,11 +2833,11 @@
 
             return (
                 <div className="max-w-4xl mx-auto space-y-10 animate-fade-in pb-20">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <h2 className="text-4xl font-black text-slate-800">إعدادات النظام</h2>
                         <button 
                             onClick={onClear}
-                            className="bg-rose-50 text-rose-600 px-6 py-3 rounded-2xl font-black flex items-center gap-2 hover:bg-rose-600 hover:text-white transition-all border border-rose-100"
+                            className="w-full sm:w-auto justify-center bg-rose-50 text-rose-600 px-6 py-3 rounded-2xl font-black flex items-center gap-2 hover:bg-rose-600 hover:text-white transition-all border border-rose-100"
                         >
                             <Icon name="trash-2" size={20} /> مسح كافة البيانات
                         </button>
@@ -2666,7 +2846,7 @@
                     <div className="bg-white rounded-[40px] p-10 border border-slate-100 shadow-xl space-y-10">
                         {/* Shifts Management */}
                         <div className="bg-indigo-50/50 rounded-[30px] p-8 border border-indigo-100">
-                            <div className="flex items-center justify-between mb-8">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-indigo-100 text-indigo-600 rounded-2xl">
                                         <Icon name="clock" size={24} />
@@ -2678,7 +2858,7 @@
                                 </div>
                                 <button 
                                     onClick={() => { setEditingShift(null); setShiftForm({ name: '', start: '09:00', end: '17:00' }); setShowShiftModal(true); }}
-                                    className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all"
+                                    className="w-full sm:w-auto justify-center bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all"
                                 >
                                     <Icon name="plus" size={18} /> إضافة وردية
                                 </button>
@@ -2711,11 +2891,11 @@
                         </div>
 
                         {showShiftModal && (
-                            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                                <div className="w-full max-w-md p-8 rounded-[40px] shadow-2xl animate-fade-in border bg-white border-slate-200">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="text-2xl font-black text-slate-800">{editingShift ? 'تعديل الوردية' : 'إضافة وردية جديدة'}</h3>
-                                        <button onClick={() => setShowShiftModal(false)} className="text-slate-400 hover:text-rose-500 transition-colors">
+                            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                                <div className="w-full max-w-md p-6 sm:p-8 rounded-[40px] shadow-2xl animate-fade-in border bg-white border-slate-200">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                        <h3 className="text-xl sm:text-2xl font-black text-slate-800">{editingShift ? 'تعديل الوردية' : 'إضافة وردية جديدة'}</h3>
+                                        <button onClick={() => setShowShiftModal(false)} className="text-slate-400 hover:text-rose-500 transition-colors self-end sm:self-auto">
                                             <Icon name="x-circle" size={24} />
                                         </button>
                                     </div>
@@ -2731,7 +2911,7 @@
                                                 placeholder="مثال: الوردية المسائية"
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-1">
                                                 <label className="text-xs font-black text-slate-500 uppercase">وقت الحضور</label>
                                                 <input 
@@ -2865,6 +3045,7 @@
                 { id: 'evaluations', title: 'تقييم الموظف', sub: 'التقييمات الدورية', icon: 'star', color: 'bg-yellow-500' },
                 { id: 'digital_files', title: 'الأرشيف الرقمي', sub: 'ملفات الموظفين (PDF)', icon: 'folder', color: 'bg-red-500' },
                 { id: 'training', title: 'تدريبات الموظفين', sub: 'الدورات والنتائج', icon: 'graduation-cap', color: 'bg-blue-500' },
+                { id: 'resignations', title: 'الاستقالات', sub: 'إدارة طلبات الاستقالة', icon: 'user-minus', color: 'bg-rose-500' },
                 { id: 'settings', title: 'إعدادات النظام', sub: 'النسخ الاحتياطي والتهيئة', icon: 'settings', color: 'bg-slate-600' },
             ];
 
@@ -2877,12 +3058,12 @@
 
             return (
                 <div className="space-y-10 animate-fade-in">
-                    <div className="flex justify-between items-end">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                         <div className="pr-4">
                             <h1 className="text-4xl font-black text-slate-800 mb-2">مرحباً بك يا {userName} 👋</h1>
                             <p className="text-slate-500 font-bold tracking-wide">إدارة أسهل… لقرارات أدق.</p>
                         </div>
-                        <button onClick={() => setIsLoggedIn(false)} className="flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-100 px-6 py-3 rounded-2xl font-black transition-all shadow-sm">
+                        <button onClick={() => setIsLoggedIn(false)} className="w-full sm:w-auto justify-center flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-100 px-6 py-3 rounded-2xl font-black transition-all shadow-sm">
                             <Icon name="log-out" size={20} />
                             تسجيل الخروج
                         </button>
@@ -2961,12 +3142,12 @@
                             </h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">إدارة الرصيد واستهلاك الأيام والكسور (0.5)</p>
                         </div>
-                        <div className="relative">
+                        <div className="relative w-full sm:w-auto">
                             <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input 
                                 type="text" 
                                 placeholder="بحث بالاسم أو الكود..." 
-                                className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-pink-500/20 transition-all w-48 md:w-64"
+                                className="w-full sm:w-auto bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-pink-500/20 transition-all md:w-64"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -3124,17 +3305,17 @@
 
             return (
                 <div className="space-y-8 animate-fade-in">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 className="text-3xl font-black text-slate-800">إدارة عقود العمل</h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">تفاصيل التعيين والعقود القانونية</p>
                         </div>
-                        <div className="relative">
+                        <div className="relative w-full sm:w-auto">
                             <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input 
                                 type="text" 
                                 placeholder="بحث بالاسم أو الكود..." 
-                                className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-teal-500/20 transition-all w-48 md:w-64"
+                                className="w-full sm:w-auto bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-teal-500/20 transition-all md:w-64"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -3293,17 +3474,17 @@
 
             return (
                 <div className="space-y-8 animate-fade-in">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 className="text-3xl font-black text-slate-800">التأمينات الاجتماعية</h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">إدارة ملفات التأمين وحصص المساهمة</p>
                         </div>
-                        <div className="relative">
+                        <div className="relative w-full sm:w-auto">
                             <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input 
                                 type="text" 
                                 placeholder="بحث بالاسم أو الكود..." 
-                                className="bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all w-48 md:w-64"
+                                className="w-full sm:w-auto bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all md:w-64"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -3593,7 +3774,7 @@
                     </div>
 
                     {deleteConfirmId && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                             <div className="bg-white p-8 rounded-[40px] shadow-2xl max-w-sm w-full text-center border-4 border-rose-100 animate-fade-in">
                                 <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                                     <Icon name="alert-triangle" size={40} />
@@ -3635,18 +3816,18 @@
                             <h2 className="text-2xl font-black text-slate-800">سجل استلام مسوغات التعيين</h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">متابعة الوثائق المكتملة لكل موظف</p>
                         </div>
-                        <div className="flex gap-3 items-center">
-                            <div className="relative">
+                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full md:w-auto">
+                            <div className="relative w-full sm:w-auto">
                                 <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input 
                                     type="text" 
                                     placeholder="بحث بالاسم أو الكود..." 
-                                    className="bg-white border border-slate-200 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500/20 transition-all w-48 md:w-64"
+                                    className="w-full sm:w-auto bg-white border border-slate-200 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500/20 transition-all md:w-64"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <button onClick={() => setView('folders')} className="px-6 py-3 bg-white text-slate-800 border-2 border-slate-200 rounded-2xl font-black">العودة للمجلدات</button>
+                            <button onClick={() => setView('folders')} className="w-full sm:w-auto px-6 py-3 bg-white text-slate-800 border-2 border-slate-200 rounded-2xl font-black">العودة للمجلدات</button>
                         </div>
                     </div>
                     <div className="rounded-[30px] shadow-2xl overflow-hidden border bg-white border-slate-200 print-container">
@@ -3686,7 +3867,7 @@
             };
 
             return (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 print:static print:bg-transparent print:p-0 print:m-0">
+                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto print:static print:bg-transparent print:p-0 print:m-0">
                     <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-fade-in border border-slate-200 flex flex-col max-h-[90vh] print:max-w-none print:border-none print:shadow-none print:rounded-none print:max-h-none print:block print:m-0 print:p-0">
                         <div className="p-4 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print shrink-0">
                             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -3788,7 +3969,7 @@
             const avgKPI = ((parseFloat(kpiData.prod || 0) + parseFloat(kpiData.qual || 0) + parseFloat(kpiData.comm || 0) + parseFloat(kpiData.team || 0)) / 4).toFixed(1);
 
             return (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[150] flex items-center justify-center p-6 no-print">
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[150] flex items-center justify-center p-4 sm:p-6 overflow-y-auto no-print">
                     <div className="bg-white w-full max-w-5xl rounded-[50px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in">
                         <div className="p-8 bg-indigo-600 text-white flex justify-between items-center relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
@@ -3911,7 +4092,7 @@
                                     <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
                                         <Icon name="folder" className="text-rose-500" /> الأرشيف الرقمي
                                     </h3>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {digitalFiles.length === 0 ? (
                                             <div className="col-span-full bg-white p-10 rounded-[40px] text-center text-slate-300 font-bold border border-dashed">لا توجد ملفات مرفوعة</div>
                                         ) : (
@@ -4043,10 +4224,10 @@
             const handleSubmit = (e) => { e.preventDefault(); editingEmp ? onUpdateEmployee({ ...formData, id: editingEmp.id }) : onAddEmployee(formData); setShowModal(false); };
             return (
                 <div className={`animate-fade-in ${warningEmp ? 'print:space-y-0 print:m-0 print:p-0' : 'space-y-6'}`}>
-                    <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${warningEmp ? 'print:hidden' : ''}`}><div><h2 className="text-3xl font-black text-slate-800">قائمة الموظفين</h2><p className="text-slate-500 font-bold">إدارة بيانات الكادر البشري في النظام</p></div><div className="flex flex-wrap items-center gap-3"><div className="relative"><Icon name="filter" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" /><select value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} className="pr-10 pl-4 py-2.5 rounded-2xl border-2 font-bold focus:outline-none bg-white border-slate-200 text-slate-700 appearance-none cursor-pointer"><option value="all">كافة الأقسام</option>{departmentsList.filter(d => d !== 'all').map(d => <option key={d} value={d}>{d}</option>)}</select></div><input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleExcelUpload} />
-<button onClick={() => fileInputRef.current.click()} className="px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg bg-emerald-50 text-emerald-700 border border-emerald-100"><Icon name="file-spreadsheet" size={20} /> استيراد Excel</button>
-<button onClick={() => setActiveTab('attendance')} className="px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg bg-blue-50 text-blue-700 border border-blue-100"><Icon name="fingerprint" size={20} /> رفع بيانات البصمة</button>
-<button onClick={() => { setEditingEmp(null); setFormData({ name: '', code: '', joinDate: '', department: '', jobTitle: '', nationalId: '', phone: '', address: '', shift: Object.values(shifts)[0]?.name || '' }); setShowModal(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all"><Icon name="plus" size={20} /> إضافة موظف جديد</button></div></div>
+                    <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${warningEmp ? 'print:hidden' : ''}`}><div><h2 className="text-2xl sm:text-3xl font-black text-slate-800">قائمة الموظفين</h2><p className="text-slate-500 font-bold">إدارة بيانات الكادر البشري في النظام</p></div><div className="flex flex-wrap items-center gap-3 w-full md:w-auto"><div className="relative w-full sm:w-auto"><Icon name="filter" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" /><select value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} className="w-full sm:w-auto pr-10 pl-4 py-2.5 rounded-2xl border-2 font-bold focus:outline-none bg-white border-slate-200 text-slate-700 appearance-none cursor-pointer"><option value="all">كافة الأقسام</option>{departmentsList.filter(d => d !== 'all').map(d => <option key={d} value={d}>{d}</option>)}</select></div><input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleExcelUpload} />
+<button onClick={() => fileInputRef.current.click()} className="flex-1 sm:flex-none justify-center px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg bg-emerald-50 text-emerald-700 border border-emerald-100"><Icon name="file-spreadsheet" size={20} /> استيراد Excel</button>
+<button onClick={() => setActiveTab('attendance')} className="flex-1 sm:flex-none justify-center px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg bg-blue-50 text-blue-700 border border-blue-100"><Icon name="fingerprint" size={20} /> رفع بيانات البصمة</button>
+<button onClick={() => { setEditingEmp(null); setFormData({ name: '', code: '', joinDate: '', department: '', jobTitle: '', nationalId: '', phone: '', address: '', shift: Object.values(shifts)[0]?.name || '' }); setShowModal(true); }} className="w-full sm:w-auto justify-center bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all"><Icon name="plus" size={20} /> إضافة موظف جديد</button></div></div>
                     <div className={`rounded-[40px] shadow-xl overflow-hidden border bg-white border-slate-100 ${warningEmp ? 'print:hidden' : ''}`}>
                         <div className="overflow-x-auto">
                             <table className="w-full text-right border-collapse">
@@ -4063,7 +4244,7 @@
                             </table>
                         </div>
                     </div>
-                    {showModal && (<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"><div className="w-full max-w-4xl p-10 rounded-[50px] shadow-2xl animate-fade-in border bg-white border-slate-200"><div className="flex justify-between items-center mb-8"><h3 className="text-3xl font-black text-slate-800">{editingEmp ? 'تعديل بيانات الموظف' : 'إضافة موظف جديد'}</h3><button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-rose-500"><Icon name="x" size={32} /></button></div><form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الاسم الكامل</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الكود الوظيفي</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">تاريخ التعيين</label><input required type="date" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.joinDate} onChange={(e) => setFormData({...formData, joinDate: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الإدارة</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">المسمى الوظيفي</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.jobTitle} onChange={(e) => setFormData({...formData, jobTitle: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الرقم القومي</label><input required type="text" pattern="\d{14}" title="يجب إدخال 14 رقم" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.nationalId} onChange={(e) => setFormData({...formData, nationalId: e.target.value.replace(/\D/g, '')})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">رقم الهاتف</label><input required type="tel" pattern="01[0125]\d{8}" title="يجب إدخال رقم هاتف مصري صحيح" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/[^\d+]/g, '')})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الوردية</label><select required className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.shift} onChange={(e) => setFormData({...formData, shift: e.target.value})}>{Object.values(shifts).map(s => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div><div className="md:col-span-2 space-y-1"><label className="text-xs font-black text-slate-500 uppercase">العنوان السكني</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} /></div><div className="md:col-span-3 pt-6"><button type="submit" className="w-full bg-indigo-600 text-white font-black py-4 rounded-3xl text-xl shadow-xl hover:bg-indigo-700 transition-all">حفظ البيانات</button></div></form></div></div>)}
+                    {showModal && (<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"><div className="my-auto w-full max-w-4xl p-6 sm:p-10 rounded-[30px] sm:rounded-[50px] shadow-2xl animate-fade-in border bg-white border-slate-200"><div className="flex justify-between items-center mb-8"><h3 className="text-2xl sm:text-3xl font-black text-slate-800">{editingEmp ? 'تعديل بيانات الموظف' : 'إضافة موظف جديد'}</h3><button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-rose-500"><Icon name="x" size={32} /></button></div><form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الاسم الكامل</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الكود الوظيفي</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">تاريخ التعيين</label><input required type="date" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.joinDate} onChange={(e) => setFormData({...formData, joinDate: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الإدارة</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">المسمى الوظيفي</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.jobTitle} onChange={(e) => setFormData({...formData, jobTitle: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الرقم القومي</label><input required type="text" pattern="\d{14}" title="يجب إدخال 14 رقم" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.nationalId} onChange={(e) => setFormData({...formData, nationalId: e.target.value.replace(/\D/g, '')})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">رقم الهاتف</label><input required type="tel" pattern="01[0125]\d{8}" title="يجب إدخال رقم هاتف مصري صحيح" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/[^\d+]/g, '')})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الوردية</label><select required className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.shift} onChange={(e) => setFormData({...formData, shift: e.target.value})}>{Object.values(shifts).map(s => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div><div className="md:col-span-2 space-y-1"><label className="text-xs font-black text-slate-500 uppercase">العنوان السكني</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} /></div><div className="md:col-span-3 pt-6"><button type="submit" className="w-full bg-indigo-600 text-white font-black py-4 rounded-3xl text-xl shadow-xl hover:bg-indigo-700 transition-all">حفظ البيانات</button></div></form></div></div>)}
                     {viewingEmp && <EmployeeProfile employee={viewingEmp} employees={employees} onClose={() => setViewingEmp(null)} />}
                     {warningEmp && <WarningModal emp={warningEmp} onClose={() => setWarningEmp(null)} />}
                 </div>
@@ -4360,7 +4541,7 @@
             )}
 
                     {showAddModal && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                             <div className="w-full max-w-lg p-8 rounded-[40px] shadow-2xl animate-fade-in border bg-white border-slate-200">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-2xl font-black text-slate-800">إضافة مرشح جديد</h3>
@@ -4389,7 +4570,7 @@
                                             onChange={(e) => setNewCandidate({...newCandidate, role: e.target.value})}
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-1">
                                             <label className="text-xs font-black text-slate-500 uppercase">سنوات الخبرة</label>
                                             <input 
@@ -4425,7 +4606,7 @@
                     )}
 
                     {editingCandidate && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
                             <div className="w-full max-w-lg p-8 rounded-[40px] shadow-2xl animate-fade-in border bg-white border-slate-200">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-2xl font-black text-slate-800">تعديل بيانات المرشح</h3>
@@ -4454,7 +4635,7 @@
                                             onChange={(e) => setEditingCandidate({...editingCandidate, role: e.target.value})}
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-1">
                                             <label className="text-xs font-black text-slate-500 uppercase">سنوات الخبرة</label>
                                             <input 
@@ -4722,7 +4903,7 @@
             if (selectedResult) {
                 return (
                     <div className="space-y-8 animate-fade-in pb-20">
-                        <div className="flex justify-between items-center no-print">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
                             <div className="flex items-center gap-4">
                                 <button onClick={() => setSelectedResult(null)} className="p-3 rounded-2xl bg-slate-900 text-white shadow-lg hover:bg-indigo-600 transition-all flex items-center gap-2">
                                     <Icon name="arrow-right" size={20} />
@@ -4874,20 +5055,20 @@
                                             <p className="text-xs font-black text-slate-700">{selectedResult.fileName}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-end gap-6">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between sm:justify-end gap-6">
                                         <button 
                                             onClick={() => saveCandidate(selectedResult)}
                                             disabled={isSaving}
-                                            className="px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl text-xs font-black hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2"
+                                            className="w-full sm:w-auto px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl text-xs font-black hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center gap-2"
                                         >
                                             <Icon name="save" size={16} />
                                             {isSaving ? 'جاري الحفظ...' : 'حفظ في قاعدة البيانات'}
                                         </button>
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-end gap-1">
+                                        <div className="text-right w-full sm:w-auto">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-start sm:justify-end gap-1">
                                                 بيانات الاتصال <Icon name="contact" size={12} />
                                             </p>
-                                            <div className="flex gap-2 mt-1">
+                                            <div className="flex flex-wrap gap-2 mt-1 justify-start sm:justify-end">
                                                 <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-lg text-[10px] font-black flex items-center gap-1">
                                                     <Icon name="phone" size={10} /> {selectedResult.phone}
                                                 </span>
@@ -5167,14 +5348,14 @@
 
             return (
                 <div className="p-8 space-y-8 animate-fade-in" dir="rtl">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <h2 className="text-3xl font-black text-slate-800 tracking-tight">إعدادات لائحة الحضور</h2>
                             <p className="text-slate-500 font-bold mt-1">تخصيص قواعد التأخير، الانصراف المبكر، والغياب.</p>
                         </div>
                         <button 
                             onClick={saveSettings}
-                            className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2"
+                            className="w-full sm:w-auto justify-center px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2"
                         >
                             <Icon name="save" size={20} />
                             حفظ الإعدادات
@@ -5213,7 +5394,7 @@
                                 <div className="space-y-3">
                                     <p className="text-sm font-black text-slate-700">شرائح الخصم:</p>
                                     {rules.lateTiers.map((tier, i) => (
-                                        <div key={i} className="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
+                                        <div key={i} className="flex flex-wrap items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
                                             <span className="text-xs font-bold text-slate-500">من</span>
                                             <input 
                                                 type="number" 
@@ -5239,7 +5420,7 @@
                                             <span className="text-xs font-bold text-slate-500">ساعة خصم</span>
                                             <button 
                                                 onClick={() => removeTier(i)}
-                                                className="absolute -left-2 top-1/2 -translate-y-1/2 p-1.5 bg-rose-50 text-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
+                                                className="absolute -left-2 top-1/2 -translate-y-1/2 p-1.5 bg-rose-50 text-rose-500 rounded-lg sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
                                             >
                                                 <Icon name="trash-2" size={14} />
                                             </button>
@@ -5280,7 +5461,7 @@
                                 <div className="space-y-3">
                                     <p className="text-sm font-black text-slate-700">شرائح الانصراف المبكر:</p>
                                     {(rules.earlyTiers || []).map((tier, i) => (
-                                        <div key={i} className="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
+                                        <div key={i} className="flex flex-wrap items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
                                             <span className="text-xs font-bold text-slate-500">من</span>
                                             <input 
                                                 type="number" 
@@ -5306,7 +5487,7 @@
                                             <span className="text-xs font-bold text-slate-500">ساعة خصم</span>
                                             <button 
                                                 onClick={() => removeEarlyTier(i)}
-                                                className="absolute -left-2 top-1/2 -translate-y-1/2 p-1.5 bg-rose-50 text-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
+                                                className="absolute -left-2 top-1/2 -translate-y-1/2 p-1.5 bg-rose-50 text-rose-500 rounded-lg sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
                                             >
                                                 <Icon name="trash-2" size={14} />
                                             </button>
@@ -5351,6 +5532,10 @@
             const [calendarEvents, setCalendarEvents] = useState(() => {
                 const saved = localStorage.getItem('hr_calendar');
                 return saved ? JSON.parse(saved) : INITIAL_CALENDAR_EVENTS;
+            });
+            const [resignations, setResignations] = useState(() => {
+                const saved = localStorage.getItem('hr_resignations');
+                return saved ? JSON.parse(saved) : [];
             });
             const [shifts, setShifts] = useState(() => {
                 const saved = localStorage.getItem('hr_shifts');
@@ -5443,6 +5628,7 @@
                     localStorage.setItem('hr_attendance', JSON.stringify(attendanceLog));
                     localStorage.setItem('hr_payroll', JSON.stringify(payrollRecords));
                     localStorage.setItem('hr_calendar', JSON.stringify(calendarEvents));
+                    localStorage.setItem('hr_resignations', JSON.stringify(resignations));
                     localStorage.setItem('hr_shifts', JSON.stringify(shifts));
                     localStorage.setItem('hr_attendance_rules', JSON.stringify(attendanceRules));
                     
@@ -5470,6 +5656,7 @@
                 if (data.contractRecords) setContractRecords(data.contractRecords);
                 if (data.payrollRecords) setPayrollRecords(data.payrollRecords);
                 if (data.calendarEvents) setCalendarEvents(data.calendarEvents);
+                if (data.resignations) setResignations(data.resignations);
                 if (data.shifts) setShifts(data.shifts);
             };
 
@@ -5481,6 +5668,7 @@
                     setContractRecords({});
                     setPayrollRecords({});
                     setCalendarEvents([]);
+                    setResignations([]);
                     setShifts(INITIAL_SHIFTS);
                     alert('تم مسح كافة البيانات بنجاح.');
                 }
@@ -5515,12 +5703,12 @@
             return (
                 <div className="min-h-screen flex flex-col desktop-container px-6 py-8">
                     {activeTab !== 'dashboard' && (
-                        <div className="mb-6 flex justify-between items-center no-print">
-                            <button onClick={() => setActiveTab('dashboard')} className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl font-black transition-all shadow-sm border border-slate-200">
+                        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
+                            <button onClick={() => setActiveTab('dashboard')} className="w-full sm:w-auto justify-center flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl font-black transition-all shadow-sm border border-slate-200">
                                 <Icon name="arrow-right" size={20} />
                                 عودة إلى لوحة التحكم
                             </button>
-                            <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
                                 <div className="flex flex-col text-right leading-tight">
                                     <span className="text-[13px] font-bold text-slate-700">{formattedDate}</span>
                                     <span className="text-[11px] font-black text-indigo-600 font-mono">{formattedTime}</span>
@@ -5566,8 +5754,10 @@
                             <DigitalFiles employees={employees} />
                         ) : activeTab === 'training' ? (
                             <Training employees={employees} />
+                        ) : activeTab === 'resignations' ? (
+                            <Resignations employees={employees} resignations={resignations} setResignations={setResignations} onUpdateEmployee={updateEmployee} />
                         ) : activeTab === 'settings' ? (
-                            <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, shifts }} onRestore={handleRestore} onClear={handleClear} shifts={shifts} setShifts={setShifts} />
+                            <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts }} onRestore={handleRestore} onClear={handleClear} shifts={shifts} setShifts={setShifts} />
                         ) : (
                             <div className="text-center py-40 text-slate-300 font-black text-4xl uppercase tracking-[0.2em] animate-pulse">سيتم التفعيل قريباً</div>
                         )}
