@@ -2075,6 +2075,518 @@
             );
         };
 
+        const KPIs = ({ employees }) => {
+            const [kpiData, setKpiData] = useState(() => {
+                const saved = localStorage.getItem('hr_kpis');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            useEffect(() => {
+                localStorage.setItem('hr_kpis', JSON.stringify(kpiData));
+            }, [kpiData]);
+
+            const updateKPI = (empId, metric, value) => {
+                setKpiData(prev => ({
+                    ...prev,
+                    [empId]: {
+                        ...(prev[empId] || {}),
+                        [metric]: value
+                    }
+                }));
+            };
+
+            return (
+                <div className="space-y-8 animate-fade-in">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="p-4 bg-indigo-600 text-white rounded-[25px] shadow-xl rotate-3">
+                                <Icon name="trending-up" size={32} />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black text-slate-800 tracking-tight">مؤشرات الأداء (KPIs)</h2>
+                                <p className="text-slate-500 font-bold text-sm uppercase tracking-wider">متابعة وتحليل أداء الموظفين</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                            <table className="w-full text-right border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-100">
+                                        <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest">الموظف</th>
+                                        <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-center">الإنتاجية (%)</th>
+                                        <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-center">الجودة (%)</th>
+                                        <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-center">الالتزام (%)</th>
+                                        <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-center">العمل الجماعي (%)</th>
+                                        <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-center">المتوسط العام</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {employees.map(emp => {
+                                        const data = kpiData[emp.id] || { prod: 0, qual: 0, comm: 0, team: 0 };
+                                        const avg = ((parseFloat(data.prod || 0) + parseFloat(data.qual || 0) + parseFloat(data.comm || 0) + parseFloat(data.team || 0)) / 4).toFixed(1);
+                                        
+                                        return (
+                                            <tr key={emp.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
+                                                <td className="p-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xs">{emp.name.charAt(0)}</div>
+                                                        <div>
+                                                            <p className="font-black text-slate-800">{emp.name}</p>
+                                                            <p className="text-[10px] font-bold text-slate-400">{emp.position}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-6">
+                                                    <input 
+                                                        type="number" 
+                                                        min="0" max="100"
+                                                        value={data.prod}
+                                                        onChange={(e) => updateKPI(emp.id, 'prod', e.target.value)}
+                                                        className="w-20 mx-auto block bg-slate-50 border border-slate-100 rounded-xl p-2 text-center font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                                    />
+                                                </td>
+                                                <td className="p-6">
+                                                    <input 
+                                                        type="number" 
+                                                        min="0" max="100"
+                                                        value={data.qual}
+                                                        onChange={(e) => updateKPI(emp.id, 'qual', e.target.value)}
+                                                        className="w-20 mx-auto block bg-slate-50 border border-slate-100 rounded-xl p-2 text-center font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                                    />
+                                                </td>
+                                                <td className="p-6">
+                                                    <input 
+                                                        type="number" 
+                                                        min="0" max="100"
+                                                        value={data.comm}
+                                                        onChange={(e) => updateKPI(emp.id, 'comm', e.target.value)}
+                                                        className="w-20 mx-auto block bg-slate-50 border border-slate-100 rounded-xl p-2 text-center font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                                    />
+                                                </td>
+                                                <td className="p-6">
+                                                    <input 
+                                                        type="number" 
+                                                        min="0" max="100"
+                                                        value={data.team}
+                                                        onChange={(e) => updateKPI(emp.id, 'team', e.target.value)}
+                                                        className="w-20 mx-auto block bg-slate-50 border border-slate-100 rounded-xl p-2 text-center font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                                    />
+                                                </td>
+                                                <td className="p-6 text-center">
+                                                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl font-black text-sm ${parseFloat(avg) >= 80 ? 'bg-emerald-50 text-emerald-600' : parseFloat(avg) >= 50 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'}`}>
+                                                        {avg}%
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Evaluations = ({ employees }) => {
+            const [evaluations, setEvaluations] = useState(() => {
+                const saved = localStorage.getItem('hr_evaluations');
+                return saved ? JSON.parse(saved) : [];
+            });
+            const [showForm, setShowForm] = useState(false);
+            const [newEval, setNewEval] = useState({ empId: '', date: new Date().toISOString().split('T')[0], score: 5, notes: '' });
+
+            useEffect(() => {
+                localStorage.setItem('hr_evaluations', JSON.stringify(evaluations));
+            }, [evaluations]);
+
+            const addEval = (e) => {
+                e.preventDefault();
+                if (!newEval.empId) return alert('برجاء اختيار موظف');
+                setEvaluations([{ ...newEval, id: Date.now().toString() }, ...evaluations]);
+                setShowForm(false);
+                setNewEval({ empId: '', date: new Date().toISOString().split('T')[0], score: 5, notes: '' });
+            };
+
+            return (
+                <div className="space-y-8 animate-fade-in">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="p-4 bg-emerald-600 text-white rounded-[25px] shadow-xl -rotate-3">
+                                <Icon name="clipboard-check" size={32} />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black text-slate-800 tracking-tight">تقييم الموظفين</h2>
+                                <p className="text-slate-500 font-bold text-sm uppercase tracking-wider">نظام التقييم الدوري للأداء</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowForm(true)} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
+                            <Icon name="plus" size={20} /> إضافة تقييم جديد
+                        </button>
+                    </div>
+
+                    {showForm && (
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+                            <div className="bg-white w-full max-w-xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-fade-in">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-2xl font-black text-slate-800">نموذج تقييم جديد</h3>
+                                    <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-rose-500"><Icon name="x" size={24} /></button>
+                                </div>
+                                <form onSubmit={addEval} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">الموظف</label>
+                                        <select 
+                                            required
+                                            value={newEval.empId}
+                                            onChange={(e) => setNewEval({...newEval, empId: e.target.value})}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                        >
+                                            <option value="">اختر الموظف...</option>
+                                            {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">التاريخ</label>
+                                            <input 
+                                                type="date" 
+                                                required
+                                                value={newEval.date}
+                                                onChange={(e) => setNewEval({...newEval, date: e.target.value})}
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">التقييم (1-10)</label>
+                                            <input 
+                                                type="number" 
+                                                min="1" max="10"
+                                                required
+                                                value={newEval.score}
+                                                onChange={(e) => setNewEval({...newEval, score: e.target.value})}
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">ملاحظات التقييم</label>
+                                        <textarea 
+                                            placeholder="اكتب ملاحظاتك هنا..."
+                                            value={newEval.notes}
+                                            onChange={(e) => setNewEval({...newEval, notes: e.target.value})}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none min-h-[120px]"
+                                        ></textarea>
+                                    </div>
+                                    <button type="submit" className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-xl text-xl">حفظ التقييم</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {evaluations.map(ev => {
+                            const emp = employees.find(e => e.id === ev.empId);
+                            return (
+                                <div key={ev.id} className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">{emp?.name.charAt(0)}</div>
+                                            <div>
+                                                <h4 className="font-black text-slate-800">{emp?.name || 'موظف محذوف'}</h4>
+                                                <p className="text-[10px] font-bold text-slate-400">{ev.date}</p>
+                                            </div>
+                                        </div>
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg ${ev.score >= 8 ? 'bg-emerald-50 text-emerald-600' : ev.score >= 5 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'}`}>
+                                            {ev.score}
+                                        </div>
+                                    </div>
+                                    <p className="text-slate-600 text-sm leading-relaxed">{ev.notes || 'لا توجد ملاحظات'}</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const DigitalFiles = ({ employees }) => {
+            const [files, setFiles] = useState(() => {
+                const saved = localStorage.getItem('hr_digital_files');
+                return saved ? JSON.parse(saved) : {};
+            });
+            const [selectedEmp, setSelectedEmp] = useState('');
+
+            useEffect(() => {
+                localStorage.setItem('hr_digital_files', JSON.stringify(files));
+            }, [files]);
+
+            const handleFileUpload = (e) => {
+                if (!selectedEmp) return alert('برجاء اختيار موظف أولاً');
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const newFile = {
+                        id: Date.now().toString(),
+                        name: file.name,
+                        type: file.type,
+                        date: new Date().toISOString().split('T')[0],
+                        data: evt.target.result
+                    };
+                    setFiles(prev => ({
+                        ...prev,
+                        [selectedEmp]: [...(prev[selectedEmp] || []), newFile]
+                    }));
+                };
+                reader.readAsDataURL(file);
+            };
+
+            const deleteFile = (empId, fileId) => {
+                if (confirm('هل أنت متأكد من حذف هذا الملف؟')) {
+                    setFiles(prev => ({
+                        ...prev,
+                        [empId]: prev[empId].filter(f => f.id !== fileId)
+                    }));
+                }
+            };
+
+            const downloadFile = (file) => {
+                const link = document.createElement('a');
+                link.href = file.data;
+                link.download = file.name;
+                link.click();
+            };
+
+            return (
+                <div className="space-y-8 animate-fade-in">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="p-4 bg-blue-600 text-white rounded-[25px] shadow-xl rotate-6">
+                                <Icon name="folder-open" size={32} />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black text-slate-800 tracking-tight">الأرشيف الرقمي</h2>
+                                <p className="text-slate-500 font-bold text-sm uppercase tracking-wider">إدارة ملفات ومستندات الموظفين</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <select 
+                                value={selectedEmp}
+                                onChange={(e) => setSelectedEmp(e.target.value)}
+                                className="bg-white border border-slate-200 rounded-2xl px-6 py-4 font-bold shadow-sm focus:ring-2 focus:ring-indigo-500/20 outline-none min-w-[250px]"
+                            >
+                                <option value="">اختر الموظف لعرض ملفاته...</option>
+                                {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                            </select>
+                            {selectedEmp && (
+                                <label className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-3">
+                                    <Icon name="upload-cloud" size={20} /> رفع مستند جديد
+                                    <input type="file" className="hidden" onChange={handleFileUpload} />
+                                </label>
+                            )}
+                        </div>
+                    </div>
+
+                    {!selectedEmp ? (
+                        <div className="bg-white rounded-[50px] border-2 border-dashed border-slate-200 py-32 text-center space-y-6">
+                            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                                <Icon name="user-plus" size={48} />
+                            </div>
+                            <p className="text-slate-400 font-black text-xl">برجاء اختيار موظف للبدء في إدارة ملفاته</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {(files[selectedEmp] || []).length === 0 ? (
+                                <div className="col-span-full py-20 text-center text-slate-300 font-bold">لا توجد ملفات مرفوعة لهذا الموظف بعد</div>
+                            ) : (
+                                files[selectedEmp].map(file => (
+                                    <div key={file.id} className="bg-white p-6 rounded-[35px] border border-slate-200 shadow-sm hover:shadow-md transition-all group relative">
+                                        <div className="flex flex-col items-center text-center space-y-4">
+                                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${file.type.includes('pdf') ? 'bg-rose-50 text-rose-500' : 'bg-blue-50 text-blue-500'}`}>
+                                                <Icon name={file.type.includes('pdf') ? 'file-text' : 'image'} size={32} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="font-black text-slate-800 text-sm truncate w-40" title={file.name}>{file.name}</h4>
+                                                <p className="text-[10px] font-bold text-slate-400">{file.date}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2 pt-2">
+                                                <button onClick={() => downloadFile(file)} className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all" title="تحميل"><Icon name="download" size={18} /></button>
+                                                <button onClick={() => deleteFile(selectedEmp, file.id)} className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-600 hover:text-white transition-all" title="حذف"><Icon name="trash-2" size={18} /></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const Training = ({ employees }) => {
+            const [courses, setCourses] = useState(() => {
+                const saved = localStorage.getItem('hr_training_courses');
+                return saved ? JSON.parse(saved) : [];
+            });
+            const [showForm, setShowForm] = useState(false);
+            const [newCourse, setNewCourse] = useState({ title: '', trainer: '', date: '', duration: '', attendees: [], results: '' });
+
+            useEffect(() => {
+                localStorage.setItem('hr_training_courses', JSON.stringify(courses));
+            }, [courses]);
+
+            const addCourse = (e) => {
+                e.preventDefault();
+                setCourses([{ ...newCourse, id: Date.now().toString() }, ...courses]);
+                setShowForm(false);
+                setNewCourse({ title: '', trainer: '', date: '', duration: '', attendees: [], results: '' });
+            };
+
+            const toggleAttendee = (empId) => {
+                setNewCourse(prev => ({
+                    ...prev,
+                    attendees: prev.attendees.includes(empId) 
+                        ? prev.attendees.filter(id => id !== empId)
+                        : [...prev.attendees, empId]
+                }));
+            };
+
+            return (
+                <div className="space-y-8 animate-fade-in">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="p-4 bg-amber-500 text-white rounded-[25px] shadow-xl rotate-12">
+                                <Icon name="graduation-cap" size={32} />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black text-slate-800 tracking-tight">تدريب الموظفين</h2>
+                                <p className="text-slate-500 font-bold text-sm uppercase tracking-wider">إدارة الدورات التدريبية والتطوير</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowForm(true)} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
+                            <Icon name="plus" size={20} /> إضافة دورة تدريبية
+                        </button>
+                    </div>
+
+                    {showForm && (
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+                            <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-fade-in max-h-[90vh] overflow-y-auto">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-2xl font-black text-slate-800">إضافة دورة تدريبية جديدة</h3>
+                                    <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-rose-500"><Icon name="x" size={24} /></button>
+                                </div>
+                                <form onSubmit={addCourse} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">عنوان الدورة</label>
+                                        <input 
+                                            required
+                                            type="text"
+                                            value={newCourse.title}
+                                            onChange={(e) => setNewCourse({...newCourse, title: e.target.value})}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            placeholder="مثال: مهارات التواصل الفعال"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">المحاضر</label>
+                                            <input 
+                                                required
+                                                type="text"
+                                                value={newCourse.trainer}
+                                                onChange={(e) => setNewCourse({...newCourse, trainer: e.target.value})}
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">التاريخ</label>
+                                            <input 
+                                                required
+                                                type="date"
+                                                value={newCourse.date}
+                                                onChange={(e) => setNewCourse({...newCourse, date: e.target.value})}
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">اختيار الحضور</label>
+                                        <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            {employees.map(e => (
+                                                <label key={e.id} className="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-xl transition-all">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={newCourse.attendees.includes(e.id)}
+                                                        onChange={() => toggleAttendee(e.id)}
+                                                        className="w-5 h-5 rounded-lg text-indigo-600"
+                                                    />
+                                                    <span className="text-sm font-bold text-slate-700">{e.name}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">نتائج التدريب / التقييم</label>
+                                        <textarea 
+                                            value={newCourse.results}
+                                            onChange={(e) => setNewCourse({...newCourse, results: e.target.value})}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none h-24 resize-none"
+                                            placeholder="أدخل نتائج التدريب وتأثيره على الأداء..."
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-xl text-xl">حفظ الدورة التدريبية</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {courses.map(course => (
+                            <div key={course.id} className="bg-white p-8 rounded-[40px] border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                                            <Icon name="book-open" size={24} />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-xl font-black text-slate-800">{course.title}</h4>
+                                            <p className="text-xs font-bold text-slate-400">بواسطة: {course.trainer}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-black text-indigo-600">{course.date}</p>
+                                        <p className="text-[10px] font-bold text-slate-400">{course.attendees.length} مشارك</p>
+                                    </div>
+                                </div>
+                                {course.results && (
+                                    <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                                        <p className="text-xs font-black text-amber-700 mb-1 flex items-center gap-2"><Icon name="award" size={14} /> نتائج التدريب:</p>
+                                        <p className="text-sm font-bold text-slate-700 leading-relaxed">{course.results}</p>
+                                    </div>
+                                )}
+                                <div className="space-y-3">
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">قائمة الحضور:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {course.attendees.map(id => {
+                                            const emp = employees.find(e => e.id === id);
+                                            return (
+                                                <span key={id} className="bg-slate-50 text-slate-600 px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-100">
+                                                    {emp?.name || 'موظف محذوف'}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
         const Settings = ({ appData, onRestore, onClear, shifts, setShifts }) => {
             const fileInputRef = useRef(null);
             const [showShiftModal, setShowShiftModal] = useState(false);
@@ -3259,9 +3771,164 @@
             );
         };
 
+        const EmployeeProfile = ({ employee, employees, onClose }) => {
+            const kpiData = JSON.parse(localStorage.getItem('hr_kpis') || '{}')[employee.id] || { prod: 0, qual: 0, comm: 0, team: 0 };
+            const evaluations = (JSON.parse(localStorage.getItem('hr_evaluations') || '[]')).filter(e => e.empId === employee.id);
+            const trainingCourses = (JSON.parse(localStorage.getItem('hr_training_courses') || '[]')).filter(c => c.attendees.includes(employee.id));
+            const digitalFiles = (JSON.parse(localStorage.getItem('hr_digital_files') || '{}'))[employee.id] || [];
+
+            const avgKPI = ((parseFloat(kpiData.prod || 0) + parseFloat(kpiData.qual || 0) + parseFloat(kpiData.comm || 0) + parseFloat(kpiData.team || 0)) / 4).toFixed(1);
+
+            return (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[150] flex items-center justify-center p-6 no-print">
+                    <div className="bg-white w-full max-w-5xl rounded-[50px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in">
+                        <div className="p-8 bg-indigo-600 text-white flex justify-between items-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                            <div className="relative z-10 flex items-center gap-6">
+                                <div className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-[30px] flex items-center justify-center text-4xl font-black border border-white/30 shadow-2xl">
+                                    {employee.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h2 className="text-4xl font-black tracking-tight">{employee.name}</h2>
+                                    <p className="text-indigo-100 font-bold text-lg uppercase tracking-wider">{employee.jobTitle} | {employee.department}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 relative z-10">
+                                <button onClick={() => window.print()} className="p-4 bg-white/10 hover:bg-white/20 rounded-2xl transition-all" title="طباعة"><Icon name="printer" size={24} /></button>
+                                <button onClick={onClose} className="p-4 bg-white/10 hover:bg-rose-500 rounded-2xl transition-all"><Icon name="x" size={24} /></button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-10 space-y-10 bg-slate-50/50">
+                            {/* Basic Info Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-white p-6 rounded-[35px] shadow-sm border border-slate-100 space-y-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الكود الوظيفي</p>
+                                    <p className="text-xl font-black text-indigo-600 font-mono">{employee.code}</p>
+                                </div>
+                                <div className="bg-white p-6 rounded-[35px] shadow-sm border border-slate-100 space-y-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تاريخ التعيين</p>
+                                    <p className="text-xl font-black text-slate-800">{employee.joinDate}</p>
+                                </div>
+                                <div className="bg-white p-6 rounded-[35px] shadow-sm border border-slate-100 space-y-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الرقم القومي</p>
+                                    <p className="text-xl font-black text-slate-800 font-mono">{employee.nationalId}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                {/* KPIs Section */}
+                                <div className="space-y-6">
+                                    <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                        <Icon name="trending-up" className="text-indigo-600" /> مؤشرات الأداء
+                                    </h3>
+                                    <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-8">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-500">المتوسط العام</span>
+                                            <span className={`px-4 py-2 rounded-2xl font-black text-lg ${parseFloat(avgKPI) >= 80 ? 'bg-emerald-50 text-emerald-600' : parseFloat(avgKPI) >= 50 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'}`}>
+                                                {avgKPI}%
+                                            </span>
+                                        </div>
+                                        <div className="space-y-6">
+                                            {[
+                                                { label: 'الإنتاجية', val: kpiData.prod, color: 'bg-blue-500' },
+                                                { label: 'الجودة', val: kpiData.qual, color: 'bg-indigo-500' },
+                                                { label: 'الالتزام', val: kpiData.comm, color: 'bg-emerald-500' },
+                                                { label: 'العمل الجماعي', val: kpiData.team, color: 'bg-amber-500' }
+                                            ].map((k, i) => (
+                                                <div key={i} className="space-y-2">
+                                                    <div className="flex justify-between text-xs font-black uppercase tracking-wider">
+                                                        <span>{k.label}</span>
+                                                        <span>{k.val}%</span>
+                                                    </div>
+                                                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div className={`h-full ${k.color} transition-all duration-1000`} style={{ width: `${k.val}%` }}></div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Evaluations Section */}
+                                <div className="space-y-6">
+                                    <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                        <Icon name="star" className="text-amber-500" /> آخر التقييمات
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {evaluations.length === 0 ? (
+                                            <div className="bg-white p-10 rounded-[40px] text-center text-slate-300 font-bold border border-dashed">لا توجد تقييمات مسجلة</div>
+                                        ) : (
+                                            evaluations.slice(0, 3).map(ev => (
+                                                <div key={ev.id} className="bg-white p-6 rounded-[35px] shadow-sm border border-slate-100 flex items-center justify-between">
+                                                    <div className="space-y-1">
+                                                        <p className="font-black text-slate-800">{ev.date}</p>
+                                                        <p className="text-xs font-bold text-slate-500 truncate w-48">{ev.notes}</p>
+                                                    </div>
+                                                    <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg shadow-sm border border-amber-100">
+                                                        {ev.score}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                {/* Training Section */}
+                                <div className="space-y-6">
+                                    <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                        <Icon name="graduation-cap" className="text-blue-600" /> السجل التدريبي
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {trainingCourses.length === 0 ? (
+                                            <div className="bg-white p-10 rounded-[40px] text-center text-slate-300 font-bold border border-dashed">لم يحضر أي دورات تدريبية بعد</div>
+                                        ) : (
+                                            trainingCourses.map(c => (
+                                                <div key={c.id} className="bg-white p-6 rounded-[35px] shadow-sm border border-slate-100 flex items-center gap-4">
+                                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Icon name="book-open" size={20} /></div>
+                                                    <div>
+                                                        <p className="font-black text-slate-800">{c.title}</p>
+                                                        <p className="text-[10px] font-bold text-slate-400">{c.date} | {c.trainer}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Digital Files Section */}
+                                <div className="space-y-6">
+                                    <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                        <Icon name="folder" className="text-rose-500" /> الأرشيف الرقمي
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {digitalFiles.length === 0 ? (
+                                            <div className="col-span-full bg-white p-10 rounded-[40px] text-center text-slate-300 font-bold border border-dashed">لا توجد ملفات مرفوعة</div>
+                                        ) : (
+                                            digitalFiles.map(f => (
+                                                <div key={f.id} className="bg-white p-4 rounded-[25px] border border-slate-100 flex items-center gap-3">
+                                                    <div className={`p-2 rounded-xl ${f.type.includes('pdf') ? 'bg-rose-50 text-rose-500' : 'bg-blue-50 text-blue-500'}`}>
+                                                        <Icon name={f.type.includes('pdf') ? 'file-text' : 'image'} size={18} />
+                                                    </div>
+                                                    <p className="text-[10px] font-black text-slate-700 truncate" title={f.name}>{f.name}</p>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const EmployeeTable = ({ employees, onAddEmployee, onUpdateEmployee, onDeleteEmployee, onBulkAdd, setActiveTab, shifts }) => {
             const [showModal, setShowModal] = useState(false);
             const [editingEmp, setEditingEmp] = useState(null);
+            const [viewingEmp, setViewingEmp] = useState(null);
             const [warningEmp, setWarningEmp] = useState(null);
             const [selectedDept, setSelectedDept] = useState('all');
             const [searchQuery, setSearchQuery] = useState('');
@@ -3376,11 +4043,20 @@
                         <div className="overflow-x-auto">
                             <table className="w-full text-right border-collapse">
                                 <thead className="bg-slate-50 text-slate-500 text-[11px] font-black uppercase tracking-wider border-b border-slate-100"><tr><th className="px-4 py-5">م</th><th className="px-4 py-5">الكود</th><th className="px-4 py-5">تاريخ التعيين</th><th className="px-6 py-5">الاسم الكامل</th><th className="px-4 py-5">الإدارة</th><th className="px-4 py-5">المسمى الوظيفي</th><th className="px-4 py-5">الوردية</th><th className="px-6 py-5">الرقم القومي</th><th className="px-4 py-5 text-center">الإجراءات</th></tr></thead>
-                                <tbody className="divide-y divide-slate-50">{filteredEmployees.length ? filteredEmployees.map((emp, index) => (<tr key={emp.id} className="hover:bg-indigo-500/5 transition-colors group"><td className="px-4 py-4 font-bold text-slate-500">{index + 1}</td><td className="px-4 py-4 font-mono font-black text-indigo-500">{emp.code}</td><td className="px-4 py-4 text-xs font-bold text-slate-500">{emp.joinDate}</td><td className="px-6 py-4 font-black text-base text-slate-800">{emp.name}</td><td className="px-4 py-4 text-sm font-bold text-slate-500">{emp.department}</td><td className="px-4 py-4 text-sm font-bold text-slate-500">{emp.jobTitle}</td><td className="px-4 py-4 text-[10px] font-bold text-indigo-600">{emp.shift || '---'}</td><td className="px-6 py-4 font-mono text-xs text-slate-500">{emp.nationalId}</td><td className="px-4 py-4 text-center"><div className="flex justify-center items-center gap-2"><button onClick={() => setWarningEmp(emp)} className="p-2 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500 transition-all hover:text-white" title="إنذار / ملاحظة"><Icon name="alert-triangle" size={16} /></button><button onClick={() => { setEditingEmp(emp); setFormData({ ...emp }); setShowModal(true); }} className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 transition-all hover:text-white"><Icon name="edit" size={16} /></button><button onClick={() => { if(confirm('حذف الموظف؟')) onDeleteEmployee(emp.id); }} className="p-2 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 transition-all hover:text-white"><Icon name="trash-2" size={16} /></button></div></td></tr>)) : <tr><td colSpan="9" className="px-6 py-10 text-center text-slate-400 font-bold italic">لا توجد بيانات حالياً</td></tr>}</tbody>
+                                <tbody className="divide-y divide-slate-50">{filteredEmployees.length ? filteredEmployees.map((emp, index) => (<tr key={emp.id} className="hover:bg-indigo-500/5 transition-colors group"><td className="px-4 py-4 font-bold text-slate-500">{index + 1}</td><td className="px-4 py-4 font-mono font-black text-indigo-500">{emp.code}</td><td className="px-4 py-4 text-xs font-bold text-slate-500">{emp.joinDate}</td><td className="px-6 py-4 font-black text-base text-slate-800">{emp.name}</td><td className="px-4 py-4 text-sm font-bold text-slate-500">{emp.department}</td><td className="px-4 py-4 text-sm font-bold text-slate-500">{emp.jobTitle}</td><td className="px-4 py-4 text-[10px] font-bold text-indigo-600">{emp.shift || '---'}</td><td className="px-6 py-4 font-mono text-xs text-slate-500">{emp.nationalId}</td>                                                <td className="px-4 py-4 text-center">
+                                                    <div className="flex justify-center items-center gap-2">
+                                                        <button onClick={() => setViewingEmp(emp)} className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all" title="عرض الملف الشخصي"><Icon name="user" size={16} /></button>
+                                                        <button onClick={() => setWarningEmp(emp)} className="p-2 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500 transition-all hover:text-white" title="إنذار / ملاحظة"><Icon name="alert-triangle" size={16} /></button>
+                                                        <button onClick={() => { setEditingEmp(emp); setFormData({ ...emp }); setShowModal(true); }} className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 transition-all hover:text-white"><Icon name="edit" size={16} /></button>
+                                                        <button onClick={() => { if(confirm('حذف الموظف؟')) onDeleteEmployee(emp.id); }} className="p-2 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 transition-all hover:text-white"><Icon name="trash-2" size={16} /></button>
+                                                    </div>
+                                                </td>
+</tr>)) : <tr><td colSpan="9" className="px-6 py-10 text-center text-slate-400 font-bold italic">لا توجد بيانات حالياً</td></tr>}</tbody>
                             </table>
                         </div>
                     </div>
                     {showModal && (<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"><div className="w-full max-w-4xl p-10 rounded-[50px] shadow-2xl animate-fade-in border bg-white border-slate-200"><div className="flex justify-between items-center mb-8"><h3 className="text-3xl font-black text-slate-800">{editingEmp ? 'تعديل بيانات الموظف' : 'إضافة موظف جديد'}</h3><button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-rose-500"><Icon name="x" size={32} /></button></div><form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الاسم الكامل</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الكود الوظيفي</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">تاريخ التعيين</label><input required type="date" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.joinDate} onChange={(e) => setFormData({...formData, joinDate: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الإدارة</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">المسمى الوظيفي</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.jobTitle} onChange={(e) => setFormData({...formData, jobTitle: e.target.value})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الرقم القومي</label><input required type="text" pattern="\d{14}" title="يجب إدخال 14 رقم" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.nationalId} onChange={(e) => setFormData({...formData, nationalId: e.target.value.replace(/\D/g, '')})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">رقم الهاتف</label><input required type="tel" pattern="01[0125]\d{8}" title="يجب إدخال رقم هاتف مصري صحيح" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/[^\d+]/g, '')})} /></div><div className="space-y-1"><label className="text-xs font-black text-slate-500 uppercase">الوردية</label><select required className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.shift} onChange={(e) => setFormData({...formData, shift: e.target.value})}>{Object.values(shifts).map(s => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div><div className="md:col-span-2 space-y-1"><label className="text-xs font-black text-slate-500 uppercase">العنوان السكني</label><input required type="text" className="w-full px-5 py-3 rounded-2xl border outline-none font-bold bg-slate-50 border-slate-100 text-slate-800" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} /></div><div className="md:col-span-3 pt-6"><button type="submit" className="w-full bg-indigo-600 text-white font-black py-4 rounded-3xl text-xl shadow-xl hover:bg-indigo-700 transition-all">حفظ البيانات</button></div></form></div></div>)}
+                    {viewingEmp && <EmployeeProfile employee={viewingEmp} employees={employees} onClose={() => setViewingEmp(null)} />}
                     {warningEmp && <WarningModal emp={warningEmp} onClose={() => setWarningEmp(null)} />}
                 </div>
             );
@@ -4843,8 +5519,11 @@
                                     {id: 'dashboard', label: 'الرئيسية'},
                                     {id: 'employees', label: 'الموظفين'},
                                     {id: 'attendance', label: 'الحضور'},
-                                    {id: 'attendance_rules', label: 'اللائحة'},
                                     {id: 'payroll', label: 'المرتبات'},
+                                    {id: 'kpis', label: 'KPIs'},
+                                    {id: 'evaluations', label: 'التقييمات'},
+                                    {id: 'digital_files', label: 'الأرشيف'},
+                                    {id: 'training', label: 'التدريب'},
                                     {id: 'recruitment', label: 'التوظيف'},
                                     {id: 'leaves', label: 'الإجازات'},
                                     {id: 'settings', label: 'الإعدادات'}
@@ -4899,6 +5578,14 @@
                             <Contracts employees={employees} contractRecords={contractRecords} setContractRecords={setContractRecords} />
                         ) : activeTab === 'leaves' ? (
                             <Leaves employees={employees} onUpdateEmployee={updateEmployee} />
+                        ) : activeTab === 'kpis' ? (
+                            <KPIs employees={employees} />
+                        ) : activeTab === 'evaluations' ? (
+                            <Evaluations employees={employees} />
+                        ) : activeTab === 'digital_files' ? (
+                            <DigitalFiles employees={employees} />
+                        ) : activeTab === 'training' ? (
+                            <Training employees={employees} />
                         ) : activeTab === 'settings' ? (
                             <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, shifts }} onRestore={handleRestore} onClear={handleClear} shifts={shifts} setShifts={setShifts} />
                         ) : (
