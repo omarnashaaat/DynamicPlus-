@@ -448,13 +448,12 @@ export const Payroll = React.memo(({ employees, payrollRecords, setPayrollRecord
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            <div className="print-only print-signatures">
-                <div>مدير حسابات</div>
-                <div>مدير الموارد البشرية</div>
-                <div>المدير التنفيذى</div>
-                <div>اعتماد</div>
+                <div className="print-only print-signatures px-8 pb-8">
+                    <div>مدير حسابات</div>
+                    <div>مدير الموارد البشرية</div>
+                    <div>المدير التنفيذى</div>
+                    <div>اعتماد</div>
+                </div>
             </div>
         </div>
     );
