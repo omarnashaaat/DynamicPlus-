@@ -406,10 +406,11 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                             </div>
                         </div>
 
-                        <div className="print-only print-signatures mt-8">
-                            <div>إعداد / شؤون العاملين</div>
-                            <div>مراجعة / الحسابات</div>
-                            <div>اعتماد / المدير العام</div>
+                        <div className="print-only print-signatures">
+                            <div>مدير حسابات</div>
+                            <div>مدير الموارد البشرية</div>
+                            <div>المدير التنفيذى</div>
+                            <div>اعتماد</div>
                         </div>
                     </div>
                 ))}

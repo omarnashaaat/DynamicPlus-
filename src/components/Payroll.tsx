@@ -313,10 +313,10 @@ export const Payroll = React.memo(({ employees, payrollRecords, setPayrollRecord
             </div>
 
             <div className={`rounded-[30px] shadow-2xl overflow-hidden print:overflow-visible border bg-white border-slate-200 landscape-page ${isSinglePage ? 'print-one-page' : ''}`}>
-                <div className="hidden print:block text-center mb-4 border-b-2 border-slate-900 pb-4">
-                    <h2 className="text-sm font-black text-indigo-600 mb-1">شركة طيبة للاستثمار العقارى والتطوير العمراني</h2>
-                    <h1 className="text-3xl font-black text-slate-900">كشف الرواتب الشهري - {selectedMonth}</h1>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[8px]">Monthly Payroll Register</p>
+                <div className="hidden print:block text-center mb-2 border-b-2 border-slate-900 pb-2">
+                    <h2 className="text-xs font-black text-indigo-600 mb-0.5">شركة طيبة للاستثمار العقارى والتطوير العمراني</h2>
+                    <h1 className="text-xl font-black text-slate-900">كشف الرواتب الشهري - {selectedMonth}</h1>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[7px]">Monthly Payroll Register</p>
                 </div>
                 <div className="overflow-x-auto print:overflow-visible payroll-print-wrapper scroll-smooth">
                     <table className="w-full text-[10px] md:text-[11px] text-center payroll-table border-collapse min-w-full">
@@ -454,6 +454,7 @@ export const Payroll = React.memo(({ employees, payrollRecords, setPayrollRecord
                 <div>مدير حسابات</div>
                 <div>مدير الموارد البشرية</div>
                 <div>المدير التنفيذى</div>
+                <div>اعتماد</div>
             </div>
         </div>
     );
