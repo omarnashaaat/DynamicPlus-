@@ -98,7 +98,6 @@ export const WarningModal = ({ emp, onClose }: WarningModalProps) => {
                             <div className="w-full border-b-2 border-slate-400"></div>
                         </div>
                         <div className="text-center space-y-8">
-                            <p>مدير الموارد البشرية</p>
                             <div className="w-full border-b-2 border-slate-400"></div>
                         </div>
                     </div>

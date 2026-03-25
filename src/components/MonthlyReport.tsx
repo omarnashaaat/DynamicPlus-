@@ -239,11 +239,6 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                                         </div>
                                     `;
                                 }).join('')}
-                                <div class="print-signatures" style="margin-top: 50px; display: flex; justify-content: space-between; gap: 40px; width: 100%; padding: 0 40px 40px 40px;">
-                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">مدير حسابات</div>
-                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">مدير الموارد البشرية</div>
-                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">المدير التنفيذى</div>
-                                </div>
                             `;
                             const opt = {
                                 margin: 5,
@@ -417,9 +412,6 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
 
                         <div className="flex-1"></div>
                         <div className="print-only print-signatures px-8 pb-8">
-                            <div>مدير الموارد البشرية</div>
-                            <div>مدير حسابات</div>
-                            <div>المدير التنفيذى</div>
                         </div>
                     </div>
                 ))}

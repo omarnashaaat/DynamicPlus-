@@ -276,11 +276,6 @@ export const Payroll = React.memo(({ employees, payrollRecords, setPayrollRecord
                                         }).join('')}
                                     </tbody>
                                 </table>
-                                <div class="print-signatures" style="margin-top: 60px; display: flex; justify-content: space-between; gap: 40px; width: 100%; padding: 20px 40px 0 40px;">
-                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">مدير الموارد البشرية</div>
-                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">مدير حسابات</div>
-                                    <div style="flex: 1; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-weight: 900; font-size: 12px;">المدير التنفيذى</div>
-                                </div>
                             `;
                             const opt = {
                                 margin: 5,
@@ -454,9 +449,6 @@ export const Payroll = React.memo(({ employees, payrollRecords, setPayrollRecord
                         </tbody>
                     </table>
                     <div className="print-only print-signatures px-8 mt-16">
-                        <div>مدير الموارد البشرية</div>
-                        <div>مدير حسابات</div>
-                        <div>المدير التنفيذى</div>
                     </div>
                 </div>
             </div>
