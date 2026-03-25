@@ -254,31 +254,54 @@ input[type="number"]::-webkit-outer-spin-button {
     }
     .single-page-mode .report-container {
         width: 190mm !important;
-        padding: 4mm !important;
+        padding: 5mm !important;
         min-height: auto !important;
-        height: 285mm !important;
+        height: 287mm !important;
         overflow: hidden !important;
         margin: 0 auto !important;
         border: 1px solid #000 !important;
         display: flex !important;
         flex-direction: column !important;
         page-break-after: always !important;
+        background: white !important;
     }
 
     .single-page-mode .report-container table {
-        font-size: 8.5pt !important;
+        font-size: 9pt !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+    }
+
+    .single-page-mode .report-container th {
+        font-size: 9.5pt !important;
+        background-color: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
     .single-page-mode .report-container td, 
     .single-page-mode .report-container th {
-        padding: 1px 1px !important;
-        line-height: 1 !important;
+        padding: 1.5px 1px !important;
+        line-height: 1.1 !important;
+        border: 1px solid #cbd5e1 !important;
     }
+
+    /* Column Widths */
+    .single-page-mode .col-no { width: 6mm !important; }
+    .single-page-mode .col-date { width: 22mm !important; }
+    .single-page-mode .col-day { width: 18mm !important; }
+    .single-page-mode .col-shift { width: 22mm !important; }
+    .single-page-mode .col-time { width: 13mm !important; }
+    .single-page-mode .col-val { width: 13mm !important; }
+    .single-page-mode .col-notes { width: auto !important; }
 
     .single-page-mode .print-signatures {
         margin-top: auto !important;
-        margin-bottom: 10px !important;
-        gap: 10px !important;
+        margin-bottom: 5mm !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        padding: 0 10mm !important;
     }
 
     .single-page-mode .print-signatures > div {
@@ -291,17 +314,38 @@ input[type="number"]::-webkit-outer-spin-button {
     }
 
     .single-page-mode h1 {
-        font-size: 1rem !important;
-        margin-bottom: 2px !important;
+        font-size: 14pt !important;
+        margin-bottom: 5mm !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+
+    .single-page-mode .report-container p {
+        font-size: 10pt !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+    }
+
+    .single-page-mode .report-container span {
+        font-size: 10pt !important;
     }
 
     .single-page-mode .hidden.print\:block.text-lg {
-        font-size: 10pt !important;
-        padding-top: 2px !important;
-        margin-top: 2px !important;
+        font-size: 11pt !important;
+        padding-top: 3mm !important;
+        margin-top: 3mm !important;
+        border-top: 2px solid #000 !important;
+        width: 60mm !important;
+        margin-left: auto !important;
+    }
+
+    .single-page-mode .hidden.print\:block.text-lg p {
+        display: flex !important;
+        justify-content: space-between !important;
+        font-size: 11pt !important;
     }
 
     .single-page-mode {
-        zoom: 0.9;
+        background: #f8fafc !important;
     }
 }

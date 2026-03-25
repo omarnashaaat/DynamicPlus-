@@ -277,102 +277,102 @@ export const MonthlyReport = React.memo(({ employees, attendanceLog, setAttendan
                         </div>
 
                         <div className="overflow-x-auto border border-slate-300 report-table-wrapper">
-                            <table className="w-full text-center text-[11px] print:text-[9px] border-collapse">
+                            <table className="w-full text-center text-[11px] border-collapse">
                                 <thead>
                                     <tr className="bg-slate-100 border-b border-slate-300">
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-6">م</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-16">التاريخ</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-16">اليوم</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">الوردية</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">دخول</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">خروج</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">إجمالي</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">تأخير</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">مبكر</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">خصم</th>
-                                        <th className="border-r border-slate-300 py-2 print:py-0.5 w-12">إضافي</th>
-                                        <th className="py-2 print:py-0.5">ملاحظات</th>
+                                        <th className="border-r border-slate-300 py-2 col-no">م</th>
+                                        <th className="border-r border-slate-300 py-2 col-date">التاريخ</th>
+                                        <th className="border-r border-slate-300 py-2 col-day">اليوم</th>
+                                        <th className="border-r border-slate-300 py-2 col-shift">الوردية</th>
+                                        <th className="border-r border-slate-300 py-2 col-time">دخول</th>
+                                        <th className="border-r border-slate-300 py-2 col-time">خروج</th>
+                                        <th className="border-r border-slate-300 py-2 col-time">إجمالي</th>
+                                        <th className="border-r border-slate-300 py-2 col-val">تأخير</th>
+                                        <th className="border-r border-slate-300 py-2 col-val">مبكر</th>
+                                        <th className="border-r border-slate-300 py-2 col-val text-rose-600">خصم</th>
+                                        <th className="border-r border-slate-300 py-2 col-val text-emerald-600">إضافي</th>
+                                        <th className="py-2 col-notes">ملاحظات</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {records.map((r) => (
-                                        <tr key={r.date} className={`border-b border-slate-200 ${r.isWeekend ? 'bg-emerald-50/50' : ''} print:leading-tight`}>
-                                            <td className="border-r border-slate-200 py-1 print:py-0 font-bold">{r.no}</td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0">{new Date(r.date).toLocaleDateString('en-GB')}</td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0 font-bold">{r.day}</td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0">
+                                        <tr key={r.date} className={`border-b border-slate-200 ${r.isWeekend ? 'bg-emerald-50/50' : ''}`}>
+                                            <td className="border-r border-slate-200 py-1 font-bold col-no">{r.no}</td>
+                                            <td className="border-r border-slate-200 py-1 col-date">{new Date(r.date).toLocaleDateString('en-GB')}</td>
+                                            <td className="border-r border-slate-200 py-1 font-bold col-day">{r.day}</td>
+                                            <td className="border-r border-slate-200 py-1 col-shift">
                                                 <input 
                                                     type="text" 
                                                     value={r.shift} 
                                                     onChange={(e) => updateReportRecord(r.date, emp.id, 'shift', e.target.value)}
-                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                 />
                                             </td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0">
+                                            <td className="border-r border-slate-200 py-1 col-time">
                                                 <input 
                                                     type="time" 
                                                     value={r.in} 
                                                     onChange={(e) => updateReportRecord(r.date, emp.id, 'arrivalTime', e.target.value)}
-                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                 />
                                             </td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0">
+                                            <td className="border-r border-slate-200 py-1 col-time">
                                                 <input 
                                                     type="time" 
                                                     value={r.out} 
                                                     onChange={(e) => updateReportRecord(r.date, emp.id, 'departureTime', e.target.value)}
-                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                 />
                                             </td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0">
+                                            <td className="border-r border-slate-200 py-1 col-time">
                                                 <input 
                                                     type="text" 
                                                     value={r.total} 
                                                     onChange={(e) => updateReportRecord(r.date, emp.id, 'totalHours', e.target.value)}
-                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                 />
                                             </td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0 font-bold">
+                                            <td className="border-r border-slate-200 py-1 font-bold col-val">
                                                 <input 
                                                     type="number" 
                                                     step="0.5"
                                                     value={r.lateDed || 0} 
                                                     onChange={(e) => updateReportRecord(r.date, emp.id, 'lateDeduction', e.target.value)}
-                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                 />
                                             </td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0 font-bold">
+                                            <td className="border-r border-slate-200 py-1 font-bold col-val">
                                                 <input 
                                                     type="number" 
                                                     step="0.5"
                                                     value={r.earlyDed || 0} 
                                                     onChange={(e) => updateReportRecord(r.date, emp.id, 'earlyDeduction', e.target.value)}
-                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                 />
                                             </td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0 font-bold text-rose-600">
+                                            <td className="border-r border-slate-200 py-1 font-bold text-rose-600 col-val">
                                                 <input 
                                                     type="number" 
                                                     value={r.ded} 
                                                     onChange={(e) => updateReportRecord(r.date, emp.id, 'deduction', parseFloat(e.target.value) || 0)}
-                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                 />
                                             </td>
-                                            <td className="border-r border-slate-200 py-1 print:py-0">
+                                            <td className="border-r border-slate-200 py-1 col-val text-emerald-600 font-bold">
                                                 <input 
                                                     type="text" 
                                                     value={r.ot} 
                                                     onChange={(e) => updateReportRecord(r.date, emp.id, 'overtimeHours', e.target.value)}
-                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                    className="w-full text-center bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                 />
                                             </td>
-                                            <td className="py-1 print:py-0 text-right px-2 text-[9px]">
+                                            <td className="py-1 text-right px-2 col-notes">
                                                 <div className="flex items-center gap-1">
                                                     <input 
                                                         type="text" 
                                                         value={r.notes} 
                                                         onChange={(e) => updateReportRecord(r.date, emp.id, 'notes', e.target.value)}
-                                                        className="flex-1 text-right bg-transparent outline-none focus:bg-blue-50 print:text-[8px] print:h-auto"
+                                                        className="flex-1 text-right bg-transparent outline-none focus:bg-blue-50 h-auto"
                                                         placeholder="..."
                                                     />
                                                     <button 
