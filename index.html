@@ -20,6 +20,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <!-- SheetJS for Excel Processing -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- html2pdf.js for direct PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Cairo', sans-serif;
@@ -77,6 +79,28 @@
             
             .shadow-2xl, .shadow-xl, .shadow-sm, .shadow-lg { box-shadow: none !important; }
             .rounded-[30px], .rounded-[40px], .rounded-[50px], .rounded-3xl, .rounded-2xl { border-radius: 0 !important; }
+            
+            /* Ensure content fits on one page if possible */
+            .animate-fade-in { animation: none !important; }
+            .overflow-x-auto, .overflow-y-auto { overflow: visible !important; }
+            
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+
+            /* Dashboard print layout */
+            .dashboard-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 10px !important;
+            }
+            .dashboard-item {
+                padding: 10px !important;
+                border: 1px solid #eee !important;
+            }
+            .dashboard-item icon {
+                size: 20px !important;
+            }
             
             /* Unified Document Box Style (Payslip & Warning) */
             .payslip-box, .warning-box {
@@ -3018,7 +3042,7 @@
             { id: 10, title: 'Eius et cum.', date: '2026-03-29', type: 'OTHER' },
         ];
 
-        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog, setIsLoggedIn }) => {
+        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog, setIsLoggedIn, downloadPDF }) => {
             const [candidatesCount, setCandidatesCount] = useState(0);
 
             useEffect(() => {
@@ -3063,10 +3087,16 @@
                             <h1 className="text-4xl font-black text-slate-800 mb-2">مرحباً بك يا {userName} 👋</h1>
                             <p className="text-slate-500 font-bold tracking-wide">إدارة أسهل… لقرارات أدق.</p>
                         </div>
-                        <button onClick={() => setIsLoggedIn(false)} className="w-full sm:w-auto justify-center flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-100 px-6 py-3 rounded-2xl font-black transition-all shadow-sm">
-                            <Icon name="log-out" size={20} />
-                            تسجيل الخروج
-                        </button>
+                        <div className="flex items-center gap-3 w-full sm:w-auto no-print">
+                            <button onClick={downloadPDF} className="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-3 rounded-2xl font-black transition-all shadow-lg">
+                                <Icon name="download" size={20} />
+                                تحميل التقرير PDF
+                            </button>
+                            <button onClick={() => setIsLoggedIn(false)} className="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-100 px-6 py-3 rounded-2xl font-black transition-all shadow-sm">
+                                <Icon name="log-out" size={20} />
+                                تسجيل الخروج
+                            </button>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -3083,12 +3113,12 @@
                         ))}
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 dashboard-grid">
                         {menuItems.map((item) => (
                             <button 
                                 key={item.id} 
                                 onClick={() => setActiveTab(item.id)}
-                                className="group p-8 rounded-[45px] shadow-sm transition-all duration-300 flex flex-col items-center text-center border bg-white border-slate-100 hover:bg-slate-900 hover:-translate-y-2"
+                                className="group p-8 rounded-[45px] shadow-sm transition-all duration-300 flex flex-col items-center text-center border bg-white border-slate-100 hover:bg-slate-900 hover:-translate-y-2 dashboard-item"
                             >
                                 <div className={`${item.color} text-white p-6 rounded-[28px] mb-5 shadow-lg group-hover:scale-110 transition-transform duration-500 flex items-center justify-center`}>
                                     <Icon name={item.icon} size={36} />
@@ -5644,6 +5674,66 @@
                 return () => clearInterval(timer);
             }, []);
 
+            const downloadPDF = async () => {
+                const element = document.querySelector('main');
+                const isLandscape = activeTab === 'payroll' || activeTab === 'monthly_report';
+                
+                // Show loading indicator
+                const loading = document.createElement('div');
+                loading.id = 'pdf-loading-overlay';
+                loading.className = 'fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[10000] no-print';
+                loading.innerHTML = `
+                    <div class="bg-white p-10 rounded-[40px] shadow-2xl flex flex-col items-center gap-6 text-center border-t-8 border-indigo-600 max-w-sm mx-4">
+                        <div class="w-20 h-20 border-8 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 mb-2">جاري التحميل...</h2>
+                            <p class="text-slate-500 font-bold leading-relaxed">نجهز لك التقرير في صفحة واحدة بجودة عالية، لحظات من فضلك.</p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(loading);
+
+                try {
+                    // Hide buttons using visibility instead of display to preserve layout
+                    const buttons = document.querySelectorAll('.no-print');
+                    buttons.forEach(btn => btn.style.opacity = '0');
+                    buttons.forEach(btn => btn.style.pointerEvents = 'none');
+
+                    const opt = {
+                        margin: 5,
+                        filename: `تقرير_${activeTab}_${new Date().toLocaleDateString('ar-EG')}.pdf`,
+                        image: { type: 'jpeg', quality: 1 },
+                        html2canvas: { 
+                            scale: 2, 
+                            useCORS: true,
+                            letterRendering: true,
+                            scrollY: 0,
+                            windowWidth: document.documentElement.offsetWidth
+                        },
+                        jsPDF: { 
+                            unit: 'mm', 
+                            format: 'a4', 
+                            orientation: isLandscape ? 'landscape' : 'portrait',
+                            compress: true
+                        },
+                        pagebreak: { mode: 'avoid-all' }
+                    };
+
+                    await html2pdf().set(opt).from(element).save();
+
+                } catch (error) {
+                    console.error('PDF Error:', error);
+                } finally {
+                    // Restore buttons visibility
+                    const buttons = document.querySelectorAll('.no-print');
+                    buttons.forEach(btn => btn.style.opacity = '1');
+                    buttons.forEach(btn => btn.style.pointerEvents = 'auto');
+                    
+                    const overlay = document.getElementById('pdf-loading-overlay');
+                    if (overlay) document.body.removeChild(overlay);
+                }
+            };
+
             const addEmployee = (d) => setEmployees([...employees, { ...d, id: Date.now().toString(), status: 'نشط', totalLeaves: 21, monthlyLeaves: Array(12).fill(0) }]);
             const bulkAddEmployees = (list) => setEmployees(p => [...p, ...list]);
             const updateEmployee = (u) => setEmployees(employees.map(e => e.id === u.id ? { ...e, ...u } : e));
@@ -5704,10 +5794,16 @@
                 <div className="min-h-screen flex flex-col desktop-container px-6 py-8">
                     {activeTab !== 'dashboard' && (
                         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
-                            <button onClick={() => setActiveTab('dashboard')} className="w-full sm:w-auto justify-center flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl font-black transition-all shadow-sm border border-slate-200">
-                                <Icon name="arrow-right" size={20} />
-                                عودة إلى لوحة التحكم
-                            </button>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <button onClick={downloadPDF} className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-2xl font-black transition-all shadow-lg">
+                                    <Icon name="download" size={20} />
+                                    تنزيل PDF مباشر
+                                </button>
+                                <button onClick={() => setActiveTab('dashboard')} className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl font-black transition-all shadow-sm border border-slate-200">
+                                    <Icon name="arrow-right" size={20} />
+                                    عودة
+                                </button>
+                            </div>
                             <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
                                 <div className="flex flex-col text-right leading-tight">
                                     <span className="text-[13px] font-bold text-slate-700">{formattedDate}</span>
@@ -5721,7 +5817,7 @@
                     )}
                     <main className="flex-1">
                         {activeTab === 'dashboard' ? (
-                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} setIsLoggedIn={setIsLoggedIn} />
+                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} setIsLoggedIn={setIsLoggedIn} downloadPDF={downloadPDF} />
                         ) : activeTab === 'employees' ? (
                             <EmployeeTable employees={employees} onAddEmployee={addEmployee} onUpdateEmployee={updateEmployee} onDeleteEmployee={deleteEmployee} onBulkAdd={bulkAddEmployees} setActiveTab={setActiveTab} shifts={shifts} />
                         ) : activeTab === 'attendance' ? (
