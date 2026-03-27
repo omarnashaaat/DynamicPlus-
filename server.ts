@@ -1,17 +1,45 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import path from "path";
 import Database from "better-sqlite3";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const db = new Database("hr_system.db");
 
-// Initialize database
+// Initialize Database
 db.exec(`
+  CREATE TABLE IF NOT EXISTS employees (
+    id TEXT PRIMARY KEY,
+    code TEXT UNIQUE,
+    name TEXT,
+    jobTitle TEXT,
+    department TEXT,
+    status TEXT,
+    joinDate TEXT,
+    nationalId TEXT,
+    phone TEXT,
+    address TEXT,
+    baseSalary REAL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS attendance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    employeeId TEXT,
+    date TEXT,
+    arrivalTime TEXT,
+    departureTime TEXT,
+    deduction REAL DEFAULT 0,
+    notes TEXT,
+    UNIQUE(employeeId, date)
+  );
+
   CREATE TABLE IF NOT EXISTS candidates (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
+    name TEXT,
     role TEXT,
-    experience TEXT,
     email TEXT,
     phone TEXT,
     status TEXT,
@@ -21,22 +49,9 @@ db.exec(`
     notes TEXT
   );
 
-  CREATE TABLE IF NOT EXISTS employees (
-    id TEXT PRIMARY KEY,
-    data TEXT NOT NULL,
-    updatedAt INTEGER NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS attendance (
-    date TEXT PRIMARY KEY,
-    data TEXT NOT NULL,
-    updatedAt INTEGER NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS app_settings (
+  CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
-    value TEXT NOT NULL,
-    updatedAt INTEGER NOT NULL
+    value TEXT
   );
 `);
 
@@ -47,125 +62,152 @@ async function startServer() {
   app.use(express.json({ limit: '50mb' }));
 
   // API Routes
-  app.get("/api/candidates", (req, res) => {
-    try {
-      const candidates = db.prepare("SELECT * FROM candidates ORDER BY createdAt DESC").all();
-      res.json(candidates);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch candidates" });
-    }
-  });
-
-  app.post("/api/candidates", (req, res) => {
-    const { id, name, role, experience, email, phone, status, priority, score, createdAt, notes } = req.body;
-    try {
-      const stmt = db.prepare(`
-        INSERT OR REPLACE INTO candidates 
-        (id, name, role, experience, email, phone, status, priority, score, createdAt, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      stmt.run(id, name, role, experience, email, phone, status, priority, score, createdAt, notes);
-      res.json({ success: true });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Failed to save candidate" });
-    }
-  });
-
-  app.delete("/api/candidates/:id", (req, res) => {
-    const { id } = req.params;
-    try {
-      db.prepare("DELETE FROM candidates WHERE id = ?").run(id);
-      res.json({ success: true });
-    } catch (err) {
-      res.status(500).json({ error: "Failed to delete candidate" });
-    }
-  });
-
-  // Employees Sync
   app.get("/api/employees", (req, res) => {
-    try {
-      const employees = db.prepare("SELECT * FROM employees").all();
-      res.json(employees.map(e => JSON.parse(e.data)));
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch employees" });
-    }
+    const employees = db.prepare("SELECT * FROM employees").all();
+    res.json(employees);
   });
 
   app.post("/api/employees", (req, res) => {
     const { employees } = req.body;
-    try {
-      const stmt = db.prepare("INSERT OR REPLACE INTO employees (id, data, updatedAt) VALUES (?, ?, ?)");
-      const transaction = db.transaction((emps) => {
-        for (const emp of emps) {
-          stmt.run(emp.id, JSON.stringify(emp), Date.now());
+    if (Array.isArray(employees)) {
+      const stmt = db.prepare(`
+        INSERT INTO employees (id, code, name, jobTitle, department, status, joinDate, nationalId, phone, address, baseSalary)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          code = excluded.code,
+          name = excluded.name,
+          jobTitle = excluded.jobTitle,
+          department = excluded.department,
+          status = excluded.status,
+          joinDate = excluded.joinDate,
+          nationalId = excluded.nationalId,
+          phone = excluded.phone,
+          address = excluded.address,
+          baseSalary = excluded.baseSalary
+      `);
+      
+      db.transaction(() => {
+        if (employees.length > 0) {
+          const placeholders = employees.map(() => '?').join(',');
+          db.prepare(`DELETE FROM employees WHERE id NOT IN (${placeholders})`).run(...employees.map(e => e.id));
+        } else {
+          db.prepare("DELETE FROM employees").run();
         }
-      });
-      transaction(employees);
+        
+        for (const emp of employees) {
+          stmt.run(emp.id, emp.code, emp.name, emp.jobTitle, emp.department, emp.status, emp.joinDate, emp.nationalId, emp.phone, emp.address, emp.baseSalary || 0);
+        }
+      })();
       res.json({ success: true });
-    } catch (err) {
-      res.status(500).json({ error: "Failed to sync employees" });
+    } else {
+      res.status(400).json({ error: "Expected an array of employees" });
     }
   });
 
-  // Attendance Sync
+  // Attendance
   app.get("/api/attendance", (req, res) => {
-    try {
-      const attendance = db.prepare("SELECT * FROM attendance").all();
-      const result = {};
-      attendance.forEach(row => {
-        result[row.date] = JSON.parse(row.data);
-      });
-      res.json(result);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch attendance" });
-    }
+    const records = db.prepare("SELECT * FROM attendance").all();
+    const formatted: any = {};
+    records.forEach((r: any) => {
+      if (!formatted[r.date]) formatted[r.date] = {};
+      formatted[r.date][r.employeeId] = {
+        arrivalTime: r.arrivalTime,
+        departureTime: r.departureTime,
+        deduction: r.deduction,
+        notes: r.notes
+      };
+    });
+    res.json(formatted);
   });
 
   app.post("/api/attendance", (req, res) => {
     const { attendance } = req.body;
-    try {
-      const stmt = db.prepare("INSERT OR REPLACE INTO attendance (date, data, updatedAt) VALUES (?, ?, ?)");
-      const transaction = db.transaction((data) => {
-        for (const date in data) {
-          stmt.run(date, JSON.stringify(data[date]), Date.now());
+    if (typeof attendance === 'object' && attendance !== null) {
+      const stmt = db.prepare(`
+        INSERT INTO attendance (employeeId, date, arrivalTime, departureTime, deduction, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(employeeId, date) DO UPDATE SET
+          arrivalTime = excluded.arrivalTime,
+          departureTime = excluded.departureTime,
+          deduction = excluded.deduction,
+          notes = excluded.notes
+      `);
+      
+      db.transaction(() => {
+        db.prepare("DELETE FROM attendance").run();
+        
+        for (const [date, records] of Object.entries(attendance)) {
+          for (const [employeeId, record] of Object.entries(records as any)) {
+            stmt.run(employeeId, date, record.arrivalTime, record.departureTime, record.deduction || 0, record.notes || '');
+          }
         }
-      });
-      transaction(attendance);
+      })();
       res.json({ success: true });
-    } catch (err) {
-      res.status(500).json({ error: "Failed to sync attendance" });
+    } else {
+      res.status(400).json({ error: "Expected an attendance object" });
     }
   });
 
-  // Settings Sync
+  // Settings
   app.get("/api/settings", (req, res) => {
-    try {
-      const settings = db.prepare("SELECT * FROM app_settings").all();
-      const result = {};
-      settings.forEach(row => {
-        result[row.key] = JSON.parse(row.value);
-      });
-      res.json(result);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch settings" });
-    }
+    const records = db.prepare("SELECT * FROM settings").all();
+    const settings: any = {};
+    records.forEach((r: any) => {
+      try {
+        settings[r.key] = JSON.parse(r.value);
+      } catch {
+        settings[r.key] = r.value;
+      }
+    });
+    res.json(settings);
   });
 
   app.post("/api/settings", (req, res) => {
     const { settings } = req.body;
-    try {
-      const stmt = db.prepare("INSERT OR REPLACE INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)");
-      const transaction = db.transaction((data) => {
-        for (const key in data) {
-          stmt.run(key, JSON.stringify(data[key]), Date.now());
+    if (typeof settings === 'object' && settings !== null) {
+      const stmt = db.prepare(`
+        INSERT INTO settings (key, value) VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+      `);
+      
+      db.transaction(() => {
+        for (const [key, value] of Object.entries(settings)) {
+          stmt.run(key, typeof value === 'string' ? value : JSON.stringify(value));
         }
-      });
-      transaction(settings);
+      })();
       res.json({ success: true });
-    } catch (err) {
-      res.status(500).json({ error: "Failed to sync settings" });
+    } else {
+      res.status(400).json({ error: "Expected a settings object" });
     }
+  });
+
+  // Candidates
+  app.get("/api/candidates", (req, res) => {
+    const candidates = db.prepare("SELECT * FROM candidates ORDER BY createdAt DESC").all();
+    res.json(candidates);
+  });
+
+  app.post("/api/candidates", (req, res) => {
+    const { id, name, role, email, phone, status, priority, score, createdAt, notes } = req.body;
+    db.prepare(`
+      INSERT INTO candidates (id, name, role, email, phone, status, priority, score, createdAt, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        role = excluded.role,
+        email = excluded.email,
+        phone = excluded.phone,
+        status = excluded.status,
+        priority = excluded.priority,
+        score = excluded.score,
+        notes = excluded.notes
+    `).run(id, name, role, email, phone, status, priority, score, createdAt, notes);
+    res.json({ success: true });
+  });
+
+  app.delete("/api/candidates/:id", (req, res) => {
+    db.prepare("DELETE FROM candidates WHERE id = ?").run(req.params.id);
+    res.json({ success: true });
   });
 
   // Vite middleware for development
@@ -176,10 +218,9 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.use(express.static(path.join(__dirname, "dist")));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "dist", "index.html"));
     });
   }
 

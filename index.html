@@ -1342,36 +1342,6 @@
                                 <option value="all">كافة الموظفين</option>
                                 {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                             </select>
-                            
-                            <button 
-                                onClick={() => setIsSinglePage(!isSinglePage)}
-                                className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border-2 ${isSinglePage ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-slate-100 text-slate-500'}`}
-                            >
-                                {isSinglePage ? 'صفحة واحدة: مفعل' : 'صفحة واحدة: معطل'}
-                            </button>
-                            
-                            <button 
-                                onClick={() => {
-                                    if (selectedEmpId === 'all') {
-                                        reportRecords
-                                            .filter(({ emp }) => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
-                                            .forEach(({ emp }) => {
-                                                downloadPDF(`report-${emp.id}`, `Report_${emp.name}_${monthName}.pdf`, isSinglePage, 'portrait');
-                                            });
-                                    } else {
-                                        const emp = employees.find(e => e.id === selectedEmpId);
-                                        if (emp) {
-                                            downloadPDF(`report-${emp.id}`, `Report_${emp.name}_${monthName}.pdf`, isSinglePage, 'portrait');
-                                        }
-                                    }
-                                }}
-                                className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all"
-                            >
-                                <Icon name="download" size={18} /> تحميل PDF
-                            </button>
-                            <button onClick={handlePrint} className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-800 transition-all">
-                                <Icon name="printer" size={18} /> طباعة
-                            </button>
                         </div>
                     </div>
 
@@ -1656,22 +1626,6 @@
                                 <h3 className="text-lg md:text-xl font-black text-slate-800">معاينة كشف الراتب</h3>
                             </div>
                             <div className="flex gap-2 w-full sm:w-auto">
-                                <button 
-                                    onClick={() => setIsSinglePage(!isSinglePage)}
-                                    className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border-2 ${isSinglePage ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
-                                    title="ضمان احتواء المحتوى في صفحة واحدة"
-                                >
-                                    {isSinglePage ? 'وضع الصفحة الواحدة: مفعل' : 'وضع الصفحة الواحدة: معطل'}
-                                </button>
-                                <button 
-                                    onClick={() => downloadPDF('payslip-content', `Payslip_${emp.name}_${month}.pdf`, isSinglePage, 'portrait')}
-                                    className="flex-1 sm:flex-none justify-center px-4 md:px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg hover:bg-emerald-700 transition-all"
-                                >
-                                    <Icon name="download" size={18}/> تحميل PDF
-                                </button>
-                                <button onClick={handlePrintSlip} className="flex-1 sm:flex-none justify-center px-4 md:px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all">
-                                    <Icon name="printer" size={18}/> طباعة
-                                </button>
                                 <button onClick={onClose} className="p-2.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all shrink-0">
                                     <Icon name="x" size={24}/>
                                 </button>
@@ -1682,7 +1636,6 @@
                             {/* Header Section */}
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-slate-900 pb-6 md:pb-8 mb-6 md:mb-8 print:pb-6 print:mb-6 gap-4">
                                 <div className="text-right w-full md:w-auto">
-                                    <p className="text-[10px] font-bold text-slate-400 mb-1 print:hidden">شركة طيبة للاستثمار العقارى والتطوير العمراني</p>
                                     <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight print:text-lg">إشعار صرف راتب</h1>
                                     <p className="text-slate-500 font-bold mt-1 uppercase tracking-[0.2em] text-[10px] md:text-[12px] print:text-black">Payroll Advice Notice</p>
                                 </div>
@@ -2005,15 +1958,6 @@
                         />
                     )}
                     
-                    <div className="print-only mb-6 text-center border-b-2 border-slate-900 pb-4">
-                        <h1 className="text-xl font-black mb-1">كشف رواتب الموظفين الشهري</h1>
-                        <p className="text-base font-bold">للفترة: {customRange ? `${startDateStr} إلى ${endDateStr}` : selectedMonth}</p>
-                        <div className="flex justify-between items-end mt-2 text-xs font-bold">
-                            <span>اسم المنشأة: .................................</span>
-                            <span>تاريخ الطباعة: {new Date().toLocaleDateString('ar-EG')}</span>
-                        </div>
-                    </div>
-
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
                         <div className="flex items-center gap-4">
                             <button 
@@ -2041,24 +1985,6 @@
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <button 
-                                onClick={() => setIsSinglePage(!isSinglePage)}
-                                className={`px-4 py-2 rounded-2xl font-black text-xs transition-all border-2 ${isSinglePage ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-slate-50 border-slate-200 text-slate-400'}`}
-                            >
-                                {isSinglePage ? 'وضع الصفحة الواحدة: مفعل' : 'وضع الصفحة الواحدة: معطل'}
-                            </button>
-                            <button 
-                                onClick={() => downloadPDF('payroll-table-container', `Payroll_${currentMonthKey}.pdf`, isSinglePage, 'landscape')}
-                                className="bg-emerald-600 text-white px-6 py-2.5 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-emerald-700 transition-all"
-                            >
-                                <Icon name="download" size={18} /> تحميل PDF
-                            </button>
-                            <button 
-                                onClick={handlePrint}
-                                className="bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-800 transition-all"
-                            >
-                                <Icon name="printer" size={18} /> طباعة
-                            </button>
                             
                             <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
                                 <button 
@@ -2083,7 +2009,6 @@
 
                     <div id="payroll-table-container" className="rounded-[30px] shadow-2xl overflow-hidden print:overflow-visible border bg-white border-slate-200 landscape-page">
                         <div className="hidden print:block text-center mb-2 border-b-2 border-slate-900 pb-2">
-                            <h2 className="text-xs font-black text-indigo-600 mb-0.5">شركة طيبة للاستثمار العقارى والتطوير العمراني</h2>
                             <h1 className="text-xl font-black text-slate-900">كشف الرواتب الشهري - {selectedMonth}</h1>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-[7px]">Monthly Payroll Register</p>
                         </div>
@@ -3209,7 +3134,6 @@
                 <div className="space-y-10 animate-fade-in">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                         <div className="pr-4">
-                            <h3 className="text-indigo-600 font-black text-sm mb-1">شركة طيبة للاستثمار العقارى والتطوير العمراني</h3>
                             <h1 className="text-4xl font-black text-slate-800 mb-2">مرحباً بك يا {userName} 👋</h1>
                             <p className="text-slate-500 font-bold tracking-wide">إدارة أسهل… لقرارات أدق.</p>
                         </div>
@@ -3219,10 +3143,6 @@
                                 <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? (syncStatus === 'syncing' ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-500') : 'bg-rose-500'}`}></div>
                                 <span className="text-xs font-black">{isOnline ? (syncStatus === 'syncing' ? 'جاري المزامنة...' : 'متصل') : 'أوفلاين'}</span>
                             </div>
-                            <button onClick={downloadPDF} className="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-3 rounded-2xl font-black transition-all shadow-lg">
-                                <Icon name="download" size={20} />
-                                تحميل التقرير PDF
-                            </button>
                             <button onClick={() => setIsLoggedIn(false)} className="flex-1 sm:flex-none justify-center flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-100 px-6 py-3 rounded-2xl font-black transition-all shadow-sm">
                                 <Icon name="log-out" size={20} />
                                 تسجيل الخروج
@@ -4038,16 +3958,6 @@
                                 <h3 className="text-lg md:text-xl font-black text-slate-800">{type === 'warning' ? 'إصدار إنذار' : 'ملاحظة إدارية'}</h3>
                             </div>
                             <div className="flex gap-2 w-full sm:w-auto">
-                                <button 
-                                    onClick={() => setIsSinglePage(!isSinglePage)}
-                                    className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border-2 ${isSinglePage ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
-                                    title="ضمان احتواء المحتوى في صفحة واحدة"
-                                >
-                                    {isSinglePage ? 'وضع الصفحة الواحدة: مفعل' : 'وضع الصفحة الواحدة: معطل'}
-                                </button>
-                                <button onClick={handlePrint} className="flex-1 sm:flex-none justify-center px-4 md:px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all">
-                                    <Icon name="printer" size={18}/> طباعة / PDF
-                                </button>
                                 <button onClick={onClose} className="p-2.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all shrink-0">
                                     <Icon name="x" size={24}/>
                                 </button>
@@ -4075,7 +3985,6 @@
                         {/* Print View */}
                         <div className="hidden print:flex flex-col warning-box bg-slate-100">
                             <div className="text-center mb-8 border-b-4 border-slate-900 pb-6">
-                                <h2 className="text-sm font-black text-indigo-600 mb-1">شركة طيبة للاستثمار العقارى والتطوير العمراني</h2>
                                 <h1 className="text-5xl font-black text-slate-900 mb-2">{type === 'warning' ? 'إنذار إداري' : 'ملاحظة إدارية'}</h1>
                                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">{type === 'warning' ? 'Administrative Warning' : 'Administrative Note'}</p>
                             </div>
@@ -4140,7 +4049,6 @@
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 relative z-10">
-                                <button onClick={() => window.print()} className="p-4 bg-white/10 hover:bg-white/20 rounded-2xl transition-all" title="طباعة"><Icon name="printer" size={24} /></button>
                                 <button onClick={onClose} className="p-4 bg-white/10 hover:bg-rose-500 rounded-2xl transition-all"><Icon name="x" size={24} /></button>
                             </div>
                         </div>
@@ -5360,10 +5268,6 @@
                                         )) : <p className="text-xs text-slate-400 font-bold italic">لا توجد توصيات محددة حالياً.</p>}
                                     </ul>
                                 </div>
-
-                                <button onClick={() => window.print()} className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 no-print">
-                                    طباعة التقرير / PDF
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -6126,10 +6030,6 @@
                     {activeTab !== 'dashboard' && (
                         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
                             <div className="flex gap-2 w-full sm:w-auto">
-                                <button onClick={downloadPDF} className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-2xl font-black transition-all shadow-lg">
-                                    <Icon name="download" size={20} />
-                                    تنزيل PDF مباشر
-                                </button>
                                 <button onClick={() => setActiveTab('dashboard')} className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl font-black transition-all shadow-sm border border-slate-200">
                                     <Icon name="arrow-right" size={20} />
                                     عودة
