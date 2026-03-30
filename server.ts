@@ -70,6 +70,16 @@ async function startServer() {
   app.post("/api/employees", (req, res) => {
     const { employees } = req.body;
     if (Array.isArray(employees)) {
+      // Deduplicate by code to prevent UNIQUE constraint errors
+      const uniqueEmployees: any[] = [];
+      const seenCodes = new Set();
+      for (const emp of employees) {
+        if (!seenCodes.has(emp.code)) {
+          uniqueEmployees.push(emp);
+          seenCodes.add(emp.code);
+        }
+      }
+
       const stmt = db.prepare(`
         INSERT INTO employees (id, code, name, jobTitle, department, status, joinDate, nationalId, phone, address, baseSalary)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -87,14 +97,14 @@ async function startServer() {
       `);
       
       db.transaction(() => {
-        if (employees.length > 0) {
-          const placeholders = employees.map(() => '?').join(',');
-          db.prepare(`DELETE FROM employees WHERE id NOT IN (${placeholders})`).run(...employees.map(e => e.id));
+        if (uniqueEmployees.length > 0) {
+          const placeholders = uniqueEmployees.map(() => '?').join(',');
+          db.prepare(`DELETE FROM employees WHERE id NOT IN (${placeholders})`).run(...uniqueEmployees.map(e => e.id));
         } else {
           db.prepare("DELETE FROM employees").run();
         }
         
-        for (const emp of employees) {
+        for (const emp of uniqueEmployees) {
           stmt.run(emp.id, emp.code, emp.name, emp.jobTitle, emp.department, emp.status, emp.joinDate, emp.nationalId, emp.phone, emp.address, emp.baseSalary || 0);
         }
       })();
@@ -137,7 +147,7 @@ async function startServer() {
         db.prepare("DELETE FROM attendance").run();
         
         for (const [date, records] of Object.entries(attendance)) {
-          for (const [employeeId, record] of Object.entries(records as any)) {
+          for (const [employeeId, record] of Object.entries(records as Record<string, any>)) {
             stmt.run(employeeId, date, record.arrivalTime, record.departureTime, record.deduction || 0, record.notes || '');
           }
         }

@@ -16,7 +16,8 @@ import {
   Clock,
   Briefcase,
   Trash2,
-  Edit3
+  Edit3,
+  Printer
 } from 'lucide-react';
 import { Card, Button, cn } from '../components/Layout';
 
@@ -71,8 +72,7 @@ const INITIAL_CANDIDATES: Candidate[] = [
   }
 ];
 
-export const Recruitment = () => {
-  const [candidates, setCandidates] = useState<Candidate[]>(INITIAL_CANDIDATES);
+export const Recruitment = ({ candidates, setCandidates }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null);
@@ -82,6 +82,12 @@ export const Recruitment = () => {
     experience: '',
     priority: 'عادي' as const,
   });
+
+  useEffect(() => {
+    if (candidates.length === 0) {
+      setCandidates(INITIAL_CANDIDATES);
+    }
+  }, []);
 
   const handleAddCandidate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,14 +107,14 @@ export const Recruitment = () => {
     e.preventDefault();
     if (!editingCandidate) return;
     
-    setCandidates(prev => prev.map(c => 
+    setCandidates((prev: Candidate[]) => prev.map(c => 
       c.id === editingCandidate.id ? editingCandidate : c
     ));
     setEditingCandidate(null);
   };
 
   const moveNext = (id: string) => {
-    setCandidates(prev => prev.map(c => {
+    setCandidates((prev: Candidate[]) => prev.map(c => {
       if (c.id === id) {
         const currentIndex = STAGES.findIndex(s => s.id === c.status);
         if (currentIndex < STAGES.length - 1) {
@@ -121,14 +127,14 @@ export const Recruitment = () => {
 
   const deleteCandidate = (id: string) => {
     if (confirm('هل أنت متأكد من حذف هذا المرشح؟')) {
-      setCandidates(prev => prev.filter(c => c.id !== id));
+      setCandidates((prev: Candidate[]) => prev.filter(c => c.id !== id));
     }
   };
 
   const stats = [
     { label: 'إجمالي المرشحين', value: candidates.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'مقابلات نشطة', value: candidates.filter(c => c.status === 'interview').length, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'عروض معلقة', value: candidates.filter(c => c.status === 'offer').length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'مقابلات نشطة', value: candidates.filter((c: any) => c.status === 'interview').length, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'عروض معلقة', value: candidates.filter((c: any) => c.status === 'offer').length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
   return (
@@ -142,7 +148,7 @@ export const Recruitment = () => {
           <h1 className="text-2xl font-black text-slate-800 tracking-tighter">إدارة التوظيف</h1>
         </div>
 
-        <div className="flex-1 max-w-xl relative">
+        <div className="flex-1 max-w-xl relative no-print">
           <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input 
             type="text" 
@@ -153,7 +159,14 @@ export const Recruitment = () => {
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 no-print">
+          <button 
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-2xl text-xs font-black hover:bg-slate-900 transition-all shadow-lg"
+          >
+            <Printer size={16} />
+            <span>طباعة</span>
+          </button>
           <button className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-100 rounded-2xl text-xs font-black text-slate-600 hover:bg-slate-50 transition-all">
             <Filter size={16} />
             <span>كل الأولويات</span>

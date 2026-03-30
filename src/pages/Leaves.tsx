@@ -40,19 +40,27 @@ export const Leaves = ({ employees, onUpdateEmployee }: any) => {
                     </h2>
                     <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">إدارة الرصيد واستهلاك الأيام والكسور (0.5)</p>
                 </div>
-                {editingId ? (
-                    <div className="flex gap-3">
-                        <button onClick={saveEdit} className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all flex items-center gap-2">
-                            <Icon name="save" size={18} /> حفظ التعديلات
-                        </button>
-                        <button onClick={() => setEditingId(null)} className="bg-white text-slate-500 px-6 py-3 rounded-2xl font-black border-2 border-slate-100 hover:bg-slate-50 transition-all">إلغاء</button>
-                    </div>
-                ) : (
-                   <div className="bg-pink-50 text-pink-700 px-4 py-2 rounded-2xl border border-pink-100 flex items-center gap-2 animate-pulse">
-                       <Icon name="info" size={16} />
-                       <span className="text-xs font-black">يمكنك إضافة نصف يوم (0.5) في وضع التعديل</span>
-                   </div>
-                )}
+                <div className="flex gap-3">
+                    <button 
+                        onClick={() => window.print()}
+                        className="bg-slate-800 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-900 transition-all"
+                    >
+                        <Icon name="printer" size={18} /> طباعة
+                    </button>
+                    {editingId ? (
+                        <div className="flex gap-3">
+                            <button onClick={saveEdit} className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all flex items-center gap-2">
+                                <Icon name="save" size={18} /> حفظ التعديلات
+                            </button>
+                            <button onClick={() => setEditingId(null)} className="bg-white text-slate-500 px-6 py-3 rounded-2xl font-black border-2 border-slate-100 hover:bg-slate-50 transition-all">إلغاء</button>
+                        </div>
+                    ) : (
+                       <div className="bg-pink-50 text-pink-700 px-4 py-2 rounded-2xl border border-pink-100 flex items-center gap-2 animate-pulse">
+                           <Icon name="info" size={16} />
+                           <span className="text-xs font-black">يمكنك إضافة نصف يوم (0.5) في وضع التعديل</span>
+                       </div>
+                    )}
+                </div>
             </div>
 
             <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100">

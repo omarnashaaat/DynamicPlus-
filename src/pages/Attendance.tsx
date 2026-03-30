@@ -107,9 +107,9 @@ export const Attendance = ({ employees, attendanceLog, setAttendanceLog }: any) 
 
     return (
         <div className="space-y-8 animate-fade-in">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
                 <div className="space-y-2">
-                    <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+                    <h2 className="text-3xl md:text-4xl font-black text-slate-800 flex items-center gap-3">
                         <Icon name="clock" className="text-blue-600" size={32} /> الحضور والانصراف اليومي
                     </h2>
                     <p className="text-slate-500 font-bold">تسجيل المواعيد وتطبيق اللائحة</p>
@@ -118,102 +118,116 @@ export const Attendance = ({ employees, attendanceLog, setAttendanceLog }: any) 
                         <span className="text-xs font-black text-blue-700">دورة الشهر: من يوم 26 حتى يوم 25 من الشهر التالي</span>
                     </div>
                 </div>
-                <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-                    <Icon name="calendar" className="text-slate-400" size={20} />
-                    <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="outline-none font-bold text-slate-700 bg-transparent" />
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => window.print()}
+                        className="bg-slate-800 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-900 transition-all"
+                    >
+                        <Icon name="printer" size={20} /> طباعة التقرير
+                    </button>
+                    <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+                        <Icon name="calendar" className="text-slate-400" size={20} />
+                        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="outline-none font-bold text-slate-700 bg-transparent" />
+                    </div>
                 </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-1 space-y-4">
+                <div className="lg:col-span-1 space-y-4 no-print">
                     <div className="bg-blue-600 rounded-[40px] p-8 text-white shadow-xl">
-                        <h3 className="font-black text-lg mb-4 flex items-center gap-2"><Icon name="info" size={20} /> لائحة التأخير</h3>
-                        <ul className="space-y-2 text-xs font-bold opacity-90">
-                            <li className="flex justify-between border-b border-white/20 pb-1"><span>حتى 09:15 ص</span> <span>سماح</span></li>
-                            <li className="flex justify-between border-b border-white/20 pb-1"><span>حتى 09:30 ص</span> <span>0.5 س</span></li>
-                            <li className="flex justify-between border-b border-white/20 pb-1"><span>حتى 10:00 ص</span> <span>1 س</span></li>
-                            <li className="flex justify-between"><span>بعد 12:00 م</span> <span>8 س</span></li>
+                        <h3 className="font-black text-lg mb-4 flex items-center gap-2"><Icon name="info" size={20} /> لائحة الحضور</h3>
+                        <ul className="space-y-3 text-xs font-bold opacity-90">
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>حتى 09:15 ص</span> <span className="bg-white/20 px-2 py-0.5 rounded">سماح</span></li>
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>حتى 09:30 ص</span> <span className="bg-white/20 px-2 py-0.5 rounded">0.5 س</span></li>
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>حتى 10:00 ص</span> <span className="bg-white/20 px-2 py-0.5 rounded">1 س</span></li>
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>حتى 10:30 ص</span> <span className="bg-white/20 px-2 py-0.5 rounded">1.5 س</span></li>
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>حتى 12:00 م</span> <span className="bg-white/20 px-2 py-0.5 rounded">4 س</span></li>
+                            <li className="flex justify-between"><span>بعد 12:00 م</span> <span className="bg-white/20 px-2 py-0.5 rounded">8 س</span></li>
                         </ul>
                     </div>
                     <div className="bg-slate-800 rounded-[40px] p-8 text-white shadow-xl">
                         <h3 className="font-black text-lg mb-4 flex items-center gap-2"><Icon name="alert-circle" size={20} /> انصراف مبكر</h3>
-                        <ul className="space-y-2 text-xs font-bold opacity-90">
-                            <li className="flex justify-between border-b border-white/20 pb-1"><span>من 05:00 م</span> <span>طبيعي</span></li>
-                            <li className="flex justify-between border-b border-white/20 pb-1"><span>04:45 م</span> <span>0.5 س</span></li>
-                            <li className="flex justify-between border-b border-white/20 pb-1"><span>04:00 م</span> <span>1 س</span></li>
-                            <li className="flex justify-between"><span>02:00 م</span> <span>4 س</span></li>
+                        <ul className="space-y-3 text-xs font-bold opacity-90">
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>من 05:00 م</span> <span className="bg-white/20 px-2 py-0.5 rounded">طبيعي</span></li>
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>04:45 م</span> <span className="bg-white/20 px-2 py-0.5 rounded">0.5 س</span></li>
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>04:00 م</span> <span className="bg-white/20 px-2 py-0.5 rounded">1 س</span></li>
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>03:30 م</span> <span className="bg-white/20 px-2 py-0.5 rounded">1.5 س</span></li>
+                            <li className="flex justify-between border-b border-white/20 pb-2"><span>03:00 م</span> <span className="bg-white/20 px-2 py-0.5 rounded">2 س</span></li>
+                            <li className="flex justify-between"><span>02:00 م</span> <span className="bg-white/20 px-2 py-0.5 rounded">4 س</span></li>
                         </ul>
                     </div>
                 </div>
-                <div className="lg:col-span-3">
-                    <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100">
-                        <table className="w-full text-right">
-                            <thead className="bg-slate-50 text-slate-500 text-[11px] font-black uppercase border-b">
-                                <tr>
-                                    <th className="px-6 py-5">الموظف</th>
-                                    <th className="px-4 py-5">الوردية</th>
-                                    <th className="px-4 py-5">حضور</th>
-                                    <th className="px-4 py-5">انصراف</th>
-                                    <th className="px-4 py-5 text-center">تأخير (س)</th>
-                                    <th className="px-4 py-5 text-center">مبكر (س)</th>
-                                    <th className="px-4 py-5 text-center">إجمالي الخصم</th>
-                                    <th className="px-4 py-5">ملاحظات</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {employees.map((emp: any) => {
-                                    const record = (attendanceLog[selectedDate] && attendanceLog[selectedDate][emp.id]) || { arrivalTime: '', departureTime: '', deduction: 0, lateDeduction: 0, earlyDeduction: 0, shift: '', notes: '' };
-                                    return (
-                                        <tr key={emp.id} className="hover:bg-blue-50/30">
-                                            <td className="px-6 py-4">
-                                                <span className="font-black block">{emp.name}</span>
-                                                <span className="text-[10px] text-slate-400">كود: {emp.code}</span>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="الوردية"
-                                                    value={record.shift || ''} 
-                                                    onChange={(e) => updateRecord(emp.id, 'shift', e.target.value)} 
-                                                    className="w-20 bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100" 
-                                                />
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <input type="time" value={record.arrivalTime} onChange={(e) => updateRecord(emp.id, 'arrivalTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100" />
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <input type="time" value={record.departureTime} onChange={(e) => updateRecord(emp.id, 'departureTime', e.target.value)} className="bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100" />
-                                            </td>
-                                            <td className="px-4 py-4 text-center">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.5"
-                                                    value={record.lateDeduction || 0} 
-                                                    onChange={(e) => updateRecord(emp.id, 'lateDeduction', e.target.value)} 
-                                                    className="w-16 bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100 text-center" 
-                                                />
-                                            </td>
-                                            <td className="px-4 py-4 text-center">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.5"
-                                                    value={record.earlyDeduction || 0} 
-                                                    onChange={(e) => updateRecord(emp.id, 'earlyDeduction', e.target.value)} 
-                                                    className="w-16 bg-slate-50 p-2 rounded-xl text-xs font-bold border border-slate-100 text-center" 
-                                                />
-                                            </td>
-                                            <td className="px-4 py-4 text-center">
-                                                <span className={`px-4 py-2 rounded-full font-black text-xs ${record.deduction > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                                                    {record.deduction} س
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <input type="text" value={record.notes} onChange={(e) => updateRecord(emp.id, 'notes', e.target.value)} className="w-full bg-transparent border-b text-xs" />
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                <div className="lg:col-span-3 print:col-span-4">
+                    <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100 print:border-none print:shadow-none">
+                        <div className="overflow-x-auto scroll-hidden">
+                            <table className="w-full text-right border-collapse min-w-[900px]">
+                                <thead className="bg-slate-50 text-slate-500 text-[11px] font-black uppercase tracking-widest border-b">
+                                    <tr>
+                                        <th className="px-6 py-6">الموظف</th>
+                                        <th className="px-4 py-6">الوردية</th>
+                                        <th className="px-4 py-6">حضور</th>
+                                        <th className="px-4 py-6">انصراف</th>
+                                        <th className="px-4 py-6 text-center">تأخير (س)</th>
+                                        <th className="px-4 py-6 text-center">مبكر (س)</th>
+                                        <th className="px-4 py-6 text-center">إجمالي الخصم</th>
+                                        <th className="px-6 py-6">ملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {employees.map((emp: any) => {
+                                        const record = (attendanceLog[selectedDate] && attendanceLog[selectedDate][emp.id]) || { arrivalTime: '', departureTime: '', deduction: 0, lateDeduction: 0, earlyDeduction: 0, shift: '', notes: '' };
+                                        return (
+                                            <tr key={emp.id} className="hover:bg-blue-50/30 transition-colors">
+                                                <td className="px-6 py-5">
+                                                    <span className="font-black block text-slate-800">{emp.name}</span>
+                                                    <span className="text-[10px] text-slate-400 font-bold">كود: {emp.code}</span>
+                                                </td>
+                                                <td className="px-4 py-5">
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="الوردية"
+                                                        value={record.shift || ''} 
+                                                        onChange={(e) => updateRecord(emp.id, 'shift', e.target.value)} 
+                                                        className="w-24 bg-slate-50 p-2.5 rounded-xl text-xs font-black border border-slate-100 focus:bg-white focus:border-blue-300 outline-none transition-all" 
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-5">
+                                                    <input type="time" value={record.arrivalTime} onChange={(e) => updateRecord(emp.id, 'arrivalTime', e.target.value)} className="bg-slate-50 p-2.5 rounded-xl text-xs font-black border border-slate-100 focus:bg-white focus:border-blue-300 outline-none transition-all" />
+                                                </td>
+                                                <td className="px-4 py-5">
+                                                    <input type="time" value={record.departureTime} onChange={(e) => updateRecord(emp.id, 'departureTime', e.target.value)} className="bg-slate-50 p-2.5 rounded-xl text-xs font-black border border-slate-100 focus:bg-white focus:border-blue-300 outline-none transition-all" />
+                                                </td>
+                                                <td className="px-4 py-5 text-center">
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.5"
+                                                        value={record.lateDeduction || 0} 
+                                                        onChange={(e) => updateRecord(emp.id, 'lateDeduction', e.target.value)} 
+                                                        className="w-16 bg-slate-50 p-2.5 rounded-xl text-xs font-black border border-slate-100 text-center focus:bg-white focus:border-blue-300 outline-none transition-all" 
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-5 text-center">
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.5"
+                                                        value={record.earlyDeduction || 0} 
+                                                        onChange={(e) => updateRecord(emp.id, 'earlyDeduction', e.target.value)} 
+                                                        className="w-16 bg-slate-50 p-2.5 rounded-xl text-xs font-black border border-slate-100 text-center focus:bg-white focus:border-blue-300 outline-none transition-all" 
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-5 text-center">
+                                                    <span className={`px-4 py-2 rounded-xl font-black text-xs shadow-sm ${record.deduction > 0 ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                                                        {record.deduction} س
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <input type="text" placeholder="أضف ملاحظة..." value={record.notes} onChange={(e) => updateRecord(emp.id, 'notes', e.target.value)} className="w-full bg-transparent border-b border-slate-100 py-1 text-xs font-bold focus:border-blue-400 outline-none transition-all" />
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

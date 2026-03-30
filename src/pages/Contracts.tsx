@@ -24,12 +24,18 @@ export const Contracts = ({ employees, contractRecords, setContractRecords }: an
     };
 
     return (
-        <div className="space-y-8 animate-fade-in">
-            <div className="flex justify-between items-center">
+        <div className="space-y-8 animate-fade-in pb-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
                 <div>
-                    <h2 className="text-3xl font-black text-slate-800">إدارة عقود العمل</h2>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">تفاصيل التعيين والعقود القانونية</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-slate-800">إدارة عقود العمل</h2>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">تفاصيل التعيين والعقود القانونية</p>
                 </div>
+                <button 
+                    onClick={() => window.print()}
+                    className="bg-slate-800 text-white px-8 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-900 transition-all"
+                >
+                    <Icon name="printer" size={20} /> طباعة التقرير
+                </button>
             </div>
 
             <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100">

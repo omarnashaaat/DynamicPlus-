@@ -71,7 +71,13 @@ export const Archive = ({ employees }: any) => {
                     <h2 className="text-2xl font-black text-slate-800">{getTitle()}</h2>
                     <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">متابعة الوثائق المكتملة لكل موظف</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 no-print">
+                    <button 
+                        onClick={() => window.print()}
+                        className="bg-slate-800 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-900 transition-all"
+                    >
+                        <Icon name="printer" size={20} /> طباعة السجل
+                    </button>
                     <button onClick={() => setView('folders')} className="px-6 py-3 bg-white text-slate-800 border-2 border-slate-200 rounded-2xl font-black">العودة للمجلدات</button>
                 </div>
             </div>

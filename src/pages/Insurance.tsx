@@ -12,7 +12,7 @@ export const Insurance = ({ employees, insuranceRecords, setInsuranceRecords }: 
             startDate: '',
             insuranceSalary: '',
             insuranceOffice: '',
-            ratioCompany: '18.75',
+            ratioCompany: '18',
             ratioEmployee: '11'
         };
         setFormData(record);
@@ -34,14 +34,20 @@ export const Insurance = ({ employees, insuranceRecords, setInsuranceRecords }: 
     }, [insuranceRecords, employees]);
 
     return (
-        <div className="space-y-8 animate-fade-in">
-            <div className="flex justify-between items-center">
+        <div className="space-y-8 animate-fade-in pb-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
                 <div>
-                    <h2 className="text-3xl font-black text-slate-800">التأمينات الاجتماعية</h2>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">إدارة ملفات التأمين وحصص المساهمة</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-slate-800">التأمينات الاجتماعية</h2>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">إدارة ملفات التأمين وحصص المساهمة</p>
                 </div>
+                <button 
+                    onClick={() => window.print()}
+                    className="bg-slate-800 text-white px-8 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg hover:bg-slate-900 transition-all"
+                >
+                    <Icon name="printer" size={20} /> طباعة التقرير
+                </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
                 <div className="bg-emerald-500 p-8 rounded-[40px] text-white shadow-xl shadow-emerald-200">
                     <Icon name="shield-check" size={32} className="mb-4 opacity-50" />
                     <h4 className="text-sm font-black uppercase tracking-widest">مؤمن عليه</h4>
@@ -101,7 +107,7 @@ export const Insurance = ({ employees, insuranceRecords, setInsuranceRecords }: 
                                         <td className="px-4 py-4">{isEditing ? <input type="date" className="w-32 p-1 border rounded text-xs" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} /> : <span className="font-mono text-[10px] text-slate-400">{record.startDate || '---'}</span>}</td>
                                         <td className="px-4 py-4">{isEditing ? <input type="number" className="w-20 p-1 border rounded text-xs font-bold" value={formData.insuranceSalary} onChange={e => setFormData({...formData, insuranceSalary: e.target.value})} /> : <span className="font-bold text-sky-700">{record.insuranceSalary ? `${record.insuranceSalary} ج.م` : '---'}</span>}</td>
                                         <td className="px-4 py-4">{isEditing ? <input type="text" className="w-28 p-1 border rounded text-xs" value={formData.insuranceOffice} onChange={e => setFormData({...formData, insuranceOffice: e.target.value})} /> : <span className="text-xs text-slate-500">{record.insuranceOffice || '---'}</span>}</td>
-                                        <td className="px-4 py-4 text-center">{isEditing ? <div className="flex items-center gap-1 justify-center"><input type="text" className="w-10 p-1 border rounded text-[10px]" value={formData.ratioCompany} onChange={e => setFormData({...formData, ratioCompany: e.target.value})} /><span className="text-slate-300">/</span><input type="text" className="w-10 p-1 border rounded text-[10px]" value={formData.ratioEmployee} onChange={e => setFormData({...formData, ratioEmployee: e.target.value})} /></div> : <span className="text-[10px] font-bold text-slate-400">{record.ratioCompany || '18.75'}% / {record.ratioEmployee || '11'}%</span>}</td>
+                                        <td className="px-4 py-4 text-center">{isEditing ? <div className="flex items-center gap-1 justify-center"><input type="text" className="w-10 p-1 border rounded text-[10px]" value={formData.ratioCompany} onChange={e => setFormData({...formData, ratioCompany: e.target.value})} /><span className="text-slate-300">/</span><input type="text" className="w-10 p-1 border rounded text-[10px]" value={formData.ratioEmployee} onChange={e => setFormData({...formData, ratioEmployee: e.target.value})} /></div> : <span className="text-[10px] font-bold text-slate-400">{record.ratioCompany || '18'}% / {record.ratioEmployee || '11'}%</span>}</td>
                                         <td className="px-4 py-4 text-center no-print">{isEditing ? <button onClick={() => saveRecord(emp.id)} className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600"><Icon name="check" size={14} /></button> : <button onClick={() => startEditing(emp)} className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-sky-500 hover:text-white transition-all"><Icon name="edit" size={14} /></button>}</td>
                                     </tr>
                                 );

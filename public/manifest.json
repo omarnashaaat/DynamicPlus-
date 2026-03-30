@@ -1,0 +1,16 @@
+{
+  "name": "HR System",
+  "short_name": "HR",
+  "description": "نظام إدارة الموارد البشرية",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
