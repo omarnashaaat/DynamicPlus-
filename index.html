@@ -3163,7 +3163,7 @@
 
         const INITIAL_CALENDAR_EVENTS = [];
 
-        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog, setIsLoggedIn, isOnline, syncStatus, recentActivity, showToast }) => {
+        const Dashboard = ({ setActiveTab, userName, employees, attendanceLog, leaveRequests, announcements, setIsLoggedIn, isOnline, syncStatus, recentActivity, showToast }) => {
             const menuItems = [
                 { id: 'employees', title: 'فريق العمل', sub: 'جميع ملفات الموظفين', icon: 'users', color: 'bg-indigo-600' },
                 { id: 'attendance', title: 'الحضور والإنصراف', sub: 'سجلات الحضور اليومية', icon: 'clock', color: 'bg-blue-600' },
@@ -3188,8 +3188,8 @@
             const stats = [
                 { label: 'إجمالي الموظفين', value: employees.length, icon: 'users', color: 'text-indigo-600', bg: 'bg-indigo-50' },
                 { label: 'حضور اليوم', value: Object.keys(attendanceLog[new Date().toISOString().split('T')[0]] || {}).length, icon: 'check-circle', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { label: 'طلبات التوظيف', value: 0, icon: 'briefcase', color: 'text-amber-600', bg: 'bg-amber-50' },
-                { label: 'إجازات معلقة', value: 0, icon: 'clock', color: 'text-rose-600', bg: 'bg-rose-50' },
+                { label: 'طلبات التوظيف', value: employees.filter(e => e.status === 'candidate').length, icon: 'briefcase', color: 'text-amber-600', bg: 'bg-amber-50' },
+                { label: 'إجازات معلقة', value: (leaveRequests || []).filter(r => r.status === 'معلق').length, icon: 'clock', color: 'text-rose-600', bg: 'bg-rose-50' },
             ];
 
             return (
@@ -3212,8 +3212,8 @@
                             </button>
                             <button 
                                 onClick={() => {
-                                    localStorage.removeItem('isLoggedIn');
-                                    localStorage.removeItem('userName');
+                                    localStorage.removeItem('hr_isLoggedIn');
+                                    localStorage.removeItem('hr_username');
                                     setIsLoggedIn(false);
                                     showToast('تم تسجيل الخروج بنجاح', 'info');
                                 }} 
@@ -3240,9 +3240,36 @@
                         ))}
                     </div>
 
+                    {/* Announcements */}
+                    <div className="w-full">
+                        <div className="bg-white rounded-[50px] p-8 border border-slate-50 shadow-sm space-y-6">
+                            <div className="flex justify-between items-center px-2">
+                                <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                    <Icon name="megaphone" className="text-indigo-600" /> الإعلانات والتعميمات
+                                </h3>
+                                <button className="text-indigo-600 font-black text-xs hover:underline">عرض الكل</button>
+                            </div>
+                            <div className="space-y-4">
+                                {(announcements || []).map(ann => (
+                                    <div key={ann.id} className="p-6 bg-slate-50 rounded-[35px] border border-slate-100 hover:bg-indigo-50/50 transition-all group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500"></div>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h4 className="font-black text-slate-800 text-lg">{ann.title}</h4>
+                                            <span className="text-[10px] font-bold text-slate-400 font-mono">{new Date(ann.date).toLocaleDateString('ar-EG')}</span>
+                                        </div>
+                                        <p className="text-slate-500 text-sm font-bold leading-relaxed">{ann.content}</p>
+                                    </div>
+                                ))}
+                                {(!announcements || announcements.length === 0) && (
+                                    <div className="text-center py-12 text-slate-400 font-bold">لا توجد إعلانات حالياً</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Main Menu Grid */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-4 no-print">
+                        <div className="flex items-center gap-4 no-print px-4">
                             <div className="h-px flex-1 bg-slate-100"></div>
                             <span className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em]">قائمة الخدمات الرئيسية</span>
                             <div className="h-px flex-1 bg-slate-100"></div>
@@ -3268,10 +3295,12 @@
             );
         };
 
-        const Leaves = ({ employees, onUpdateEmployee, showToast }) => {
+        const Leaves = ({ employees, onUpdateEmployee, leaveRequests, setLeaveRequests, showToast }) => {
             const [editingId, setEditingId] = useState(null);
             const [editData, setEditData] = useState({});
             const [searchQuery, setSearchQuery] = useState('');
+            const [showRequestModal, setShowRequestModal] = useState(false);
+            const [newRequest, setNewRequest] = useState({ employeeId: '', type: 'سنوية', startDate: '', endDate: '', notes: '' });
             
             const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
@@ -3299,6 +3328,49 @@
                 setEditData({...editData, monthlyLeaves: newMonthly});
             };
 
+            const submitRequest = () => {
+                if (!newRequest.employeeId || !newRequest.startDate || !newRequest.endDate) {
+                    showToast('يرجى إكمال جميع الحقول', 'error');
+                    return;
+                }
+                const start = new Date(newRequest.startDate);
+                const end = new Date(newRequest.endDate);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+                const request = {
+                    ...newRequest,
+                    id: Date.now(),
+                    days: diffDays,
+                    status: 'معلق',
+                    createdAt: new Date().toISOString()
+                };
+
+                setLeaveRequests(prev => [request, ...prev]);
+                setShowRequestModal(false);
+                setNewRequest({ employeeId: '', type: 'سنوية', startDate: '', endDate: '', notes: '' });
+                showToast('تم تقديم طلب الإجازة بنجاح');
+            };
+
+            const handleApprove = (req) => {
+                const emp = employees.find(e => e.id === req.employeeId);
+                if (!emp) return;
+
+                const start = new Date(req.startDate);
+                const monthIdx = start.getMonth();
+                const newMonthly = [...(emp.monthlyLeaves || Array(12).fill(0))];
+                newMonthly[monthIdx] = (parseFloat(newMonthly[monthIdx]) || 0) + req.days;
+
+                onUpdateEmployee({ ...emp, monthlyLeaves: newMonthly });
+                setLeaveRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'مقبول' } : r));
+                showToast('تم قبول الطلب وتحديث الرصيد');
+            };
+
+            const handleReject = (reqId) => {
+                setLeaveRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'مرفوض' } : r));
+                showToast('تم رفض الطلب', 'warning');
+            };
+
             return (
                 <div className="space-y-8 animate-fade-in pb-10">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
@@ -3308,32 +3380,136 @@
                             </h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">إدارة الرصيد واستهلاك الأيام والكسور (0.5)</p>
                         </div>
-                        <div className="relative w-full sm:w-auto">
-                            <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input 
-                                type="text" 
-                                placeholder="بحث بالاسم أو الكود..." 
-                                className="w-full sm:w-auto bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-pink-500/20 transition-all md:w-64"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        {editingId ? (
-                            <div className="flex gap-3">
-                                <button onClick={saveEdit} className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all flex items-center gap-2">
-                                    <Icon name="save" size={18} /> حفظ التعديلات
-                                </button>
-                                <button onClick={() => setEditingId(null)} className="bg-white text-slate-500 px-6 py-3 rounded-2xl font-black border-2 border-slate-100 hover:bg-slate-50 transition-all">إلغاء</button>
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                            <div className="relative flex-1 sm:flex-none">
+                                <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="بحث بالاسم أو الكود..." 
+                                    className="w-full sm:w-64 bg-white border border-slate-100 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-pink-500/20 transition-all"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
                             </div>
-                        ) : (
-                           <div className="bg-pink-50 text-pink-700 px-4 py-2 rounded-2xl border border-pink-100 flex items-center gap-2 animate-pulse">
-                               <Icon name="info" size={16} />
-                               <span className="text-xs font-black">يمكنك إضافة نصف يوم (0.5) في وضع التعديل</span>
-                           </div>
-                        )}
+                            <button onClick={() => setShowRequestModal(true)} className="bg-pink-600 text-white px-6 py-2 rounded-2xl font-black shadow-lg hover:bg-pink-700 transition-all flex items-center gap-2 whitespace-nowrap">
+                                <Icon name="plus-circle" size={18} /> طلب إجازة جديد
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Leave Requests Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 space-y-6">
+                            <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-100">
+                                <div className="p-6 border-b border-slate-50 flex justify-between items-center">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <Icon name="clipboard-list" className="text-indigo-600" /> طلبات الإجازات الأخيرة
+                                    </h3>
+                                    <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black">
+                                        {leaveRequests.filter(r => r.status === 'معلق').length} معلق
+                                    </span>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-right border-collapse text-[11px]">
+                                        <thead className="bg-slate-50 text-slate-500 font-black uppercase border-b">
+                                            <tr>
+                                                <th className="px-4 py-4">الموظف</th>
+                                                <th className="px-4 py-4">النوع</th>
+                                                <th className="px-4 py-4">الفترة</th>
+                                                <th className="px-4 py-4">الأيام</th>
+                                                <th className="px-4 py-4">الحالة</th>
+                                                <th className="px-4 py-4 text-center">إجراء</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {leaveRequests.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="6" className="py-10 text-center text-slate-400 font-bold">لا توجد طلبات حالياً</td>
+                                                </tr>
+                                            ) : (
+                                                leaveRequests.map(req => {
+                                                    const emp = employees.find(e => e.id === req.employeeId);
+                                                    return (
+                                                        <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
+                                                            <td className="px-4 py-4 font-black text-slate-800">{emp?.name || 'موظف محذوف'}</td>
+                                                            <td className="px-4 py-4 font-bold text-slate-500">{req.type}</td>
+                                                            <td className="px-4 py-4 text-slate-400 font-mono">
+                                                                {req.startDate} <Icon name="arrow-left" size={10} className="inline mx-1" /> {req.endDate}
+                                                            </td>
+                                                            <td className="px-4 py-4 font-black text-indigo-600">{req.days} يوم</td>
+                                                            <td className="px-4 py-4">
+                                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black ${
+                                                                    req.status === 'مقبول' ? 'bg-emerald-100 text-emerald-600' :
+                                                                    req.status === 'مرفوض' ? 'bg-rose-100 text-rose-600' :
+                                                                    'bg-amber-100 text-amber-600'
+                                                                }`}>
+                                                                    {req.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-4 text-center">
+                                                                {req.status === 'معلق' && (
+                                                                    <div className="flex justify-center gap-2">
+                                                                        <button onClick={() => handleApprove(req)} className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all">
+                                                                            <Icon name="check" size={14} />
+                                                                        </button>
+                                                                        <button onClick={() => handleReject(req.id)} className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all">
+                                                                            <Icon name="x" size={14} />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="bg-indigo-600 p-8 rounded-[40px] text-white shadow-xl relative overflow-hidden group">
+                                <Icon name="info" className="absolute -right-4 -bottom-4 text-white/10 w-32 h-32 group-hover:scale-110 transition-transform" />
+                                <h4 className="text-sm font-black uppercase tracking-widest opacity-60 mb-2">إجمالي الاستهلاك السنوي</h4>
+                                <p className="text-5xl font-black mb-4">
+                                    {employees.reduce((acc, emp) => acc + calculateTotalConsumed(emp.monthlyLeaves), 0)}
+                                </p>
+                                <p className="text-xs font-bold opacity-80">يوم غياب لجميع الموظفين هذا العام</p>
+                            </div>
+                            
+                            <div className="bg-white p-6 rounded-[40px] border border-slate-100 shadow-xl">
+                                <h4 className="font-black text-slate-800 mb-4 flex items-center gap-2">
+                                    <Icon name="pie-chart" className="text-pink-600" /> توزيع أنواع الإجازات
+                                </h4>
+                                <div className="space-y-3">
+                                    {['سنوية', 'مرضي', 'عارضة', 'بدون أجر'].map(type => {
+                                        const count = leaveRequests.filter(r => r.type === type && r.status === 'مقبول').length;
+                                        const total = leaveRequests.filter(r => r.status === 'مقبول').length || 1;
+                                        const percent = (count / total) * 100;
+                                        return (
+                                            <div key={type} className="space-y-1">
+                                                <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
+                                                    <span className="text-slate-500">{type}</span>
+                                                    <span className="text-slate-800">{count}</span>
+                                                </div>
+                                                <div className="h-1.5 bg-slate-50 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${percent}%` }}></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100">
+                        <div className="p-6 border-b border-slate-50">
+                            <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                <Icon name="table" className="text-pink-600" /> تفاصيل رصيد الموظفين
+                            </h3>
+                        </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-center border-collapse text-[11px]">
                                 <thead className="bg-slate-50 text-slate-500 font-black uppercase tracking-wider border-b border-slate-200">
@@ -3442,6 +3618,84 @@
                             </table>
                         </div>
                     </div>
+
+                    {/* Request Modal */}
+                    {showRequestModal && (
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+                            <div className="bg-white rounded-[40px] w-full max-w-lg overflow-hidden shadow-2xl animate-scale-in">
+                                <div className="bg-indigo-600 p-8 text-white flex justify-between items-center">
+                                    <div>
+                                        <h3 className="text-2xl font-black">طلب إجازة جديد</h3>
+                                        <p className="text-indigo-100 text-xs font-bold uppercase tracking-widest mt-1">تقديم طلب للمراجعة والاعتماد</p>
+                                    </div>
+                                    <button onClick={() => setShowRequestModal(false)} className="bg-white/10 hover:bg-white/20 p-2 rounded-2xl transition-all">
+                                        <Icon name="x" size={24} />
+                                    </button>
+                                </div>
+                                <div className="p-8 space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">الموظف</label>
+                                        <select 
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all appearance-none"
+                                            value={newRequest.employeeId}
+                                            onChange={e => setNewRequest({...newRequest, employeeId: e.target.value})}
+                                        >
+                                            <option value="">اختر الموظف...</option>
+                                            {employees.map(e => <option key={e.id} value={e.id}>{e.name} ({e.code})</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">النوع</label>
+                                            <select 
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all"
+                                                value={newRequest.type}
+                                                onChange={e => setNewRequest({...newRequest, type: e.target.value})}
+                                            >
+                                                <option value="سنوية">سنوية</option>
+                                                <option value="مرضي">مرضي</option>
+                                                <option value="عارضة">عارضة</option>
+                                                <option value="بدون أجر">بدون أجر</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">تاريخ البداية</label>
+                                            <input 
+                                                type="date" 
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all"
+                                                value={newRequest.startDate}
+                                                onChange={e => setNewRequest({...newRequest, startDate: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">تاريخ النهاية</label>
+                                            <input 
+                                                type="date" 
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all"
+                                                value={newRequest.endDate}
+                                                onChange={e => setNewRequest({...newRequest, endDate: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">ملاحظات</label>
+                                            <input 
+                                                type="text" 
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all"
+                                                value={newRequest.notes}
+                                                onChange={e => setNewRequest({...newRequest, notes: e.target.value})}
+                                                placeholder="اختياري..."
+                                            />
+                                        </div>
+                                    </div>
+                                    <button onClick={submitRequest} className="w-full bg-indigo-600 text-white font-black py-5 rounded-3xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all mt-4 flex items-center justify-center gap-3">
+                                        إرسال الطلب <Icon name="send" size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
@@ -3450,6 +3704,12 @@
             const [editingId, setEditingId] = useState(null);
             const [formData, setFormData] = useState({});
             const [searchQuery, setSearchQuery] = useState('');
+
+            const getDaysRemaining = (expiryDate) => {
+                if (!expiryDate) return null;
+                const diff = new Date(expiryDate) - new Date();
+                return Math.ceil(diff / (1000 * 60 * 60 * 24));
+            };
 
             const startEditing = (emp) => {
                 const record = contractRecords[emp.id] || {
@@ -3467,13 +3727,21 @@
             const saveRecord = (empId) => {
                 setContractRecords(prev => ({ ...prev, [empId]: formData }));
                 setEditingId(null);
+                showToast('تم تحديث بيانات العقد');
             };
+
+            const expiringSoonCount = Object.values(contractRecords).filter(r => {
+                const days = getDaysRemaining(r.endDate);
+                return days !== null && days > 0 && days <= 30;
+            }).length;
 
             return (
                 <div className="space-y-8 animate-fade-in">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h2 className="text-3xl font-black text-slate-800">إدارة عقود العمل</h2>
+                            <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+                                <Icon name="file-text" className="text-teal-600" size={32} /> إدارة عقود العمل
+                            </h2>
                             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">تفاصيل التعيين والعقود القانونية</p>
                         </div>
                         <div className="relative w-full sm:w-auto">
@@ -3488,6 +3756,33 @@
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-teal-600 p-8 rounded-[40px] text-white shadow-xl relative overflow-hidden group">
+                            <Icon name="file-check" className="absolute -right-4 -bottom-4 text-white/10 w-32 h-32 group-hover:scale-110 transition-transform" />
+                            <h4 className="text-sm font-black uppercase tracking-widest opacity-60">إجمالي العقود</h4>
+                            <p className="text-5xl font-black">{employees.length}</p>
+                        </div>
+                        <div className={`p-8 rounded-[40px] text-white shadow-xl relative overflow-hidden group transition-all ${expiringSoonCount > 0 ? 'bg-rose-500 animate-pulse' : 'bg-slate-800'}`}>
+                            <Icon name="alert-circle" className="absolute -right-4 -bottom-4 text-white/10 w-32 h-32 group-hover:scale-110 transition-transform" />
+                            <h4 className="text-sm font-black uppercase tracking-widest opacity-60">عقود تنتهي قريباً</h4>
+                            <p className="text-5xl font-black">{expiringSoonCount}</p>
+                            <p className="text-[10px] font-bold mt-2 opacity-80">أقل من 30 يوم على الانتهاء</p>
+                        </div>
+                        <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl flex flex-col justify-center">
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">توزيع أنواع العقود</h4>
+                            <div className="flex gap-2">
+                                <div className="flex-1 h-2 bg-teal-500 rounded-full" title="محدد المدة"></div>
+                                <div className="flex-1 h-2 bg-indigo-500 rounded-full" title="غير محدد"></div>
+                                <div className="flex-1 h-2 bg-amber-500 rounded-full" title="موسمي"></div>
+                            </div>
+                            <div className="flex justify-between mt-2 text-[9px] font-black text-slate-500">
+                                <span>محدد</span>
+                                <span>مفتوح</span>
+                                <span>موسمي</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100">
                         <div className="overflow-x-auto">
                             <table className="w-full text-right border-collapse">
@@ -3497,6 +3792,7 @@
                                         <th className="px-4 py-5">نوع العقد</th>
                                         <th className="px-4 py-5">بيانات المنشأة</th>
                                         <th className="px-4 py-5">فترة التعاقد</th>
+                                        <th className="px-4 py-5">الأيام المتبقية</th>
                                         <th className="px-4 py-5 text-center no-print">إجراءات</th>
                                     </tr>
                                 </thead>
@@ -3504,9 +3800,10 @@
                                     {employees.map(emp => {
                                         const record = contractRecords[emp.id] || {};
                                         const isEditing = editingId === emp.id;
+                                        const daysRemaining = getDaysRemaining(record.endDate);
 
                                         return (
-                                            <tr key={emp.id} className="hover:bg-teal-500/5 transition-colors group">
+                                            <tr key={emp.id} className={`hover:bg-teal-500/5 transition-colors group ${daysRemaining !== null && daysRemaining <= 30 && daysRemaining > 0 ? 'bg-rose-50/30' : ''}`}>
                                                 <td className="px-4 py-4 align-top">
                                                     <div className="space-y-1">
                                                         <p className="font-black text-slate-800 text-base">{emp.name}</p>
@@ -3574,6 +3871,13 @@
                                                             )}
                                                         </div>
                                                     )}
+                                                </td>
+                                                <td className="px-4 py-4 align-top">
+                                                    {daysRemaining !== null ? (
+                                                        <span className={`font-black ${daysRemaining <= 30 ? 'text-rose-600 animate-pulse' : 'text-slate-600'}`}>
+                                                            {daysRemaining} يوم
+                                                        </span>
+                                                    ) : '---'}
                                                 </td>
                                                 <td className="px-4 py-4 text-center no-print align-middle">
                                                     {isEditing ? (
@@ -4577,7 +4881,17 @@
             const fetchCandidates = async () => {
                 try {
                     const response = await fetch('/api/candidates');
-                    const data = await response.json();
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Response was not JSON');
+                    }
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (e) {
+                        throw new Error('Failed to parse JSON body');
+                    }
                     setCandidates(data);
                     localStorage.setItem('hr_candidates_cache', JSON.stringify(data));
                 } catch (err) {
@@ -6117,6 +6431,14 @@
                 const saved = localStorage.getItem('hr_calendar');
                 return saved ? JSON.parse(saved) : INITIAL_CALENDAR_EVENTS;
             });
+            const [leaveRequests, setLeaveRequests] = useState(() => {
+                const saved = localStorage.getItem('hr_leave_requests');
+                return saved ? JSON.parse(saved) : [];
+            });
+            const [announcements, setAnnouncements] = useState(() => {
+                const saved = localStorage.getItem('hr_announcements');
+                return saved ? JSON.parse(saved) : [];
+            });
             const [resignations, setResignations] = useState(() => {
                 const saved = localStorage.getItem('hr_resignations');
                 return saved ? JSON.parse(saved) : [];
@@ -6192,6 +6514,8 @@
                         const localPayroll = localStorage.getItem('hr_payroll');
                         const localCalendar = localStorage.getItem('hr_calendar');
                         const localResignations = localStorage.getItem('hr_resignations');
+                        const localLeaves = localStorage.getItem('hr_leave_requests');
+                        const localAnnouncements = localStorage.getItem('hr_announcements');
 
                         if (localEmps) setEmployees(JSON.parse(localEmps));
                         if (localAtt) setAttendanceLog(JSON.parse(localAtt));
@@ -6202,6 +6526,8 @@
                         if (localPayroll) setPayrollRecords(JSON.parse(localPayroll));
                         if (localCalendar) setCalendarEvents(JSON.parse(localCalendar));
                         if (localResignations) setResignations(JSON.parse(localResignations));
+                        if (localLeaves) setLeaveRequests(JSON.parse(localLeaves));
+                        if (localAnnouncements) setAnnouncements(JSON.parse(localAnnouncements));
                     } catch (err) {
                         console.error('Failed to load local data:', err);
                     }
@@ -6212,22 +6538,33 @@
                 if (isOnline && !dataLoaded) {
                     const fetchData = async () => {
                         try {
+                            const safeJson = async (res) => {
+                                if (!res || !res.ok) return null;
+                                try {
+                                    const contentType = res.headers.get('content-type');
+                                    if (contentType && contentType.includes('application/json')) {
+                                        return await res.json();
+                                    }
+                                } catch (e) {
+                                    return null;
+                                }
+                                return null;
+                            };
+
                             const [empRes, attRes, setRes] = await Promise.all([
                                 fetch('/api/employees').catch(() => null),
                                 fetch('/api/attendance').catch(() => null),
                                 fetch('/api/settings').catch(() => null)
                             ]);
                             
-                            if (empRes && empRes.ok) {
-                                const emps = await empRes.json();
-                                if (emps.length > 0) setEmployees(emps);
-                            }
-                            if (attRes && attRes.ok) {
-                                const att = await attRes.json();
-                                if (Object.keys(att).length > 0) setAttendanceLog(att);
-                            }
-                            if (setRes && setRes.ok) {
-                                const settings = await setRes.json();
+                            const emps = await safeJson(empRes);
+                            if (emps && emps.length > 0) setEmployees(emps);
+
+                            const att = await safeJson(attRes);
+                            if (att && Object.keys(att).length > 0) setAttendanceLog(att);
+
+                            const settings = await safeJson(setRes);
+                            if (settings) {
                                 if (settings.shifts) setShifts(settings.shifts);
                                 if (settings.attendance_rules) setAttendanceRules(settings.attendance_rules);
                                 if (settings.insurance) setInsuranceRecords(settings.insurance);
@@ -6235,6 +6572,8 @@
                                 if (settings.payroll) setPayrollRecords(settings.payroll);
                                 if (settings.calendar) setCalendarEvents(settings.calendar);
                                 if (settings.resignations) setResignations(settings.resignations);
+                                if (settings.leaveRequests) setLeaveRequests(settings.leaveRequests);
+                                if (settings.announcements) setAnnouncements(settings.announcements);
                             }
                         } catch (err) {
                             console.error('Failed to fetch initial data from backend:', err);
@@ -6261,7 +6600,9 @@
                         calendarEvents,
                         resignations,
                         shifts,
-                        attendanceRules
+                        attendanceRules,
+                        leaveRequests,
+                        announcements
                     };
                     const backups = JSON.parse(localStorage.getItem('hr_backups') || '[]');
                     backups.unshift(backupData);
@@ -6303,7 +6644,9 @@
                                         contracts: contractRecords,
                                         payroll: payrollRecords,
                                         calendar: calendarEvents,
-                                        resignations
+                                        resignations,
+                                        leaveRequests,
+                                        announcements
                                     }
                                 })
                             }).catch(() => ({ ok: false }))
@@ -6322,7 +6665,7 @@
 
                 const timer = setTimeout(sync, 5000);
                 return () => clearTimeout(timer);
-            }, [isOnline, employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, shifts, attendanceRules, resignations]);
+            }, [isOnline, employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, shifts, attendanceRules, resignations, leaveRequests, announcements]);
 
             // Keyboard Navigation Logic
             useEffect(() => {
@@ -6552,7 +6895,7 @@
                     )}
                     <main className="flex-1">
                         {activeTab === 'dashboard' ? (
-                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} setIsLoggedIn={setIsLoggedIn} isOnline={isOnline} syncStatus={syncStatus} recentActivity={recentActivity} showToast={showToast} />
+                            <Dashboard setActiveTab={setActiveTab} userName={username || "المدير"} employees={employees} attendanceLog={attendanceLog} leaveRequests={leaveRequests} announcements={announcements} setIsLoggedIn={setIsLoggedIn} isOnline={isOnline} syncStatus={syncStatus} recentActivity={recentActivity} showToast={showToast} />
                         ) : activeTab === 'employees' ? (
                             <EmployeeTable employees={employees} onAddEmployee={(d) => { addEmployee(d); showToast('تم إضافة الموظف بنجاح'); }} onUpdateEmployee={(u) => { updateEmployee(u); showToast('تم تحديث البيانات'); }} onDeleteEmployee={(id) => { deleteEmployee(id); showToast('تم حذف الموظف', 'error'); }} onBulkAdd={bulkAddEmployees} setActiveTab={setActiveTab} shifts={shifts} showToast={showToast} askConfirm={askConfirm} />
                         ) : activeTab === 'attendance' ? (
@@ -6576,7 +6919,7 @@
                         ) : activeTab === 'contracts' ? (
                             <Contracts employees={employees} contractRecords={contractRecords} setContractRecords={setContractRecords} showToast={showToast} />
                         ) : activeTab === 'leaves' ? (
-                            <Leaves employees={employees} onUpdateEmployee={updateEmployee} showToast={showToast} />
+                            <Leaves employees={employees} onUpdateEmployee={updateEmployee} leaveRequests={leaveRequests} setLeaveRequests={setLeaveRequests} showToast={showToast} />
                         ) : activeTab === 'kpis' ? (
                             <KPIs employees={employees} showToast={showToast} />
                         ) : activeTab === 'evaluations' ? (
@@ -6588,7 +6931,7 @@
                         ) : activeTab === 'resignations' ? (
                             <Resignations employees={employees} resignations={resignations} setResignations={setResignations} onUpdateEmployee={updateEmployee} showToast={showToast} />
                         ) : activeTab === 'settings' ? (
-                            <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts }} onRestore={(d) => { handleRestore(d); showToast('تم استعادة البيانات بنجاح'); }} onClear={() => { handleClear(); showToast('تم مسح البيانات', 'warning'); }} shifts={shifts} setShifts={setShifts} showToast={showToast} askConfirm={askConfirm} />
+                            <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, leaveRequests, announcements }} onRestore={(d) => { handleRestore(d); showToast('تم استعادة البيانات بنجاح'); }} onClear={() => { handleClear(); showToast('تم مسح البيانات', 'warning'); }} shifts={shifts} setShifts={setShifts} showToast={showToast} askConfirm={askConfirm} />
                         ) : (
                             <div className="text-center py-40 text-slate-300 font-black text-4xl uppercase tracking-[0.2em] animate-pulse">سيتم التفعيل قريباً</div>
                         )}
