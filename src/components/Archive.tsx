@@ -1,144 +1,105 @@
 import React, { useState } from 'react';
-import { Icon } from './Icon';
-import html2pdf from 'html2pdf.js';
+import { Icon } from './ui/Icon';
 
 interface ArchiveProps {
-    employees: any[];
+  employees: any[];
+  showToast: (msg: string, type?: any) => void;
 }
 
-export const Archive = React.memo(({ employees }: ArchiveProps) => {
-    const [view, setView] = useState('folders');
-    const [docsState, setDocsState] = useState<any>({});
-    const [searchQuery, setSearchQuery] = useState('');
-    const docHeaders = ["صورة البطاقة", "إقرار استلام العمل", "أصل المؤهل الدراسي", "أصل شهادة الميلاد", "الكشف الطبي (111)", "صحيفة الحالة الجنائية", "الموقف من التجنيد", "الصور الشخصية (6)", "كعب العمل", "أصل العقد الموقع", "استمارة س1", "شهادة قياس المهارة", "تراخيص / نقابة", "الشهادة الصحية"];
-    
-    const toggleDoc = (empId: string, docIdx: number) => { 
-        const key = `${empId}-${docIdx}`; 
-        setDocsState((prev: any) => ({ ...prev, [key]: !prev[key] })); 
-    };
-
-    const folders = [
-        { id: 'hiring_docs', title: 'مسوغات التعيين', icon: 'folder-open', color: 'bg-amber-600' }, 
-        { id: 'contracts', title: 'أرشيف العقود', icon: 'file-text', color: 'bg-indigo-600' }, 
-        { id: 'insurance', title: 'مستندات التأمينات', icon: 'shield-check', color: 'bg-sky-600' }, 
-        { id: 'payroll_archive', title: 'سجلات الرواتب', icon: 'banknote', color: 'bg-emerald-600' }
-    ];
-
-    if (view === 'folders') {
-        return (
-            <div className="space-y-12 animate-fade-in pt-8">
-                <div className="flex justify-between items-center">
-                    <div className="space-y-2">
-                        <h2 className="text-4xl font-black text-slate-800">الأرشيف الرقمي</h2>
-                        <p className="text-slate-500 font-bold text-lg">إدارة الوثائق والملفات الرسمية</p>
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-                    {folders.map(f => (
-                        <button 
-                            key={f.id} 
-                            onClick={() => f.id === 'hiring_docs' && setView('hiring_matrix')} 
-                            className="group p-10 rounded-[45px] border border-slate-50 transition-all flex flex-col items-center text-center bg-white hover:shadow-xl hover:-translate-y-2"
-                        >
-                            <div className={`${f.color} p-7 rounded-[28px] text-white shadow-xl mb-8 group-hover:scale-110 transition-transform`}>
-                                <Icon name={f.icon} size={48} />
-                            </div>
-                            <h3 className="text-2xl font-black text-slate-800">{f.title}</h3>
-                            <p className="text-slate-400 text-xs font-bold mt-3 uppercase tracking-widest">اضغط للفتح</p>
-                        </button>
-                    ))}
-                </div>
-            </div>
-        );
+export default function Archive({ employees, showToast }: ArchiveProps) {
+  const [view, setView] = useState('folders');
+  const [docsState, setDocsState] = useState<any>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('hr_archive_matrix') || '{}');
+    } catch (e) {
+      console.error('Error reading hr_archive_matrix from localStorage', e);
+      return {};
     }
+  });
+  const [searchQuery, setSearchQuery] = useState('');
 
+  const docHeaders = ["صورة البطاقة", "إقرار استلام العمل", "أصل المؤهل الدراسي", "أصل شهادة الميلاد", "الكشف الطبي (111)", "صحيفة الحالة الجنائية", "الموقف من التجنيد", "الصور الشخصية (6)", "كعب العمل", "أصل العقد الموقع", "استمارة س1"];
+
+  const toggleDoc = (empId: string, docIdx: number) => {
+    const key = `${empId}-${docIdx}`;
+    const newState = { ...docsState, [key]: !docsState[key] };
+    setDocsState(newState);
+    try {
+      localStorage.setItem('hr_archive_matrix', JSON.stringify(newState));
+    } catch (e) {
+      console.error('Error saving hr_archive_matrix to localStorage', e);
+    }
+  };
+
+  if (view === 'folders') {
     return (
-        <div className="archive-container space-y-6 animate-fade-in" key="archive-matrix">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
-                <div>
-                    <h2 className="text-2xl font-black text-slate-800">سجل استلام مسوغات التعيين</h2>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">متابعة الوثائق المكتملة لكل موظف</p>
-                </div>
-                <div className="flex gap-3 items-center">
-                    <div className="relative">
-                        <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input 
-                            type="text" 
-                            placeholder="بحث بالاسم أو الكود..." 
-                            className="bg-white border border-slate-200 rounded-full py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500/20 transition-all w-48 md:w-64"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <button onClick={() => setView('folders')} className="px-6 py-3 bg-white text-slate-800 border-2 border-slate-200 rounded-full font-black">العودة للمجلدات</button>
-                    <button 
-                        onClick={() => {
-                            const element = document.querySelector('.archive-container') as HTMLElement;
-                            const opt = {
-                                margin: 10,
-                                filename: `archive-hiring-docs.pdf`,
-                                image: { type: 'jpeg' as const, quality: 0.98 },
-                                html2canvas: { scale: 2, useCORS: true },
-                                jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'landscape' as const }
-                            };
-                            html2pdf().set(opt).from(element).save();
-                        }}
-                        className="bg-slate-800 text-white px-6 py-2.5 rounded-full font-black flex items-center gap-2 shadow-lg hover:bg-slate-900 transition-all no-print"
-                    >
-                        <Icon name="download" size={18} /> تنزيل PDF
-                    </button>
-                    <button 
-                        onClick={() => window.print()}
-                        className="bg-amber-600 text-white px-6 py-2.5 rounded-full font-black flex items-center gap-2 shadow-lg hover:bg-amber-700 transition-all no-print"
-                    >
-                        <Icon name="printer" size={18} /> طباعة
-                    </button>
-                </div>
-            </div>
-            <div className="rounded-[30px] shadow-2xl overflow-hidden border bg-white border-slate-200">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-center border-collapse">
-                        <thead className="bg-slate-50 text-slate-700 text-[10px] font-black uppercase">
-                            <tr>
-                                <th className="px-3 py-6 border-b border-l min-w-[60px] sticky right-0 z-20 bg-slate-50 text-center leading-none">كود<br/>الموظف</th>
-                                <th className="px-4 py-6 border-b border-l min-w-[250px] sticky right-[60px] z-20 bg-slate-50 text-right">الاســــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــم</th>
-                                <th className="px-2 py-6 border-b border-l min-w-[100px]">الإدارة</th>
-                                <th className="px-2 py-6 border-b border-l min-w-[120px]">الوظيفة</th>
-                                <th className="px-2 py-6 border-b border-l min-w-[90px]">التوظيف</th>
-                                {docHeaders.map((h, i) => (<th key={i} className="p-0 border-b border-l min-w-[50px] relative"><div className="writing-mode-vertical transform -rotate-180 h-48 flex items-center justify-center font-black leading-tight px-1 text-[9px]">{h}</div></th>))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200">
-                            {employees
-                                .filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()) || emp.code.toLowerCase().includes(searchQuery.toLowerCase()))
-                                .map(emp => (
-                                    <tr key={emp.id} className="hover:bg-amber-500/5 transition-colors group">
-                                        <td className="px-2 py-4 border-l font-mono font-bold text-indigo-500 sticky right-0 z-10 bg-white group-hover:bg-amber-50/50">{emp.code}</td>
-                                        <td className="px-4 py-4 border-l font-black text-right sticky right-[60px] z-10 bg-white group-hover:bg-amber-50/50 text-slate-800">{emp.name}</td>
-                                        <td className="px-2 py-4 border-l text-[11px] font-bold text-slate-500">{emp.department}</td>
-                                        <td className="px-2 py-4 border-l text-[11px] font-bold text-slate-500">{emp.jobTitle}</td>
-                                        <td className="px-2 py-4 border-l text-[11px] font-mono text-slate-400">{emp.joinDate}</td>
-                                        {docHeaders.map((_, i) => { 
-                                            const key = `${emp.id}-${i}`; 
-                                            const checked = docsState[key]; 
-                                            return (
-                                                <td key={i} onClick={() => toggleDoc(emp.id, i)} className={`px-1 py-4 border-l cursor-pointer transition-all hover:bg-emerald-500/10 ${checked ? 'bg-emerald-500/10' : ''}`}>
-                                                    <div className="flex justify-center items-center h-8">
-                                                        {checked ? (
-                                                            <div className="text-emerald-500 animate-fade-in"><Icon name="check" size={24} /></div>
-                                                        ) : (
-                                                            <div className="w-6 h-6 rounded-lg border-2 border-slate-200 opacity-20 no-print"></div>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            ); 
-                                        })}
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      <div className="space-y-10 animate-fade-in">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-black text-slate-800">الأرشيف الرقمي</h2>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">إدارة الوثائق والملفات الرسمية</p>
+          </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <button onClick={() => setView('hiring_matrix')} className="group p-8 rounded-[50px] border-2 transition-all flex flex-col items-center text-center bg-white border-slate-100 hover:border-amber-400">
+            <div className="bg-amber-600 p-6 rounded-[30px] text-white shadow-xl mb-6 group-hover:scale-110 transition-transform">
+              <Icon name="folder-open" size={40} />
+            </div>
+            <h3 className="text-xl font-black text-slate-800">مسوغات التعيين</h3>
+            <p className="text-slate-400 text-[10px] font-bold mt-2 uppercase">اضغط لعرض المصفوفة</p>
+          </button>
+        </div>
+      </div>
     );
-});
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
+        <button onClick={() => setView('folders')} className="flex items-center gap-2 text-slate-500 font-bold hover:text-indigo-600 transition-colors">
+          <Icon name="arrow-right" size={20} /> العودة للمجلدات
+        </button>
+        <div className="relative">
+          <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input type="text" placeholder="بحث..." className="bg-white border rounded-2xl py-2 pr-10 pl-4 text-xs font-bold outline-none" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="rounded-[30px] shadow-2xl overflow-hidden border bg-white border-slate-200">
+        <div className="overflow-x-auto">
+          <table className="w-full text-center border-collapse">
+            <thead className="bg-slate-50 text-slate-700 text-[9px] font-black uppercase">
+              <tr>
+                <th className="px-4 py-6 border-b border-l sticky right-0 bg-slate-50 z-10 text-right min-w-[150px]">الموظف</th>
+                {docHeaders.map((h, i) => (
+                  <th key={i} className="p-2 border-b border-l min-w-[80px]">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {employees.filter(e => e.name.includes(searchQuery)).map(emp => (
+                <tr key={emp.id} className="hover:bg-amber-50/30 transition-colors">
+                  <td className="px-4 py-4 border-l font-black text-right sticky right-0 bg-inherit z-10">
+                    <p className="text-slate-800 text-xs">{emp.name}</p>
+                    <p className="text-[9px] text-slate-400 font-mono">{emp.code}</p>
+                  </td>
+                  {docHeaders.map((_, i) => {
+                    const key = `${emp.id}-${i}`;
+                    const checked = docsState[key];
+                    return (
+                      <td key={i} onClick={() => toggleDoc(emp.id, i)} className={`px-1 py-4 border-l cursor-pointer transition-all ${checked ? 'bg-emerald-50' : ''}`}>
+                        <div className="flex justify-center items-center">
+                          {checked ? <Icon name="circle-check" size={20} className="text-emerald-500" /> : <div className="w-5 h-5 rounded border-2 border-slate-100 opacity-20"></div>}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

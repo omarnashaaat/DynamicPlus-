@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -6,127 +7,9 @@
 
 @layer base {
   body {
-    @apply font-sans bg-slate-50 text-slate-800 min-h-screen m-0 overflow-x-hidden selection:bg-indigo-100 selection:text-indigo-900;
+    @apply font-sans bg-slate-50 text-slate-900;
   }
 }
-
-@layer components {
-  .desktop-container {
-    @apply w-full mx-auto flex flex-col min-h-screen;
-  }
-  
-  .full-width-section {
-    @apply w-full px-4 md:px-8 lg:px-12;
-  }
-  
-  .glass-card {
-    @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.04)] transition-all duration-300;
-  }
-
-  .card-hover {
-    @apply hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] hover:-translate-y-1 transition-all duration-300;
-  }
-
-  .writing-mode-vertical {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-  }
-
-  .scroll-hidden::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .payroll-table th, .payroll-table td {
-    @apply border border-slate-200;
-  }
-}
-
-@media print {
-  @page { 
-    size: A4; 
-    margin: 10mm; 
-  }
-  
-  html, body { 
-    width: 210mm;
-    height: 297mm;
-    background-color: white !important;
-    color: black !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    font-size: 10pt;
-  }
-
-  .no-print { display: none !important; }
-  .print-only { display: block !important; }
-  
-  main { padding: 0 !important; margin: 0 !important; width: 100% !important; }
-  
-  .payroll-table { 
-    width: 100% !important;
-    border: 1.5pt solid #000 !important;
-    font-size: 9pt !important;
-    border-collapse: collapse !important;
-    margin-bottom: 20px !important;
-  }
-  
-  .payroll-table th, .payroll-table td { 
-    border: 1pt solid #000 !important;
-    padding: 6px !important;
-    line-height: 1.4 !important;
-    text-align: center !important;
-  }
-  
-  .payroll-table th {
-    background-color: #f1f5f9 !important;
-    font-weight: bold !important;
-    -webkit-print-color-adjust: exact;
-  }
-  
-  input { 
-    border: none !important;
-    background: transparent !important;
-    text-align: center !important;
-    width: 100% !important;
-    color: black !important;
-    font-family: "Cairo", sans-serif !important;
-  }
-  
-  .shadow-2xl, .shadow-xl, .shadow-sm, .shadow-lg, .shadow-md, .shadow-inner { box-shadow: none !important; }
-  .rounded-[30px], .rounded-[40px], .rounded-[50px], .rounded-3xl, .rounded-2xl { border-radius: 4px !important; border: 1px solid #ddd !important; }
-  
-  .print-header {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    border-bottom: 2pt solid #000 !important;
-    padding-bottom: 10px !important;
-    margin-bottom: 20px !important;
-  }
-
-  .print-signatures {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 30px !important;
-    margin-top: 40px !important;
-    text-align: center !important;
-  }
-
-  .print-signature-box {
-    border-top: 1pt solid #000 !important;
-    padding-top: 10px !important;
-    font-weight: bold !important;
-  }
-
-  .payslip-box {
-    border: 1.5pt solid #000 !important;
-    padding: 25px !important;
-    margin: 10px 0 !important;
-    page-break-inside: avoid !important;
-  }
-}
-
-.print-only { display: none; }
 
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
@@ -136,3 +19,42 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+@media print {
+  @page { size: A4; margin: 10mm; }
+  @page landscape { size: A4 landscape; margin: 10mm; }
+  @page portrait { size: A4 portrait; margin: 10mm; }
+  html, body { width: 100%; height: auto; background: white !important; color: black !important; margin: 0; padding: 0; font-size: 10pt; overflow: visible !important; }
+  #root { min-height: auto !important; display: block !important; }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  main { padding: 0 !important; margin: 0 !important; display: block !important; }
+  .desktop-container { max-width: none !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+  .shadow-2xl, .shadow-xl, .shadow-sm, .shadow-lg, .shadow-md { box-shadow: none !important; }
+  .glass-card { border: 1px solid #e2e8f0 !important; border-radius: 0 !important; transform: none !important; }
+  h1, h2, h3, h4 { color: #000 !important; font-weight: 900 !important; }
+  p, span, td, th { color: #000 !important; font-weight: 600 !important; }
+  table { width: 100% !important; border-collapse: collapse !important; page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  th, td { border: 1px solid #000 !important; padding: 4px !important; }
+  .payslip-box, .warning-box { border: 2px solid #000 !important; padding: 40px !important; margin: 0 auto !important; width: 190mm !important; min-height: 270mm !important; height: auto !important; box-sizing: border-box !important; background: white !important; display: flex !important; flex-direction: column !important; page-break-inside: avoid !important; page-break-after: always !important; }
+  .net-salary-box-print { border: 3px solid #000 !important; background-color: #f8fafc !important; -webkit-print-color-adjust: exact; padding: 15px !important; margin-top: 15px !important; }
+  .landscape-page { width: 280mm !important; height: 195mm !important; border: 2px solid #000 !important; padding: 10px !important; margin: 0 auto !important; box-sizing: border-box !important; page-break-after: always !important; display: flex !important; flex-direction: column !important; page: landscape; }
+  .payroll-table { width: 100% !important; font-size: 7.5pt !important; border-collapse: collapse !important; table-layout: fixed !important; }
+  .payroll-table th, .payroll-table td { padding: 2px !important; border: 1px solid #000 !important; }
+  .payroll-table thead tr { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
+  .report-container, .pdf-container { border: 2px solid #000 !important; padding: 10mm !important; margin: 0 auto !important; width: 190mm !important; min-height: 277mm !important; box-sizing: border-box !important; page-break-after: always !important; display: flex !important; flex-direction: column !important; background: white !important; -webkit-print-color-adjust: exact; position: relative !important; }
+  .report-container table, .pdf-container table { font-size: 8.5pt !important; width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
+  .report-container th, .report-container td, .pdf-container th, .pdf-container td { padding: 4px 2px !important; border: 1px solid #000 !important; word-wrap: break-word !important; overflow-wrap: break-word !important; }
+  .payroll-print-wrapper, .report-table-wrapper { flex: 1 !important; }
+  .print-signatures { display: flex !important; justify-content: space-between !important; gap: 60px !important; margin-bottom: 60px !important; padding-bottom: 20px !important; text-align: center !important; width: 100% !important; }
+  .print-signatures > div { flex: 1 !important; border-top: 2px solid #000 !important; padding-top: 12px !important; font-weight: 900 !important; font-size: 11pt !important; color: #000 !important; }
+}
+
+.print-only { display: none; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; border: 2px solid #f1f5f9; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
