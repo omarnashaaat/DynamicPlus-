@@ -32,14 +32,14 @@ export default function Dashboard({
     { id: 'payroll', title: 'الرواتب والمالية', sub: 'المسيرات والتحويلات', icon: 'banknote', color: 'bg-emerald-600', size: 'medium' },
     { id: 'kpis', title: 'الأداء والنمو', sub: 'مؤشرات الكفاءة', icon: 'chart-line', color: 'bg-rose-500', size: 'small' },
     { id: 'training', title: 'أكاديمية التدريب', sub: 'تطوير المسار الوظيفي', icon: 'graduation-cap', color: 'bg-violet-600', size: 'small' },
-    { id: 'portal', title: 'بوابة الموظف', sub: 'الخدمة الذاتية', icon: 'circle-user', color: 'bg-slate-800', size: 'small' },
     { id: 'doc_center', title: 'مركز الوثائق', sub: 'النماذج والشهادات', icon: 'file-text', color: 'bg-sky-700', size: 'small' },
     { id: 'recruitment', title: 'التوظيف والتعاقد', sub: 'نظام ATS المتكامل', icon: 'briefcase', color: 'bg-violet-600', size: 'small' },
     { id: 'leaves', title: 'الإجازات', sub: 'الأرصدة والطلبات', icon: 'calendar-days', color: 'bg-rose-500', size: 'small' },
     { id: 'insurance', title: 'التأمينات', sub: 'الحصص والمستندات', icon: 'shield-check', color: 'bg-sky-600', size: 'small' },
     { id: 'contracts', title: 'إدارة العقود', sub: 'المتابعة والتجديد', icon: 'scroll-text', color: 'bg-teal-600', size: 'small' },
     { id: 'loans', title: 'القروض والسلف', sub: 'الحسابات الجارية', icon: 'hand-coins', color: 'bg-amber-600', size: 'small' },
-    { id: 'rewards', title: 'التميز الوظيفي', sub: 'المكافآت والتقدير', icon: 'trophy', color: 'bg-orange-600', size: 'small' },
+    { id: 'rewards', title: 'التميز الوظيفي', sub: 'المكافآت والتقدير', icon: 'gift', color: 'bg-orange-600', size: 'small' },
+    { id: 'gamification', title: 'التميز والتحفيز', sub: 'نظام النقاط والأوسمة', icon: 'trophy', color: 'bg-orange-600', size: 'small' },
     { id: 'org_chart', title: 'الهيكل الإداري', sub: 'التسلسل الوظيفي', icon: 'network', color: 'bg-blue-800', size: 'small' },
     { id: 'goals', title: 'الأهداف والإنتاجية', sub: 'نظام OKRs الذكي', icon: 'target', color: 'bg-rose-600', size: 'small' },
     { id: 'surveys', title: 'استطلاعات الرأي', sub: 'قياس الرضا', icon: 'message-square', color: 'bg-violet-500', size: 'small' },
@@ -74,13 +74,9 @@ export default function Dashboard({
             <div className="text-center md:text-right flex-1">
               <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight">مرحباً بِكَ، <span className="text-indigo-400">{userName}</span></h1>
               <p className="text-slate-400 font-bold text-lg md:text-xl max-w-2xl leading-relaxed">أهلاً بك في منصة <span className="text-white">عالم الموارد البشرية</span>. لديك اليوم {stats[1].value} موظفاً باشروا أعمالهم. نظام التحليلات يشير إلى كفاءة تشغيل بنسبة 94%.</p>
-              
-              <div className="mt-10 flex flex-wrap gap-5 justify-center md:justify-start">
+                            <div className="mt-10 flex flex-wrap gap-5 justify-center md:justify-start">
                  <button onClick={() => setActiveTab('employees')} className="bg-white text-slate-900 px-10 py-4 rounded-[20px] font-black text-sm shadow-xl hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all">لوحة التحكم</button>
                  <button onClick={generateDummyData} className="bg-white/10 backdrop-blur-md border border-white/10 text-white px-10 py-4 rounded-[20px] font-black text-sm hover:bg-white/20 hover:scale-105 active:scale-95 transition-all">توليد بيانات ذكية</button>
-                 <button onClick={() => setActiveTab('portal')} className="flex items-center gap-2 group/btn px-6 py-4 text-indigo-400 font-black hover:text-white transition-colors">
-                   بوابة الموظفين <Icon name="arrow-left" size={20} className="group-hover/btn:-translate-x-2 transition-transform" />
-                 </button>
               </div>
             </div>
           </div>

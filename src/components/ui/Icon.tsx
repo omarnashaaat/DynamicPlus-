@@ -4,9 +4,10 @@ interface IconProps {
   name: string;
   size?: number;
   className?: string;
+  strokeWidth?: number;
 }
 
-export const Icon = ({ name, size = 24, className }: IconProps) => {
+export const Icon = ({ name, size = 24, className, strokeWidth }: IconProps) => {
   // Convert kebab-case to PascalCase for Lucide
   const pascalName = name
     .split('-')
@@ -20,5 +21,5 @@ export const Icon = ({ name, size = 24, className }: IconProps) => {
     return null;
   }
 
-  return <LucideIcon size={size} className={className} />;
+  return <LucideIcon size={size} className={className} strokeWidth={strokeWidth} />;
 };

@@ -1,68 +1,149 @@
 import React, { useState } from 'react';
 import { Icon } from './ui/Icon';
+import { motion, AnimatePresence } from 'motion/react';
 
-interface TrainingProps {
-  employees: any[];
-  showToast: (msg: string, type?: any) => void;
-}
+export default function Training({ trainingCourses, setTrainingCourses, employees, showToast, askConfirm }: any) {
+  const [showModal, setShowModal] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [formData, setFormData] = useState({ title: '', provider: '', date: '', status: 'upcoming', attendeesCount: 0, description: '' });
 
-export default function Training({ employees, showToast }: TrainingProps) {
-  const [courses, setCourses] = useState([
-    { id: 1, title: 'القيادة الإدارية', provider: 'مركز التدريب العالمي', date: '2024-05-10', status: 'completed', attendees: 12 },
-    { id: 2, title: 'مهارات التواصل الفعال', provider: 'أكاديمية الموارد البشرية', date: '2024-06-15', status: 'upcoming', attendees: 25 },
-    { id: 3, title: 'إدارة الوقت والضغوط', provider: 'مؤسسة تطوير الذات', date: '2024-04-20', status: 'completed', attendees: 18 },
-  ]);
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    const courseData = {
+      ...formData,
+      id: editingCourse ? editingCourse.id : Date.now().toString()
+    };
+
+    if (editingCourse) {
+      setTrainingCourses(trainingCourses.map((c: any) => c.id === editingCourse.id ? courseData : c));
+      showToast('تم تحديث بيانات الدورة التدريبية');
+    } else {
+      setTrainingCourses([...trainingCourses, courseData]);
+      showToast('تمت إضافة الدورة التدريبية بنجاح');
+    }
+
+    setShowModal(false);
+    setEditingCourse(null);
+    setFormData({ title: '', provider: '', date: '', status: 'upcoming', attendeesCount: 0, description: '' });
+  };
+
+  const handleDelete = (id: string) => {
+    askConfirm('حذف الدورة التدريبية؟', 'سيتم إزالة كافة البيانات المرتبطة بهذه الدورة بشكل نهائي.', () => {
+      setTrainingCourses(trainingCourses.filter((c: any) => c.id !== id));
+      showToast('تم حذف الدورة', 'error');
+    });
+  };
 
   return (
-    <div className="space-y-10 animate-fade-in">
-      <div className="flex justify-between items-center">
+    <div className="space-y-12 animate-fade-in px-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-black text-slate-800">التدريب والتطوير</h2>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">تنمية مهارات الكوادر البشرية</p>
+          <h2 className="text-4xl font-black text-slate-800 tracking-tighter italic">التدريب والتطوير <span className="text-indigo-600">Growth</span></h2>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-1 italic">بناء المهارات وتعزيز القدرات التنافسية للفريق</p>
         </div>
-        <button className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-xs hover:bg-indigo-700 transition-all flex items-center gap-2">
-          <Icon name="plus" size={16} /> إضافة دورة تدريبية
+        <button 
+           onClick={() => { setEditingCourse(null); setShowModal(true); }}
+           className="bg-slate-900 text-white px-10 py-5 rounded-[30px] font-black shadow-2xl hover:bg-emerald-600 hover:scale-105 active:scale-95 transition-all flex items-center gap-4 group"
+        >
+           <Icon name="plus" size={24} />
+           إضافة دورة جديدة
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {courses.map(course => (
-          <div key={course.id} className="bg-white rounded-[40px] border shadow-xl p-8 flex flex-col justify-between group hover:border-indigo-400 transition-all">
-            <div>
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${course.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
-                <Icon name={course.status === 'completed' ? 'graduation-cap' : 'clock'} size={24} />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">{course.title}</h3>
-              <p className="text-xs text-slate-400 font-bold mb-4">{course.provider}</p>
-              <div className="flex items-center gap-4 text-[10px] font-black text-slate-500 uppercase">
-                <span className="flex items-center gap-1"><Icon name="calendar" size={12} /> {course.date}</span>
-                <span className="flex items-center gap-1"><Icon name="users" size={12} /> {course.attendees} متدرب</span>
-              </div>
-            </div>
-            <button className="mt-8 w-full py-3 rounded-xl bg-slate-50 text-slate-400 font-black text-[10px] uppercase group-hover:bg-indigo-600 group-hover:text-white transition-all">
-              عرض التفاصيل
-            </button>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {trainingCourses.length === 0 ? (
+           <div className="col-span-full py-32 bg-slate-50 rounded-[60px] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300">
+              <Icon name="graduation-cap" size={72} strokeWidth={1} />
+              <p className="mt-4 font-black italic">لا توجد دورات مسجلة حالياً.</p>
+           </div>
+        ) : trainingCourses.map((course: any) => (
+          <motion.div 
+            layout
+            key={course.id} 
+            className="p-10 bg-white border border-slate-100 rounded-[50px] shadow-2xl shadow-slate-200/50 relative overflow-hidden group hover:border-indigo-500/30 transition-all flex flex-col italic"
+          >
+             <div className="flex justify-between items-start mb-6">
+                <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${course.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                   {course.status === 'completed' ? 'دورة مكتملة' : 'دورة قادمة'}
+                </span>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button onClick={() => { setEditingCourse(course); setFormData({...course}); setShowModal(true); }} className="p-3 bg-blue-50 text-blue-600 rounded-2xl hover:bg-blue-600 hover:text-white transition-all"><Icon name="edit" size={18} /></button>
+                   <button onClick={() => handleDelete(course.id)} className="p-3 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-600 hover:text-white transition-all"><Icon name="trash-2" size={18} /></button>
+                </div>
+             </div>
+             
+             <h3 className="text-2xl font-black text-slate-800 mb-2 truncate group-hover:text-indigo-600 transition-colors uppercase tracking-tighter italic">{course.title}</h3>
+             <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mb-6">{course.provider}</p>
+             
+             <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between text-xs font-black">
+                   <span className="text-slate-400 uppercase tracking-wider">التاريخ المستهدف:</span>
+                   <span className="text-slate-700">{course.date}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-black">
+                   <span className="text-slate-400 uppercase tracking-wider">عدد المتدربين:</span>
+                   <span className="text-slate-700">{course.attendeesCount} متدرب</span>
+                </div>
+             </div>
+
+             <button className="mt-auto w-full py-4 bg-slate-50 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-900 hover:text-white transition-all">تحميل الخطة التدريبية</button>
+          </motion.div>
         ))}
       </div>
 
-      <div className="bg-indigo-900 rounded-[50px] p-12 text-white relative overflow-hidden">
-        <div className="relative z-10 max-w-2xl">
-          <h3 className="text-3xl font-black mb-4">خطة التدريب السنوية 2024</h3>
-          <p className="text-indigo-200 font-bold text-sm mb-8 leading-relaxed">تم تصميم هذه الخطة لرفع كفاءة الموظفين في المجالات التقنية والإدارية بنسبة 25% خلال العام الحالي.</p>
-          <div className="flex gap-4">
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl flex-1">
-              <p className="text-4xl font-black mb-1">15</p>
-              <p className="text-[10px] font-black uppercase opacity-60">دورة متبقية</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl flex-1">
-              <p className="text-4xl font-black mb-1">85%</p>
-              <p className="text-[10px] font-black uppercase opacity-60">نسبة الإنجاز</p>
-            </div>
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.9, y: 30 }}
+               animate={{ opacity: 1, scale: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.9 }}
+               className="bg-white w-full max-w-2xl rounded-[50px] shadow-3xl overflow-hidden"
+             >
+                <div className="p-10 border-b border-slate-50 flex items-center justify-between">
+                   <h3 className="text-3xl font-black text-slate-800 tracking-tighter italic">إدارة البرامج التدريبية</h3>
+                   <button onClick={() => setShowModal(false)} className="w-14 h-14 bg-slate-50 rounded-2xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"><Icon name="x" size={28} /></button>
+                </div>
+
+                <form onSubmit={handleSave} className="p-12 space-y-6">
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic ml-4">عنوان الدورة التدريبية</label>
+                      <input required className="w-full bg-slate-50 border-2 border-slate-100 rounded-[25px] p-6 font-black text-slate-800 outline-none focus:border-indigo-500 transition-all" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="مثال: إدارة الأزمات، القيادة الإبداعية.." />
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic ml-4">جهة التدريب (Provider)</label>
+                         <input required className="w-full bg-slate-50 border-2 border-slate-100 rounded-[25px] p-6 font-black text-slate-800 outline-none focus:border-indigo-500 transition-all" value={formData.provider} onChange={e => setFormData({...formData, provider: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic ml-4">تاريخ الانعقاد</label>
+                         <input type="date" required className="w-full bg-slate-50 border-2 border-slate-100 rounded-[25px] p-6 font-black text-slate-800 outline-none focus:border-indigo-500 transition-all" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic ml-4">عدد المستهدفين</label>
+                         <input type="number" required className="w-full bg-slate-50 border-2 border-slate-100 rounded-[25px] p-6 font-black text-slate-800 outline-none focus:border-indigo-500 transition-all" value={formData.attendeesCount} onChange={e => setFormData({...formData, attendeesCount: parseInt(e.target.value)})} />
+                      </div>
+                      <div className="space-y-2">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic ml-4">حالة الدورة</label>
+                         <select className="w-full bg-slate-50 border-2 border-slate-100 rounded-[25px] p-6 font-black text-slate-800 outline-none focus:border-indigo-500 transition-all" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                            <option value="upcoming">قادمة (Upcoming)</option>
+                            <option value="completed">مكتملة (Completed)</option>
+                         </select>
+                      </div>
+                   </div>
+
+                   <button type="submit" className="w-full bg-slate-900 text-white p-7 rounded-[35px] font-black shadow-3xl hover:bg-indigo-600 hover:scale-[1.02] transition-all flex items-center justify-center gap-4 text-xl tracking-tighter uppercase italic mt-6">
+                      اعتماد الدورة التدريبية <Icon name="graduation-cap" size={24} />
+                   </button>
+                </form>
+             </motion.div>
           </div>
-        </div>
-        <Icon name="award" size={300} className="absolute -bottom-20 -left-20 text-white/5 rotate-12" />
-      </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

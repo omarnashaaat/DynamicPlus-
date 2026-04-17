@@ -34,6 +34,13 @@ export default function Rewards({ employees, rewards, setRewards, showToast, ask
     showToast('تم تسجيل المكافأة بنجاح');
   };
 
+  const deleteReward = (id: string) => {
+    askConfirm('حذف المكافأة؟', 'هل أنت متأكد من حذف هذا السجل بشكل نهائي؟', () => {
+      setRewards(rewards.filter((r: any) => r.id !== id));
+      showToast('تم حذف السجل', 'error');
+    });
+  };
+
   const sortedLeadboard = [...employees].sort((a, b) => (b.points || 0) - (a.points || 0)).slice(0, 5);
 
   return (
@@ -129,15 +136,16 @@ export default function Rewards({ employees, rewards, setRewards, showToast, ask
                   <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">القيمة</th>
                   <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">السبب</th>
                   <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">التاريخ</th>
+                  <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">العمليات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {rewards.length === 0 ? (
                    <tr>
-                     <td colSpan={5} className="p-12 text-center text-slate-300 font-bold">لا توجد سجلات مكافآت حتى الآن</td>
+                     <td colSpan={6} className="p-12 text-center text-slate-300 font-bold">لا توجد سجلات مكافآت حتى الآن</td>
                    </tr>
                 ) : rewards.slice().reverse().map(reward => (
-                  <tr key={reward.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={reward.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="p-6 font-black text-slate-700">{reward.empName}</td>
                     <td className="p-6">
                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase ${reward.type === 'bonus' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'}`}>
@@ -149,6 +157,9 @@ export default function Rewards({ employees, rewards, setRewards, showToast, ask
                     </td>
                     <td className="p-6 font-bold text-slate-400 text-xs">{reward.reason || '---'}</td>
                     <td className="p-6 font-bold text-slate-400 text-xs">{reward.date}</td>
+                    <td className="p-6">
+                       <button onClick={() => deleteReward(reward.id)} className="p-2.5 rounded-xl bg-rose-50 text-rose-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"><Icon name="trash-2" size={16} /></button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

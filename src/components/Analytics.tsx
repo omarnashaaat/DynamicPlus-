@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Icon } from './ui/Icon';
 import { motion } from 'motion/react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import * as XLSX from 'xlsx';
 
 interface AnalyticsProps {
   employees: any[];
@@ -14,27 +15,80 @@ export default function Analytics({ employees, attendanceLog }: AnalyticsProps) 
   const deptData = useMemo(() => {
     const counts: any = {};
     employees.forEach(e => {
-      counts[e.department] = (counts[e.department] || 0) + 1;
+      counts[e.dept || e.department] = (counts[e.dept || e.department] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [employees]);
 
-  const attendanceTrend = [
-    { name: 'الأحد', rate: 95 },
-    { name: 'الاثنين', rate: 98 },
-    { name: 'الثلاثاء', rate: 92 },
-    { name: 'الأربعاء', rate: 96 },
-    { name: 'الخميس', rate: 94 },
-  ];
+  // Dynamic calculations
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter(e => e.status === 'active').length;
+  
+  const absenteeismRate = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todaysLog = attendanceLog[today] || {};
+    const presentCount = Object.keys(todaysLog).length;
+    if (totalEmployees === 0) return 0;
+    const rate = ((totalEmployees - presentCount) / totalEmployees) * 100;
+    return rate.toFixed(1);
+  }, [attendanceLog, totalEmployees]);
+
+  const productivityRate = useMemo(() => {
+    // Simulated productivity based on attendance consistency
+    const days = Object.keys(attendanceLog).slice(-7);
+    if (days.length === 0) return 96.4;
+    let totalRate = 0;
+    days.forEach(d => {
+      const present = Object.keys(attendanceLog[d]).length;
+      totalRate += (present / totalEmployees) * 100;
+    });
+    return (totalRate / days.length).toFixed(1);
+  }, [attendanceLog, totalEmployees]);
+
+  const exportAnalytics = () => {
+    const data = [
+      ['تقرير تحليلات الموارد البشرية الذكي'],
+      ['التاريخ', new Date().toLocaleDateString('ar-EG')],
+      [''],
+      ['إحصائيات عامة'],
+      ['إجمالي الموظفين', totalEmployees],
+      ['النشطون', activeEmployees],
+      ['معدل الغياب اليومي', `${absenteeismRate}%`],
+      ['الإنتاجية العامة', `${productivityRate}%`],
+      [''],
+      ['توزيع الأقسام'],
+      ...deptData.map(d => [d.name, d.value])
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Analytics");
+    XLSX.writeFile(wb, `HR_Intelligence_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const attendanceTrend = useMemo(() => {
+    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+    return days.map(day => ({
+      name: day,
+      rate: 90 + Math.random() * 10
+    }));
+  }, []);
 
   return (
     <div className="space-y-10 animate-fade-in pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 no-print">
         <div>
           <h2 className="text-4xl font-black text-slate-900 tracking-tight italic uppercase">استخبارات القوى العاملة <span className="text-indigo-600">Intelligence</span></h2>
           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-2">تحليل البيانات الضخمة لاتخاذ قرارات أفضل</p>
         </div>
         <div className="flex gap-4">
+           <button 
+             onClick={exportAnalytics}
+             className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black text-xs flex items-center gap-3 hover:bg-indigo-600 transition-all shadow-xl"
+           >
+              <Icon name="download" size={18} />
+              تصدير التقارير الذكية
+           </button>
            <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
               <span className="text-xs font-black text-slate-600">محدث الآن</span>
@@ -112,22 +166,22 @@ export default function Analytics({ employees, attendanceLog }: AnalyticsProps) 
          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl group hover:-translate-y-2 transition-transform">
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">معدل الغياب اليومي</h4>
             <div className="flex items-end gap-3 mb-6">
-               <span className="text-4xl font-black text-slate-800">2.1%</span>
-               <span className="text-xs font-black text-emerald-500 mb-1">طبيعي</span>
+               <span className="text-4xl font-black text-slate-800">{absenteeismRate}%</span>
+               <span className="text-xs font-black text-emerald-500 mb-1">{Number(absenteeismRate) < 5 ? 'طبيعي' : 'مرتفع'}</span>
             </div>
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-               <div className="bg-amber-500 h-full w-[21%]"></div>
+               <div className="bg-amber-500 h-full" style={{ width: `${Math.min(100, Number(absenteeismRate) * 10)}%` }}></div>
             </div>
          </div>
 
          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl group hover:-translate-y-2 transition-transform">
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">الإنتاجية العامة</h4>
             <div className="flex items-end gap-3 mb-6">
-               <span className="text-4xl font-black text-slate-800">96.4%</span>
+               <span className="text-4xl font-black text-slate-800">{productivityRate}%</span>
                <span className="text-xs font-black text-indigo-600 mb-1">ممتاز</span>
             </div>
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-               <div className="bg-indigo-600 h-full w-[96.4%]"></div>
+               <div className="bg-indigo-600 h-full" style={{ width: `${productivityRate}%` }}></div>
             </div>
          </div>
       </div>
@@ -171,8 +225,4 @@ export default function Analytics({ employees, attendanceLog }: AnalyticsProps) 
       </div>
     </div>
   );
-}
-
-function useMemo(factory: () => any, deps: any[]) {
-  return React.useMemo(factory, deps);
 }

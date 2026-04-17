@@ -28,15 +28,17 @@ import Rewards from './components/Rewards';
 import Assets from './components/Assets';
 import Goals from './components/Goals';
 import Surveys from './components/Surveys';
-import EmployeePortal from './components/EmployeePortal';
 import OrgChart from './components/OrgChart';
 import ActivityLog from './components/ActivityLog';
-import DocumentCenter from './components/DocumentCenter';
+import Gamification from './components/Gamification';
+import DocCenter from './components/DocCenter';
 import Announcements from './components/Announcements';
 import Complaints from './components/Complaints';
 import Analytics from './components/Analytics';
 import SmartChat from './components/SmartChat';
+import Tasks from './components/Tasks';
 import BranchManagement from './components/BranchManagement';
+import Login from './components/Login';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -218,7 +220,16 @@ export default function App() {
   const [surveys, setSurveys] = useState(() => JSON.parse(localStorage.getItem('hr_surveys') || '[]'));
   const [trainingCourses, setTrainingCourses] = useState(() => JSON.parse(localStorage.getItem('hr_training') || '[]'));
   const [announcements, setAnnouncements] = useState(() => JSON.parse(localStorage.getItem('hr_announcements') || '[]'));
-  const [complaints, setComplaints] = useState(() => JSON.parse(localStorage.getItem('hr_complaints') || '[]'));
+  const [complaints, setComplaints] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('hr_complaints') || '[]');
+    } catch { return []; }
+  });
+  const [tasks, setTasks] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('hr_tasks') || '[]');
+    } catch { return []; }
+  });
   const [activityLogs, setActivityLogs] = useState(() => JSON.parse(localStorage.getItem('hr_activity') || '[]'));
   const [documents, setDocuments] = useState(() => JSON.parse(localStorage.getItem('hr_docs') || '[]'));
 
@@ -249,13 +260,14 @@ export default function App() {
       localStorage.setItem('hr_training', JSON.stringify(trainingCourses));
       localStorage.setItem('hr_announcements', JSON.stringify(announcements));
       localStorage.setItem('hr_complaints', JSON.stringify(complaints));
+      localStorage.setItem('hr_tasks', JSON.stringify(tasks));
       localStorage.setItem('hr_activity', JSON.stringify(activityLogs));
       localStorage.setItem('hr_docs', JSON.stringify(documents));
       localStorage.setItem('hr_userRole', userRole);
     } catch (e) {
       console.error('Error saving to localStorage', e);
     }
-  }, [employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, attendanceRules, assets, goals, surveys, trainingCourses, announcements, complaints, activityLogs, documents, userRole]);
+  }, [employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, attendanceRules, assets, goals, surveys, trainingCourses, announcements, complaints, tasks, activityLogs, documents, userRole]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     const id = Date.now();
@@ -326,6 +338,11 @@ export default function App() {
     }));
     
     setEmployees(newEmployees);
+    setTasks([
+      { id: '1', title: 'مراجعة عقود الموظفين الجدد', description: 'التأكد من اكتمال كافة المستندات والتوقيعات', empId: '1', empName: 'مدير النظام', deadline: '2026-04-30', status: 'Pending', createdAt: '2026-04-15' },
+      { id: '2', title: 'تحديث كشوف التأمينات', description: 'إرسال الكشوف المحدثة للهيئة العامة للتأمينات', empId: '2', empName: 'موظف تجريبي', deadline: '2026-04-20', status: 'Completed', createdAt: '2026-04-10' }
+    ]);
+    
     showToast('تم إضافة بيانات تجريبية بنجاح', 'success');
   };
 
@@ -348,130 +365,21 @@ export default function App() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-white font-['Cairo'] flex flex-col md:flex-row overflow-hidden" dir="rtl">
-        <div className="flex-1 p-10 md:p-20 flex flex-col justify-between relative order-2 md:order-1">
-          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-indigo-50 rounded-full -mr-48 -mt-48 blur-[120px] pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-20 animate-fade-in">
-              <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-2xl rotate-3">
-                <Icon name="shield-check" size={32} />
-              </div>
-              <div className="text-right">
-                <h1 className="text-2xl font-black text-slate-900 leading-none">عالم ال HR</h1>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Advanced Intelligence</p>
-              </div>
-            </div>
-
-            <motion.div 
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, ease: "circOut" }}
-              className="max-w-md w-full"
-            >
-              <div className="mb-12">
-                <h2 className="text-5xl font-black text-slate-900 mb-6 leading-tight italic uppercase">نظام إدارة <br/><span className="text-indigo-600">المستقبل البشري</span></h2>
-                <p className="text-slate-500 font-bold leading-relaxed text-lg italic">ابدأ اليوم في إدارة فريق عملك بأكثر الوسائل التقنية تطوراً، مع دعم كامل للذكاء الاصطناعي والتحليلات المتقدمة.</p>
-              </div>
-              
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase mr-2 tracking-widest italic">User Identity</label>
-                  <div className="relative group">
-                    <Icon name="user" size={18} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-                    <input 
-                      required 
-                      type="text" 
-                      placeholder="اسم المستخدم" 
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-[25px] py-5 pr-16 pl-6 text-slate-800 font-bold focus:outline-none focus:border-indigo-600/20 focus:bg-white transition-all shadow-sm" 
-                      value={loginData.user} 
-                      onChange={(e) => setLoginData(prev => ({ ...prev, user: e.target.value }))} 
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase mr-2 tracking-widest italic">Secret Key</label>
-                  <div className="relative group">
-                    <Icon name="key-round" size={18} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-                    <input 
-                      required 
-                      type="password" 
-                      placeholder="كلمة المرور" 
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-[25px] py-5 pr-16 pl-6 text-slate-800 font-bold focus:outline-none focus:border-indigo-600/20 focus:bg-white transition-all shadow-sm" 
-                      value={loginData.pass} 
-                      onChange={(e) => setLoginData(prev => ({ ...prev, pass: e.target.value }))} 
-                    />
-                  </div>
-                </div>
-                
-                {loginError && (
-                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-rose-50 text-rose-600 p-5 rounded-[20px] text-xs font-black border border-rose-100 flex items-center gap-3">
-                    <Icon name="alert-circle" size={20} />
-                    {loginError}
-                  </motion.div>
-                )}
-
-                <button type="submit" className="w-full bg-slate-900 text-white font-black py-5 rounded-[25px] shadow-2xl flex items-center justify-center gap-4 hover:bg-indigo-600 active:scale-95 transition-all duration-500 uppercase tracking-widest">
-                  فتح المنصة <Icon name="chevron-left" size={20} />
-                </button>
-              </form>
-
-              <div className="mt-12 pt-12 border-t border-slate-100 flex items-center gap-6">
-                 <div>
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Company System</p>
-                   <p className="text-xs font-black text-slate-700">v4.4.2 Enterprise Edition</p>
-                 </div>
-                 <div className="h-10 w-px bg-slate-100"></div>
-                 <div>
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Security Protocol</p>
-                   <p className="text-xs font-black text-emerald-600 flex items-center gap-1"><Icon name="shield" size={12} /> Secure Connection</p>
-                 </div>
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="relative z-10 text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] italic mt-20">
-             © 2024 HR World Ecosystem. All Rights Reserved.
-          </div>
-        </div>
-
-        <div className="hidden md:flex flex-1 bg-slate-900 relative items-center justify-center p-20 order-1 md:order-2 overflow-hidden">
-           <div className="absolute inset-0 z-0">
-              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,_var(--tw-gradient-stops))] from-indigo-600/20 via-transparent to-transparent"></div>
-              <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_70%,_var(--tw-gradient-stops))] from-emerald-600/10 via-transparent to-transparent"></div>
-              <div className="grid grid-cols-12 h-full opacity-10">
-                 {Array.from({length: 144}).map((_, i) => (
-                   <div key={i} className="border-[0.5px] border-white/20 aspect-square"></div>
-                 ))}
-              </div>
-           </div>
-           
-           <div className="relative z-10 text-center space-y-12">
-              <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full backdrop-blur-md">
-                 <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                 <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">Live System Health: 100%</span>
-              </div>
-              <h3 className="text-7xl font-black text-white italic tracking-tighter leading-none">REMAP YOUR <br/><span className="text-indigo-500 underline decoration-indigo-500/30 underline-offset-[20px]">WORKPLACE</span></h3>
-              <div className="flex justify-center gap-8">
-                 {[
-                   { label: 'Cloud Sync', val: 'Active' },
-                   { label: 'AI Core', val: 'Online' },
-                   { label: 'Blockchain', val: 'Encrypted' }
-                 ].map(item => (
-                   <div key={item.label}>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 italic">{item.label}</p>
-                      <p className="text-sm font-black text-white">{item.val}</p>
-                   </div>
-                 ))}
-              </div>
-           </div>
-
-           <div className="absolute -bottom-20 -right-20 w-[40rem] rotate-12 opacity-5">
-              <Icon name="shield-check" size={600} />
-           </div>
-        </div>
-      </div>
+      <Login 
+        onLogin={(name) => {
+          setIsLoggedIn(true);
+          setUsername(name);
+          setUserRole('admin');
+          try {
+            localStorage.setItem('hr_isLoggedIn', 'true');
+            localStorage.setItem('hr_username', name);
+            localStorage.setItem('hr_userRole', 'admin');
+          } catch (e) {
+            console.error('Error saving login state', e);
+          }
+          showToast(`مرحباً بك مجدداً، ${name}`, 'success');
+        }} 
+      />
     );
   }
 
@@ -500,6 +408,9 @@ export default function App() {
             { id: 'assets', icon: 'package', label: 'العهد' },
             { id: 'org_chart', icon: 'network', label: 'الهيكل' },
             { id: 'doc_center', icon: 'file-text', label: 'المستندات' },
+            { id: 'gamification', icon: 'trophy', label: 'التميز' },
+            { id: 'rewards', icon: 'trophy', label: 'التميز' },
+            { id: 'tasks', icon: 'check-square', label: 'المهام' },
             { id: 'announcements', icon: 'megaphone', label: 'الإعلانات' },
             { id: 'training', icon: 'graduation-cap', label: 'التدريب' },
             { id: 'offices', icon: 'building-2', label: 'الفروع' },
@@ -563,34 +474,35 @@ export default function App() {
           />}
           {activeTab === 'employees' && <EmployeeTable employees={employees} setEmployees={setEmployees} shifts={shifts} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'attendance' && <Analytics employees={employees} attendanceLog={attendanceLog} />}
-          {activeTab === 'offices' && <BranchManagement />}
+          {activeTab === 'offices' && <BranchManagement askConfirm={askConfirm} showToast={showToast} />}
           {activeTab === 'monthly_report' && <MonthlyReport employees={employees} attendanceLog={attendanceLog} setAttendanceLog={setAttendanceLog} shifts={shifts} rules={attendanceRules} showToast={showToast} />}
           {activeTab === 'payroll' && <Payroll employees={employees} payrollRecords={payrollRecords} setPayrollRecords={setPayrollRecords} attendanceLog={attendanceLog} insuranceRecords={insuranceRecords} setActiveTab={setActiveTab} rules={attendanceRules} showToast={showToast} />}
           {activeTab === 'recruitment' && <Recruitment employees={employees} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'leaves' && <Leaves employees={employees} setEmployees={setEmployees} showToast={showToast} />}
-          {activeTab === 'insurance' && <Insurance employees={employees} insuranceRecords={insuranceRecords} setInsuranceRecords={setInsuranceRecords} showToast={showToast} />}
-          {activeTab === 'contracts' && <Contracts employees={employees} contractRecords={contractRecords} setContractRecords={setContractRecords} showToast={showToast} />}
+          {activeTab === 'insurance' && <Insurance employees={employees} insuranceRecords={insuranceRecords} setInsuranceRecords={setInsuranceRecords} showToast={showToast} askConfirm={askConfirm} />}
+          {activeTab === 'contracts' && <Contracts employees={employees} contractRecords={contractRecords} setContractRecords={setContractRecords} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'archive' && <Archive employees={employees} showToast={showToast} />}
           {activeTab === 'calendar' && <Calendar employees={employees} calendarEvents={calendarEvents} setCalendarEvents={setCalendarEvents} showToast={showToast} />}
           {activeTab === 'kpis' && <KPIs employees={employees} showToast={showToast} />}
           {activeTab === 'evaluations' && <Evaluations employees={employees} showToast={showToast} />}
           {activeTab === 'digital_files' && <DigitalFiles employees={employees} showToast={showToast} askConfirm={askConfirm} />}
-          {activeTab === 'training' && <Training employees={employees} showToast={showToast} />}
-          {activeTab === 'resignations' && <Resignations employees={employees} resignations={resignations} setResignations={setResignations} setEmployees={setEmployees} showToast={showToast} />}
+          {activeTab === 'training' && <Training trainingCourses={trainingCourses} setTrainingCourses={setTrainingCourses} employees={employees} showToast={showToast} askConfirm={askConfirm} />}
+          {activeTab === 'resignations' && <Resignations employees={employees} resignations={resignations} setResignations={setResignations} setEmployees={setEmployees} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'attendance_rules' && <AttendanceRules rules={attendanceRules} setRules={setAttendanceRules} showToast={showToast} />}
           {activeTab === 'ats' && <ATS showToast={showToast} />}
           {activeTab === 'loans' && <Loans employees={employees} loans={loans} setLoans={setLoans} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'rewards' && <Rewards employees={employees} rewards={rewards} setRewards={setRewards} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'assets' && <Assets assets={assets} setAssets={setAssets} employees={employees} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'goals' && <Goals goals={goals} setGoals={setGoals} employees={employees} showToast={showToast} />}
-          {activeTab === 'surveys' && <Surveys surveys={surveys} setSurveys={setSurveys} showToast={showToast} />}
-          {activeTab === 'portal' && <EmployeePortal currentUser={employees[0]} loans={loans} setLoans={setLoans} resignations={resignations} setResignations={setResignations} showToast={showToast} />}
+          {activeTab === 'surveys' && <Surveys surveys={surveys} setSurveys={setSurveys} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'org_chart' && <OrgChart employees={employees} />}
-          {activeTab === 'doc_center' && <DocumentCenter employees={employees} showToast={showToast} />}
-          {activeTab === 'announcements' && <Announcements announcements={announcements} setAnnouncements={setAnnouncements} showToast={showToast} />}
+          {activeTab === 'doc_center' && <DocCenter employees={employees} showToast={showToast} />}
+          {activeTab === 'gamification' && <Gamification employees={employees} />}
+          {activeTab === 'announcements' && <Announcements announcements={announcements} setAnnouncements={setAnnouncements} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'activity_log' && <ActivityLog logs={activityLogs} />}
-          {activeTab === 'complaints' && <Complaints complaints={complaints} setComplaints={setComplaints} showToast={showToast} />}
-          {activeTab === 'settings' && <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, attendanceRules, loans, rewards, assets, goals, surveys, announcements, complaints }} onRestore={(d: any) => { setEmployees(d.employees || []); setAttendanceLog(d.attendanceLog || {}); setInsuranceRecords(d.insuranceRecords || {}); setContractRecords(d.contractRecords || {}); setPayrollRecords(d.payrollRecords || {}); setCalendarEvents(d.calendarEvents || []); setResignations(d.resignations || []); setShifts(d.shifts || INITIAL_SHIFTS); setAttendanceRules(d.attendanceRules || attendanceRules); setLoans(d.loans || []); setRewards(d.rewards || []); setAssets(d.assets || []); setGoals(d.goals || []); setSurveys(d.surveys || []); setAnnouncements(d.announcements || []); setComplaints(d.complaints || []); }} onClear={() => { setEmployees([]); setAttendanceLog({}); setInsuranceRecords({}); setContractRecords({}); setPayrollRecords({}); setCalendarEvents([]); setResignations([]); setLoans([]); setRewards([]); setAssets([]); setGoals([]); setSurveys([]); setAnnouncements([]); setComplaints([]); setShifts(INITIAL_SHIFTS); showToast('تم مسح البيانات', 'warning'); }} shifts={shifts} setShifts={setShifts} showToast={showToast} askConfirm={askConfirm} />}
+          {activeTab === 'complaints' && <Complaints complaints={complaints} setComplaints={setComplaints} employees={employees} showToast={showToast} askConfirm={askConfirm} />}
+          {activeTab === 'tasks' && <Tasks tasks={tasks} setTasks={setTasks} employees={employees} showToast={showToast} askConfirm={askConfirm} />}
+          {activeTab === 'settings' && <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, attendanceRules, loans, rewards, assets, goals, surveys, announcements, complaints, tasks }} onRestore={(d: any) => { setEmployees(d.employees || []); setAttendanceLog(d.attendanceLog || {}); setInsuranceRecords(d.insuranceRecords || {}); setContractRecords(d.contractRecords || {}); setPayrollRecords(d.payrollRecords || {}); setCalendarEvents(d.calendarEvents || []); setResignations(d.resignations || []); setShifts(d.shifts || INITIAL_SHIFTS); setAttendanceRules(d.attendanceRules || attendanceRules); setLoans(d.loans || []); setRewards(d.rewards || []); setAssets(d.assets || []); setGoals(d.goals || []); setSurveys(d.surveys || []); setAnnouncements(d.announcements || []); setComplaints(d.complaints || []); setTasks(d.tasks || []); }} onClear={() => { setEmployees([]); setAttendanceLog({}); setInsuranceRecords({}); setContractRecords({}); setPayrollRecords({}); setCalendarEvents([]); setResignations([]); setLoans([]); setRewards([]); setAssets([]); setGoals([]); setSurveys([]); setAnnouncements([]); setComplaints([]); setTasks([]); setShifts(INITIAL_SHIFTS); showToast('تم مسح البيانات', 'warning'); }} shifts={shifts} setShifts={setShifts} showToast={showToast} askConfirm={askConfirm} />}
         </main>
       </div>
 
@@ -599,7 +511,7 @@ export default function App() {
         <AnimatePresence>
           {notifications.map(n => (
             <motion.div key={n.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className={`pointer-events-auto flex items-center gap-4 px-8 py-5 rounded-[24px] shadow-2xl border ${n.type === 'error' ? 'bg-rose-600 border-rose-500 text-white' : n.type === 'warning' ? 'bg-amber-500 border-amber-400 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
-              <Icon name={n.type === 'error' ? 'alert-circle' : n.type === 'warning' ? 'alert-triangle' : 'circle-check'} size={24} />
+              <Icon name={n.type === 'error' ? 'circle-alert' : n.type === 'warning' ? 'triangle-alert' : 'circle-check'} size={24} />
               <span className="font-black text-lg">{n.message}</span>
             </motion.div>
           ))}
