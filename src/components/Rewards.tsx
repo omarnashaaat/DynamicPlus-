@@ -12,26 +12,33 @@ interface RewardsProps {
 
 export default function Rewards({ employees, rewards, setRewards, showToast, askConfirm }: RewardsProps) {
   const [formData, setFormData] = useState({ empId: '', amount: '', type: 'bonus', reason: '', points: '10' });
+  const [editingReward, setEditingReward] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleAddReward = (e: React.FormEvent) => {
+  const handleSaveReward = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.empId || (!formData.amount && formData.type !== 'points')) return;
 
     const emp = employees.find(e => e.id === formData.empId);
-    const newReward = {
-      id: Date.now().toString(),
-      empId: formData.empId,
+    const rewardData = {
+      ...formData,
+      id: editingReward ? editingReward.id : Date.now().toString(),
       empName: emp?.name || 'غير معروف',
       amount: parseFloat(formData.amount || '0'),
       points: parseInt(formData.points || '0'),
-      type: formData.type,
-      reason: formData.reason,
-      date: new Date().toISOString().split('T')[0],
+      date: editingReward ? editingReward.date : new Date().toISOString().split('T')[0],
     };
 
-    setRewards([...rewards, newReward]);
+    if (editingReward) {
+      setRewards(rewards.map((r: any) => r.id === editingReward.id ? rewardData : r));
+      showToast('تم تحديث بيانات المكافأة');
+    } else {
+      setRewards([...rewards, rewardData]);
+      showToast('تم تسجيل المكافأة بنجاح');
+    }
+    
+    setEditingReward(null);
     setFormData({ empId: '', amount: '', type: 'bonus', reason: '', points: '10' });
-    showToast('تم تسجيل المكافأة بنجاح');
   };
 
   const deleteReward = (id: string) => {
@@ -58,7 +65,7 @@ export default function Rewards({ employees, rewards, setRewards, showToast, ask
                </div>
             </div>
 
-            <form onSubmit={handleAddReward} className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <form onSubmit={handleSaveReward} className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase mr-2">الموظف</label>
                 <select 
@@ -118,15 +125,27 @@ export default function Rewards({ employees, rewards, setRewards, showToast, ask
                 />
               </div>
               <button type="submit" className="md:col-span-2 w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
-                <Icon name="award" size={20} /> منح التكريم
+                <Icon name="award" size={20} /> {editingReward ? 'تحديث البيانات' : 'منح التكريم'}
               </button>
             </form>
           </div>
 
           <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+            <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
                <h3 className="font-black text-slate-800">سجل المكافآت الأخير</h3>
-               <Icon name="history" size={18} className="text-slate-400" />
+               <div className="flex items-center gap-3 w-full md:w-auto">
+                 <div className="relative flex-1 md:w-64">
+                    <Icon name="search" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                      type="text" 
+                      placeholder="بحث عن موظف..." 
+                      className="w-full bg-white border border-slate-200 rounded-xl py-2 pr-10 pl-4 text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500/20"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                    />
+                 </div>
+                 <Icon name="history" size={18} className="text-slate-400" />
+               </div>
             </div>
             <table className="w-full text-right border-collapse">
               <thead>
@@ -140,11 +159,13 @@ export default function Rewards({ employees, rewards, setRewards, showToast, ask
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {rewards.length === 0 ? (
+                {rewards.filter(r => r.empName.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
                    <tr>
-                     <td colSpan={6} className="p-12 text-center text-slate-300 font-bold">لا توجد سجلات مكافآت حتى الآن</td>
+                     <td colSpan={6} className="p-12 text-center text-slate-300 font-bold">لا توجد سجلات مكافآت تطابق البحث</td>
                    </tr>
-                ) : rewards.slice().reverse().map(reward => (
+                ) : rewards.slice().reverse()
+                    .filter(r => r.empName.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map(reward => (
                   <tr key={reward.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="p-6 font-black text-slate-700">{reward.empName}</td>
                     <td className="p-6">
@@ -158,7 +179,10 @@ export default function Rewards({ employees, rewards, setRewards, showToast, ask
                     <td className="p-6 font-bold text-slate-400 text-xs">{reward.reason || '---'}</td>
                     <td className="p-6 font-bold text-slate-400 text-xs">{reward.date}</td>
                     <td className="p-6">
-                       <button onClick={() => deleteReward(reward.id)} className="p-2.5 rounded-xl bg-rose-50 text-rose-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"><Icon name="trash-2" size={16} /></button>
+                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                          <button onClick={() => { setEditingReward(reward); setFormData({ empId: reward.empId, amount: reward.amount?reward.amount.toString():'', type: reward.type, reason: reward.reason, points: reward.points?reward.points.toString():'10' }); }} className="p-2.5 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><Icon name="edit" size={16} /></button>
+                          <button onClick={() => deleteReward(reward.id)} className="p-2.5 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><Icon name="trash-2" size={16} /></button>
+                       </div>
                     </td>
                   </tr>
                 ))}

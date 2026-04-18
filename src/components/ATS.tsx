@@ -142,7 +142,7 @@ export default function ATS({ onSaveCandidate, showToast }: ATSProps) {
             disabled={isAnalyzing || files.length === 0}
             className="w-full bg-indigo-600 text-white font-black py-5 rounded-3xl text-xl shadow-xl hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 transition-all"
           >
-            {isAnalyzing ? `جاري التحليل ${analysisProgress}%...` : 'بدء التحليل الذكي'}
+            {isAnalyzing ? `جاري التحليل ${analysisProgress}%...` : 'بدء التحليل'}
           </button>
         </div>
       </div>

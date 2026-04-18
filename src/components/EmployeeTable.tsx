@@ -14,6 +14,7 @@ interface EmployeeTableProps {
 export default function EmployeeTable({ employees, setEmployees, shifts, showToast, askConfirm }: EmployeeTableProps) {
   const [showModal, setShowModal] = useState(false);
   const [showProfile, setShowProfile] = useState<any>(null);
+  const [profileTab, setProfileTab] = useState('overview');
   const [editingEmp, setEditingEmp] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('all');
@@ -55,29 +56,34 @@ export default function EmployeeTable({ employees, setEmployees, shifts, showToa
 
       let headerIdx = 0;
       for (let i = 0; i < Math.min(rows.length, 10); i++) {
-        const rowStr = rows[i].map((c: any) => normalizeText(c)).join(' ');
+        const rowData = rows[i];
+        if (!rowData || !Array.isArray(rowData)) continue;
+        const rowStr = rowData.map((c: any) => normalizeText(c)).join(' ');
         if (rowStr.includes('اسم') || rowStr.includes('كود')) {
           headerIdx = i;
           break;
         }
       }
 
-      const headers = rows[headerIdx].map((h: any) => normalizeText(h));
+      const headers = rows[headerIdx]?.map((h: any) => normalizeText(h)) || [];
       const f = (k: string[], df: number) => {
         const idx = headers.findIndex((h: string) => k.some(ki => h.includes(normalizeText(ki))));
         return idx !== -1 ? idx : df;
       };
 
       const m = {
-        code: f(['كود', 'بصمه'], 1),
+        code: f(['كود', 'بصمه', 'رقم وظيفي'], 0),
+        name: f(['اسم'], 1),
         joinDate: f(['تاريخ', 'تعيين'], 2),
-        name: f(['اسم'], 3),
-        department: f(['قسم', 'اداره'], 4),
-        jobTitle: f(['مسمي'], 5),
-        nationalId: f(['قومي'], 6),
-        phone: f(['هاتف'], 7),
-        address: f(['عنوان'], 8),
-        shift: f(['ورديه', 'شفت'], 9)
+        department: f(['قسم', 'اداره', 'قطاع'], 3),
+        jobTitle: f(['مسمي', 'وظيفه', 'مهنه'], 4),
+        nationalId: f(['قومي', 'هويه'], 5),
+        phone: f(['هاتف', 'موبايل', 'تليفون'], 6),
+        address: f(['عنوان', 'سكن'], 7),
+        shift: f(['ورديه', 'شفت'], 8),
+        salary: f(['راتب', 'مرتب', 'اجر'], 9),
+        email: f(['ايميل', 'بريد'], 10),
+        birthDate: f(['ميلاد'], 11)
       };
 
       const res = rows.slice(headerIdx + 1).map(r => {
@@ -89,6 +95,16 @@ export default function EmployeeTable({ employees, setEmployees, shifts, showToa
           const d = new Date(rawDate);
           joinDate = isNaN(d.getTime()) ? rawDate.toString() : d.toISOString().split('T')[0];
         }
+
+        let birthDate = '';
+        const rawBirth = r[m.birthDate];
+        if (rawBirth instanceof Date) {
+          birthDate = rawBirth.toISOString().split('T')[0];
+        } else if (rawBirth) {
+          const bd = new Date(rawBirth);
+          birthDate = isNaN(bd.getTime()) ? rawBirth.toString() : bd.toISOString().split('T')[0];
+        }
+
         return {
           id: Math.random().toString(36).substr(2, 9),
           code: r[m.code]?.toString() || '',
@@ -99,6 +115,9 @@ export default function EmployeeTable({ employees, setEmployees, shifts, showToa
           nationalId: r[m.nationalId]?.toString() || '',
           phone: r[m.phone]?.toString() || '',
           address: r[m.address]?.toString() || '',
+          email: r[m.email]?.toString() || '',
+          salary: parseFloat(r[m.salary]) || 0,
+          birthDate,
           shift: r[m.shift]?.toString() || (Object.values(shifts)[0] as any)?.name || '',
           status: 'نشط',
           totalLeaves: 21,
@@ -107,12 +126,41 @@ export default function EmployeeTable({ employees, setEmployees, shifts, showToa
       }).filter(emp => emp.name && emp.code);
 
       if (res.length) {
-        setEmployees(prev => [...prev, ...res]);
+        setEmployees(prev => {
+          const existingCodes = new Set(prev.map(e => e.code.toString()));
+          const uniqueNew = res.filter(e => !existingCodes.has(e.code.toString()));
+          if (uniqueNew.length < res.length) {
+            showToast(`تم تجاهل ${res.length - uniqueNew.length} سجل مكرر.`);
+          }
+          return [...prev, ...uniqueNew];
+        });
         showToast(`تم استيراد بيانات ${res.length} موظف بنجاح.`);
       }
     };
     reader.readAsBinaryString(file);
     e.target.value = '';
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateData = [{
+      'كود الموظف': '101',
+      'الاسم الكامل': 'محمد احمد علي',
+      'تاريخ التعيين': '2024-01-01',
+      'الإدارة': 'الموارد البشرية',
+      'المسمى الوظيفي': 'أخصائي شؤون موظفين',
+      'الرقم القومي': '29001011234567',
+      'رقم الهاتف': '01012345678',
+      'العنوان': 'القاهرة، مدينة نصر',
+      'الوردية': 'الصباحية',
+      'الراتب': '8000',
+      'البريد الإلكتروني': 'emp@company.com',
+      'تاريخ الميلاد': '1990-05-15'
+    }];
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+    XLSX.writeFile(workbook, "HR_Import_Template.xlsx");
+    showToast('تم تحميل نموذج الاستيراد', 'info');
   };
 
   const handleExcelExport = () => {
@@ -171,6 +219,13 @@ export default function EmployeeTable({ employees, setEmployees, shifts, showToa
           >
             <Icon name="download" size={20} /> 
             تصدير Excel
+          </button>
+          <button 
+            onClick={handleDownloadTemplate} 
+            className="flex-1 sm:flex-none justify-center px-6 py-3.5 rounded-2xl font-black flex items-center gap-2 shadow-xl bg-orange-50 text-orange-700 border border-orange-100 hover:bg-orange-100 transition-all text-sm"
+          >
+            <Icon name="file-text" size={20} /> 
+            تحميل النموذج
           </button>
           <button 
             onClick={() => fileInputRef.current?.click()} 
@@ -343,53 +398,134 @@ export default function EmployeeTable({ employees, setEmployees, shifts, showToa
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white w-full max-w-4xl rounded-[40px] shadow-2xl p-12 relative overflow-hidden mb-auto mt-auto"
+                className="bg-white w-full max-w-5xl rounded-[50px] shadow-3xl relative overflow-hidden mb-auto mt-auto"
               >
-              <button onClick={() => setShowProfile(null)} className="absolute top-8 left-8 p-2 hover:bg-rose-50 text-slate-400 rounded-xl"><Icon name="x" size={32} /></button>
+              <div className="h-32 bg-slate-900 w-full relative">
+                 <div className="absolute -bottom-16 right-12 w-32 h-32 rounded-[35px] bg-indigo-600 border-4 border-white flex items-center justify-center text-white text-5xl font-black shadow-2xl">
+                    {showProfile.name.charAt(0)}
+                 </div>
+                 <button onClick={() => setShowProfile(null)} className="absolute top-6 left-6 p-2 bg-white/10 hover:bg-rose-500 text-white rounded-xl transition-all"><Icon name="x" size={24} /></button>
+              </div>
               
-              <div className="flex flex-col md:flex-row gap-12 items-start">
-                <div className="w-48 h-48 rounded-[40px] bg-indigo-600 flex items-center justify-center text-white text-7xl font-black shadow-2xl shadow-indigo-500/30">
-                  {showProfile.name.charAt(0)}
-                </div>
-                
-                <div className="flex-1 space-y-8">
-                  <div>
-                    <h2 className="text-4xl font-black text-slate-800">{showProfile.name}</h2>
-                    <p className="text-indigo-600 font-bold text-lg mt-1">{showProfile.jobTitle} • {showProfile.department}</p>
-                  </div>
+              <div className="pt-20 px-12 pb-12">
+                 <div className="flex justify-between items-start mb-10">
+                    <div>
+                       <h2 className="text-4xl font-black text-slate-800 tracking-tighter">{showProfile.name}</h2>
+                       <p className="text-indigo-600 font-bold text-lg mt-1 underline decoration-indigo-100 decoration-2 underline-offset-4">{showProfile.jobTitle} • {showProfile.department}</p>
+                    </div>
+                    <div className="flex gap-2">
+                       <button className="px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-black text-sm hover:bg-indigo-600 hover:text-white transition-all">تحميل السيرة الذاتية</button>
+                    </div>
+                 </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">كود الموظف</p>
-                      <p className="font-black text-slate-700">{showProfile.code}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">تاريخ التعيين</p>
-                      <p className="font-black text-slate-700">{showProfile.joinDate}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">الرقم القومي</p>
-                      <p className="font-black text-slate-700">{showProfile.nationalId}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">رقم الهاتف</p>
-                      <p className="font-black text-slate-700">{showProfile.phone || 'غير مسجل'}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">البريد الإلكتروني</p>
-                      <p className="font-black text-slate-700">{showProfile.email || 'غير مسجل'}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">تاريخ الميلاد</p>
-                      <p className="font-black text-slate-700">{showProfile.birthDate || 'غير مسجل'}</p>
-                    </div>
-                  </div>
+                 <div className="flex bg-slate-50 p-1.5 rounded-2xl mb-10 w-fit no-print">
+                    {[
+                      { id: 'overview', title: 'نظرة عامة', icon: 'layout' },
+                      { id: 'timeline', title: 'سجل الترقيات', icon: 'milestone' },
+                      { id: 'docs', title: 'المستندات', icon: 'files' },
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setProfileTab(tab.id)}
+                        className={`px-8 py-3 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${profileTab === tab.id ? 'bg-white text-indigo-600 shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                         <Icon name={tab.icon} size={16} />
+                         {tab.title}
+                      </button>
+                    ))}
+                 </div>
 
-                  <div className="p-6 bg-slate-50 rounded-3xl space-y-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase">العنوان</p>
-                    <p className="font-bold text-slate-700">{showProfile.address || 'غير مسجل'}</p>
-                  </div>
-                </div>
+                 {profileTab === 'overview' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
+                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                          {[
+                            { label: 'كود الموظف', val: showProfile.code, icon: 'id-card' },
+                            { label: 'تاريخ التعيين', val: showProfile.joinDate, icon: 'calendar-range' },
+                            { label: 'الرقم القومي', val: showProfile.nationalId, icon: 'id-card' },
+                            { label: 'رقم الهاتف', val: showProfile.phone || 'غير مسجل', icon: 'phone' },
+                            { label: 'البريد الإلكتروني', val: showProfile.email || 'غير مسجل', icon: 'mail' },
+                            { label: 'تاريخ الميلاد', val: showProfile.birthDate || 'غير مسجل', icon: 'cake' },
+                            { label: 'الراتب الأساسي', val: `${showProfile.salary} ج.م`, icon: 'banknote' },
+                            { label: 'الوردية', val: showProfile.shift, icon: 'clock' },
+                          ].map((stat, i) => (stat.val &&
+                            <div key={i} className="p-6 bg-slate-50/50 border border-slate-50 rounded-[30px] space-y-2 group hover:bg-white hover:shadow-xl hover:border-indigo-100 transition-all">
+                               <div className="text-slate-300 group-hover:text-indigo-400 transition-colors"><Icon name={stat.icon} size={20} /></div>
+                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                               <p className="font-black text-slate-800">{stat.val}</p>
+                            </div>
+                          ))}
+                       </div>
+                       
+                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                          <div className="p-8 bg-indigo-950 text-white rounded-[40px] shadow-2xl relative overflow-hidden">
+                             <div className="absolute -top-12 -left-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                             <h4 className="text-lg font-black mb-6 relative z-10">إحصائيات الحضور</h4>
+                             <div className="grid grid-cols-3 gap-4 relative z-10">
+                                <div className="text-center">
+                                   <p className="text-3xl font-black mb-1">21</p>
+                                   <p className="text-[10px] text-indigo-300 font-bold">يوم عمل</p>
+                                </div>
+                                <div className="text-center border-x border-white/10">
+                                   <p className="text-3xl font-black mb-1">2</p>
+                                   <p className="text-[10px] text-indigo-300 font-bold">تأخير</p>
+                                </div>
+                                <div className="text-center">
+                                   <p className="text-3xl font-black mb-1">0</p>
+                                   <p className="text-[10px] text-indigo-300 font-bold">غياب</p>
+                                </div>
+                             </div>
+                          </div>
+                          <div className="p-8 bg-white border border-slate-100 rounded-[40px] shadow-sm flex flex-col justify-center gap-2 italic">
+                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">العنوان الفعلي</p>
+                             <p className="text-xl font-black text-slate-800">{showProfile.address || 'لم يتم تسجيل العنوان'}</p>
+                          </div>
+                       </div>
+                    </motion.div>
+                 )}
+
+                 {profileTab === 'timeline' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                       <div className="relative pr-12 space-y-12 before:absolute before:right-6 before:top-2 before:bottom-2 before:w-1 before:bg-slate-100 before:rounded-full">
+                          {[
+                            { title: 'موظف حالي', date: showProfile.joinDate, sub: 'بقرار تعيين رسمي', type: 'current' },
+                            { title: 'فترة التجريب', date: showProfile.joinDate, sub: 'بداية العمل بالشركة', type: 'start' },
+                          ].map((event, i) => (
+                            <div key={i} className="relative group">
+                               <div className={`absolute -right-[30px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-md z-10 transition-all group-hover:scale-150 ${event.type === 'current' ? 'bg-indigo-600' : 'bg-slate-300'}`}></div>
+                               <div className="premium-card p-6 inline-block min-w-[300px]">
+                                  <p className="text-[10px] font-black text-slate-400 italic mb-1">{event.date}</p>
+                                  <h4 className="font-black text-slate-800">{event.title}</h4>
+                                  <p className="text-xs text-slate-500 font-bold">{event.sub}</p>
+                               </div>
+                            </div>
+                          ))}
+                       </div>
+                    </motion.div>
+                 )}
+
+                 {profileTab === 'docs' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                       {[
+                         { name: 'صورة البطاقة', type: 'Identity', size: '1.2 MB' },
+                         { name: 'شهادة التخرج', type: 'Education', size: '2.4 MB' },
+                         { name: 'عقد العمل الموثق', type: 'Contract', size: '3.1 MB' },
+                         { name: 'شهادة الخبرة', type: 'Experience', size: '0.8 MB' },
+                       ].map((doc, i) => (
+                         <div key={i} className="p-6 bg-slate-50 border border-slate-100 rounded-[35px] flex items-center justify-between hover:bg-white hover:shadow-xl transition-all group cursor-pointer">
+                            <div className="flex items-center gap-4">
+                               <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                  <Icon name="file-text" size={24} />
+                               </div>
+                               <div>
+                                  <h5 className="font-black text-slate-800 text-sm">{doc.name}</h5>
+                                  <p className="text-[10px] text-slate-400 font-bold uppercase">{doc.type} • {doc.size}</p>
+                               </div>
+                            </div>
+                            <button className="p-2 text-slate-300 hover:text-indigo-600 transition-all"><Icon name="download" size={18} /></button>
+                         </div>
+                       ))}
+                    </motion.div>
+                 )}
               </div>
             </motion.div>
             </div>

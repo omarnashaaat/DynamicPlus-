@@ -50,7 +50,7 @@ export default function Surveys({ surveys, setSurveys, showToast, askConfirm }: 
               <Icon name="message-square" size={40} />
            </div>
            <div>
-              <h2 className="text-4xl font-black text-slate-800 tracking-tighter italic uppercase">منظومة الاستطلاعات الذكية <span className="text-violet-600">Surveys</span></h2>
+              <h2 className="text-4xl font-black text-slate-800 tracking-tighter italic uppercase">منظومة الاستطلاعات <span className="text-violet-600">Surveys</span></h2>
               <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] italic">قياس نبض المؤسسة وتعزيز الشفافية الرقمية</p>
            </div>
         </div>

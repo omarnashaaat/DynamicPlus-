@@ -26,36 +26,38 @@ export default function Dashboard({
   generateDummyData 
 }: DashboardProps) {
   const menuItems = [
-    { id: 'employees', title: 'قاعدة البيانات', sub: 'إدارة شؤون العاملين', icon: 'users', color: 'bg-indigo-600', size: 'large' },
-    { id: 'attendance', title: 'ذكاء الأعمال', sub: 'تحليلات القوى العاملة', icon: 'chart-column-increasing', color: 'bg-indigo-950', size: 'medium' },
-    { id: 'offices', title: 'إدارة الفروع', sub: 'الانتشار الجغرافي', icon: 'building-2', color: 'bg-sky-600', size: 'medium' },
-    { id: 'payroll', title: 'الرواتب والمالية', sub: 'المسيرات والتحويلات', icon: 'banknote', color: 'bg-emerald-600', size: 'medium' },
-    { id: 'kpis', title: 'الأداء والنمو', sub: 'مؤشرات الكفاءة', icon: 'chart-line', color: 'bg-rose-500', size: 'small' },
-    { id: 'training', title: 'أكاديمية التدريب', sub: 'تطوير المسار الوظيفي', icon: 'graduation-cap', color: 'bg-violet-600', size: 'small' },
-    { id: 'doc_center', title: 'مركز الوثائق', sub: 'النماذج والشهادات', icon: 'file-text', color: 'bg-sky-700', size: 'small' },
-    { id: 'recruitment', title: 'التوظيف والتعاقد', sub: 'نظام ATS المتكامل', icon: 'briefcase', color: 'bg-violet-600', size: 'small' },
-    { id: 'leaves', title: 'الإجازات', sub: 'الأرصدة والطلبات', icon: 'calendar-days', color: 'bg-rose-500', size: 'small' },
-    { id: 'insurance', title: 'التأمينات', sub: 'الحصص والمستندات', icon: 'shield-check', color: 'bg-sky-600', size: 'small' },
-    { id: 'contracts', title: 'إدارة العقود', sub: 'المتابعة والتجديد', icon: 'scroll-text', color: 'bg-teal-600', size: 'small' },
-    { id: 'loans', title: 'القروض والسلف', sub: 'الحسابات الجارية', icon: 'hand-coins', color: 'bg-amber-600', size: 'small' },
-    { id: 'rewards', title: 'التميز الوظيفي', sub: 'المكافآت والتقدير', icon: 'gift', color: 'bg-orange-600', size: 'small' },
-    { id: 'gamification', title: 'التميز والتحفيز', sub: 'نظام النقاط والأوسمة', icon: 'trophy', color: 'bg-orange-600', size: 'small' },
-    { id: 'org_chart', title: 'الهيكل الإداري', sub: 'التسلسل الوظيفي', icon: 'network', color: 'bg-blue-800', size: 'small' },
-    { id: 'goals', title: 'الأهداف والإنتاجية', sub: 'نظام OKRs الذكي', icon: 'target', color: 'bg-rose-600', size: 'small' },
-    { id: 'surveys', title: 'استطلاعات الرأي', sub: 'قياس الرضا', icon: 'message-square', color: 'bg-violet-500', size: 'small' },
-    { id: 'announcements', title: 'أخبار الشركة', sub: 'الإعلانات العامة', icon: 'megaphone', color: 'bg-indigo-400', size: 'small' },
-    { id: 'archive', title: 'الأرشيف سحابي', sub: 'الملفات الرقمية', icon: 'folder-archive', color: 'bg-slate-600', size: 'small' },
-    { id: 'calendar', title: 'الأجندة العامة', sub: 'المناسبات والمهام', icon: 'calendar', color: 'bg-indigo-500', size: 'small' },
-    { id: 'evaluations', title: 'تقييم 360', sub: 'التقييم السنوي', icon: 'star', color: 'bg-yellow-600', size: 'small' },
-    { id: 'complaints', title: 'صندوق الاقتراحات', sub: 'الشكاوى والاستفسارات', icon: 'inbox', color: 'bg-rose-400', size: 'small' },
-    { id: 'activity_log', title: 'سجل النظام', sub: 'متابعة العمليات', icon: 'history', color: 'bg-slate-500', size: 'small' },
-    { id: 'settings', title: 'التحكم العام', sub: 'ضبط الإعدادات', icon: 'settings', color: 'bg-slate-700', size: 'small' },
+    { id: 'employees', title: 'شؤون الموظفين', sub: 'إدارة ملفات وبيانات الموظفين', icon: 'users', color: 'bg-indigo-600', size: 'large' },
+    { id: 'attendance', title: 'الحضور والانصراف', sub: 'متابعة سجلات التحضير اليومي', icon: 'chart-column', color: 'bg-indigo-950', size: 'medium' },
+    { id: 'offices', title: 'المواقع والفروع', sub: 'إدارة الفروع والمواقع الجغرافية', icon: 'building-2', color: 'bg-sky-600', size: 'medium' },
+    { id: 'payroll', title: 'الرواتب والأجور', sub: 'كشوف المرتبات والمسيرات المالية', icon: 'banknote', color: 'bg-emerald-600', size: 'medium' },
+    { id: 'monthly_report', title: 'التقارير الشهرية', sub: 'سجلات الحضور والغياب المجمعة', icon: 'file-chart-column', color: 'bg-emerald-700', size: 'medium' },
+    { id: 'kpis', title: 'تقييم الأداء', sub: 'مؤشرات الكفاءة والإنتاجية', icon: 'chart-line', color: 'bg-rose-500', size: 'small' },
+    { id: 'training', title: 'التدريب والتطوير', sub: 'تطوير مهارات فريق العمل', icon: 'graduation-cap', color: 'bg-violet-600', size: 'small' },
+    { id: 'doc_center', title: 'مركز النماذج', sub: 'النماذج الإدارية والشهادات', icon: 'file-text', color: 'bg-sky-700', size: 'small' },
+    { id: 'recruitment', title: 'التوظيف', sub: 'إدارة طلبات التوظيف والمقابلات', icon: 'briefcase', color: 'bg-violet-600', size: 'small' },
+    { id: 'leaves', title: 'الإجازات', sub: 'إدارة الأرصدة وطلبات الإجازة', icon: 'calendar-days', color: 'bg-rose-500', size: 'small' },
+    { id: 'insurance', title: 'التأمينات', sub: 'إدارة التأمينات الاجتماعية والطبية', icon: 'shield-check', color: 'bg-sky-600', size: 'small' },
+    { id: 'contracts', title: 'العقود', sub: 'متابعة وتجديد عقود الموظفين', icon: 'scroll-text', color: 'bg-teal-600', size: 'small' },
+    { id: 'loans', title: 'السلف والقروض', sub: 'إدارة السلف والذمم المالية', icon: 'hand-coins', color: 'bg-amber-600', size: 'small' },
+    { id: 'rewards', title: 'المكافآت', sub: 'نظام الحوافز والمكافآت التشجيعية', icon: 'gift', color: 'bg-orange-600', size: 'small' },
+    { id: 'gamification', title: 'التحفيز الرقمي', sub: 'نظام النقاط ولوحة الصدارة', icon: 'trophy', color: 'bg-orange-600', size: 'small' },
+    { id: 'org_chart', title: 'الهيكل التنظيمي', sub: 'التسلسل الإداري للشركة', icon: 'network', color: 'bg-blue-800', size: 'small' },
+    { id: 'policies', title: 'سياسات الشركة', sub: 'الدليل التنظيمي واللوائح', icon: 'scroll-text', color: 'bg-slate-900', size: 'small' },
+    { id: 'goals', title: 'الأهداف الاستراتيجية', sub: 'متابعة الأهداف والنتائج الرئيسية', icon: 'target', color: 'bg-rose-600', size: 'small' },
+    { id: 'surveys', title: 'الاستبيانات', sub: 'قياس رضا الموظفين والمقترحات', icon: 'message-square', color: 'bg-violet-500', size: 'small' },
+    { id: 'announcements', title: 'أخبار الشركة', sub: 'لوحة الإعلانات والتعميمات', icon: 'megaphone', color: 'bg-indigo-400', size: 'small' },
+    { id: 'archive', title: 'الأرشيف الرقمي', sub: 'إدارة الوثائق والملفات الإلكترونية', icon: 'folder-archive', color: 'bg-slate-600', size: 'small' },
+    { id: 'calendar', title: 'التقويم', sub: 'المناسبات والاجتماعات الهامة', icon: 'calendar', color: 'bg-indigo-500', size: 'small' },
+    { id: 'evaluations', title: 'التقييم السنوي', sub: 'مراجعة أداء الموظفين السنوي', icon: 'star', color: 'bg-yellow-600', size: 'small' },
+    { id: 'complaints', title: 'الشكاوى والمقترحات', sub: 'صندوق التواصل الداخلي', icon: 'inbox', color: 'bg-rose-400', size: 'small' },
+    { id: 'activity_log', title: 'سجل العمليات', sub: 'مراقبة التغييرات في النظام', icon: 'history', color: 'bg-slate-500', size: 'small' },
+    { id: 'settings', title: 'الإعدادات', sub: 'تهيئة النظام وصلاحيات المستخدمين', icon: 'settings', color: 'bg-slate-700', size: 'small' },
   ];
 
   const stats = [
     { label: 'إجمالي الموظفين', value: employees.length, icon: 'users', color: 'text-indigo-600', bg: 'bg-indigo-100', trend: '+12%' },
-    { label: 'سجل الحضور', value: Object.keys(attendanceLog[new Date().toISOString().split('T')[0]] || {}).length, icon: 'circle-check', color: 'text-emerald-600', bg: 'bg-emerald-100', trend: '98%' },
-    { label: 'الموازنة التقديرية', value: employees.reduce((acc, emp) => acc + (emp.salary || 0), 0).toLocaleString(), icon: 'banknote', color: 'text-rose-600', bg: 'bg-rose-100', trend: 'استقرار' },
+    { label: 'الحضور اليومي', value: Object.keys(attendanceLog[new Date().toISOString().split('T')[0]] || {}).length, icon: 'circle-check', color: 'text-emerald-600', bg: 'bg-emerald-100', trend: '98%' },
+    { label: 'إجمالي الرواتب', value: employees.reduce((acc, emp) => acc + (emp.salary || 0), 0).toLocaleString(), icon: 'banknote', color: 'text-rose-600', bg: 'bg-rose-100', trend: 'استقرار' },
     { label: 'معدل الدوران', value: '4.2%', icon: 'refresh-ccw', color: 'text-amber-600', bg: 'bg-amber-100', trend: 'تحسن' },
   ];
 
@@ -98,7 +100,7 @@ export default function Dashboard({
               whileHover={{ y: -10, rotate: 1 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setActiveTab(item.id)}
-              className={`group relative overflow-hidden p-8 rounded-[40px] border transition-all duration-500 flex flex-col items-center justify-center text-center bg-white border-slate-100/80 shadow-sm hover:border-indigo-500/30 hover:shadow-[0_20px_60px_-15px_rgba(79,70,229,0.12)] ${
+              className={`group relative overflow-hidden p-8 premium-card flex flex-col items-center justify-center text-center ${
                 item.size === 'large' ? 'col-span-2 row-span-2 md:p-12' : 
                 item.size === 'medium' ? 'col-span-2' : 'col-span-1'
               }`}
@@ -117,6 +119,53 @@ export default function Dashboard({
               <div className="absolute top-2 left-2 text-[10px] font-black text-slate-100 uppercase tracking-widest">{item.id.slice(0, 3)}</div>
             </motion.button>
           ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 no-print">
+        <div className="lg:col-span-2 space-y-6">
+           <div className="flex items-center gap-4">
+              <div className="p-3 bg-white border rounded-2xl shadow-sm italic font-black text-rose-500">02.</div>
+              <h2 className="text-3xl font-black text-slate-900 italic tracking-tight uppercase">أخبار الشركة <span className="text-slate-300 ml-2">Corporate News</span></h2>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { title: 'موعد إفطار رمضان الجماعي', date: 'منذ ساعتين', tag: 'إجتماعي', color: 'bg-emerald-100 text-emerald-600' },
+                { title: 'تحديث لائحة الإجازات الجديدة', date: 'منذ يوم', tag: 'إداري', color: 'bg-indigo-100 text-indigo-600' },
+              ].map((news, idx) => (
+                <div key={idx} className="bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+                   <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase ${news.color}`}>{news.tag}</span>
+                   <h4 className="mt-4 font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{news.title}</h4>
+                   <div className="mt-6 flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold">{news.date}</span>
+                      <Icon name="arrow-left" size={16} className="text-slate-200 group-hover:text-indigo-400 group-hover:-translate-x-2 transition-all" />
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+
+        <div className="space-y-6">
+           <div className="flex items-center gap-4">
+              <div className="p-3 bg-white border rounded-2xl shadow-sm italic font-black text-amber-500">03.</div>
+              <h2 className="text-3xl font-black text-slate-900 italic tracking-tight uppercase">المميزين <span className="text-slate-300 ml-2">Spotlight</span></h2>
+           </div>
+           
+           <div className="bg-slate-900 p-8 rounded-[40px] text-white relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+              <div className="relative z-10 flex flex-col items-center text-center space-y-4">
+                 <div className="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/10 rotate-3">
+                    <Icon name="medal" size={40} className="text-yellow-400" />
+                 </div>
+                 <div>
+                    <h3 className="text-lg font-black">أحمد محمد علي</h3>
+                    <p className="text-xs text-indigo-300 font-bold">موظف الشهر المثالي</p>
+                 </div>
+                 <p className="text-[11px] text-slate-400 font-bold italic">"تقدير لجهوده الاستثنائية في تطوير نظام الأرشفة الرقمي"</p>
+                 <button onClick={() => setActiveTab('rewards')} className="w-full py-3 bg-white/10 border border-white/5 rounded-2xl text-[10px] font-black hover:bg-white/20 transition-all">شاهد لوحة الشرف</button>
+              </div>
+           </div>
         </div>
       </div>
     </div>

@@ -14,11 +14,13 @@ export default function DigitalFiles({ employees, showToast, askConfirm }: any) 
     }
   });
 
+  const [viewingFile, setViewingFile] = useState<any>(null);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && selectedEmp) {
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('حجم الملف كبير جداً (الأقصى 5 ميجابايت)', 'error');
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('حجم الملف كبير جداً (الأقصى 10 ميجابايت)', 'error');
         return;
       }
       
@@ -39,9 +41,9 @@ export default function DigitalFiles({ employees, showToast, askConfirm }: any) 
           localStorage.setItem('hr_digital_files', JSON.stringify(newFiles));
         } catch (e) {
           console.error('Error saving hr_digital_files to localStorage', e);
-          showToast('فشل حفظ الملف في التخزين المحلي', 'error');
+          showToast('فشل حفظ الملف (قد يكون الحجم كبيراً جداً للتخزين المحلي)', 'error');
         }
-        showToast('تم رفع الملف بنجاح');
+        showToast('تم أرشفة المستند بنجاح');
       };
       reader.readAsDataURL(file);
     }
@@ -176,8 +178,9 @@ export default function DigitalFiles({ employees, showToast, askConfirm }: any) 
                              </div>
                              
                              <div className="flex items-center gap-2 pt-4 justify-end border-t border-slate-50 italic">
+                                <button onClick={() => setViewingFile(file)} className="w-10 h-10 bg-slate-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all" title="معاينة"><Icon name="eye" size={18} /></button>
                                 <a href={file.data} download={file.name} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center hover:bg-indigo-100 hover:text-indigo-600 transition-all" title="تحميل"><Icon name="download" size={18} /></a>
-                                <button onClick={() => deleteFile(file.id)} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all" title="حذف بالماك"><Icon name="trash-2" size={18} /></button>
+                                <button onClick={() => deleteFile(file.id)} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all" title="حذف"><Icon name="trash-2" size={18} /></button>
                              </div>
                           </motion.div>
                        ))}
@@ -209,6 +212,35 @@ export default function DigitalFiles({ employees, showToast, askConfirm }: any) 
            </AnimatePresence>
         </div>
       </div>
+      <AnimatePresence>
+        {viewingFile && (
+          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-2xl z-[300] flex items-center justify-center p-4">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.9 }}
+               className="bg-white w-full max-w-5xl h-[90vh] rounded-[60px] shadow-4xl overflow-hidden flex flex-col"
+             >
+                <div className="p-8 border-b flex justify-between items-center bg-slate-50">
+                   <div>
+                      <h3 className="text-2xl font-black text-slate-800 italic">{viewingFile.name}</h3>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">{viewingFile.type} • {viewingFile.size}</p>
+                   </div>
+                   <button onClick={() => setViewingFile(null)} className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl hover:text-rose-500 transition-all"><Icon name="x" size={24} /></button>
+                </div>
+                <div className="flex-1 bg-slate-100 overflow-hidden">
+                   {viewingFile.type.includes('image') ? (
+                     <div className="h-full flex items-center justify-center p-10">
+                        <img src={viewingFile.data} alt={viewingFile.name} className="max-h-full max-w-full rounded-2xl shadow-2xl object-contain" referrerPolicy="no-referrer" />
+                     </div>
+                   ) : (
+                     <iframe src={viewingFile.data} className="w-full h-full border-none" title={viewingFile.name} />
+                   )}
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

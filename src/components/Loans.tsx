@@ -12,6 +12,7 @@ interface LoansProps {
 
 export default function Loans({ employees, loans, setLoans, showToast, askConfirm }: LoansProps) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingLoan, setEditingLoan] = useState<any>(null);
   const [formData, setFormData] = useState({
     empId: '',
     amount: '',
@@ -19,27 +20,39 @@ export default function Loans({ employees, loans, setLoans, showToast, askConfir
     reason: '',
     date: new Date().toISOString().split('T')[0]
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleAddLoan = (e: React.FormEvent) => {
+  const filteredLoans = loans.filter(l => 
+    l.empName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    l.empId?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSaveLoan = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.empId || !formData.amount) return;
 
     const emp = employees.find(e => e.id === formData.empId);
-    const newLoan = {
-      id: Math.random().toString(36).substr(2, 9),
+    const loanData = {
+      ...formData,
+      id: editingLoan ? editingLoan.id : Math.random().toString(36).substr(2, 9),
       empName: emp.name,
       empId: emp.id,
       amount: parseFloat(formData.amount),
       installments: parseInt(formData.installments),
-      paid: 0,
-      reason: formData.reason,
-      date: formData.date,
-      status: 'pending'
+      paid: editingLoan ? editingLoan.paid : 0,
+      status: editingLoan ? editingLoan.status : 'pending'
     };
 
-    setLoans([...loans, newLoan]);
+    if (editingLoan) {
+      setLoans(loans.map(l => l.id === editingLoan.id ? loanData : l));
+      showToast("تم تحديث بيانات السلفة");
+    } else {
+      setLoans([...loans, loanData]);
+      showToast("تم تسجيل طلب السلفة بنجاح");
+    }
+    
     setShowAddModal(false);
-    showToast("تم تسجيل طلب السلفة بنجاح");
+    setEditingLoan(null);
   };
 
   const approveLoan = (id: string) => {
@@ -66,13 +79,25 @@ export default function Loans({ employees, loans, setLoans, showToast, askConfir
               <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] italic">نظام تتبع القروض والخصم التلقائي</p>
            </div>
         </div>
-        <button 
-           onClick={() => setShowAddModal(true)}
-           className="bg-slate-900 text-white px-10 py-5 rounded-[30px] font-black shadow-2xl hover:bg-amber-600 hover:scale-105 active:scale-95 transition-all flex items-center gap-4"
-        >
-           <Icon name="plus" size={24} />
-           طلب سلفة جديدة
-        </button>
+        <div className="flex flex-wrap items-center gap-4">
+           <div className="relative group">
+              <Icon name="search" size={20} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-amber-500 transition-colors" />
+              <input 
+                 type="text" 
+                 placeholder="ابحث عن سجل موظف..." 
+                 className="bg-white border-2 border-slate-100 rounded-[25px] py-4 pr-14 pl-6 font-black text-slate-800 outline-none focus:border-amber-500 transition-all shadow-inner italic w-full md:w-80"
+                 value={searchQuery}
+                 onChange={e => setSearchQuery(e.target.value)}
+              />
+           </div>
+           <button 
+              onClick={() => { setEditingLoan(null); setFormData({ empId: '', amount: '', installments: '3', reason: '', date: new Date().toISOString().split('T')[0] }); setShowAddModal(true); }}
+              className="bg-slate-900 text-white px-10 py-5 rounded-[30px] font-black shadow-2xl hover:bg-amber-600 hover:scale-105 active:scale-95 transition-all flex items-center gap-4 shadow-amber-200/50"
+           >
+              <Icon name="plus" size={24} />
+              طلب سلفة جديدة
+           </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-4 no-print">
@@ -109,12 +134,12 @@ export default function Loans({ employees, loans, setLoans, showToast, askConfir
                   </tr>
                </thead>
                <tbody className="divide-y divide-slate-50">
-                  {loans.length === 0 ? (
+                  {filteredLoans.length === 0 ? (
                     <tr>
-                       <td colSpan={6} className="py-20 text-slate-300 font-black italic">لا يوجد طلبات سلف حالياً</td>
+                       <td colSpan={6} className="py-20 text-slate-300 font-black italic">لا يوجد طلبات سلف تطابق البحث</td>
                     </tr>
                   ) : (
-                    loans.map(loan => (
+                    filteredLoans.map(loan => (
                       <tr key={loan.id} className="hover:bg-slate-50 transition-all font-bold group text-sm">
                          <td className="px-10 py-6 text-right flex items-center gap-4">
                             <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-black italic">#</div>
@@ -143,6 +168,7 @@ export default function Loans({ employees, loans, setLoans, showToast, askConfir
                                      اعتماد
                                   </button>
                                )}
+                               <button onClick={() => { setEditingLoan(loan); setFormData({ empId: loan.empId, amount: loan.amount.toString(), installments: loan.installments.toString(), reason: loan.reason, date: loan.date }); setShowAddModal(true); }} className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Icon name="edit" size={16} /></button>
                                <button onClick={() => deleteLoan(loan.id)} className="p-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all"><Icon name="trash-2" size={16} /></button>
                             </div>
                          </td>
@@ -165,13 +191,13 @@ export default function Loans({ employees, loans, setLoans, showToast, askConfir
             >
                <div className="p-10 border-b border-slate-50 flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-black text-slate-800 tracking-tighter">طلب سلفة وذمة مالية</h3>
+                    <h3 className="text-2xl font-black text-slate-800 tracking-tighter">{editingLoan ? 'تعديل بيانات السلفة' : 'طلب سلفة وذمة مالية'}</h3>
                     <p className="text-sm font-bold text-slate-400">يرجى استيفاء البيانات المالية المطلوبة بعناية</p>
                   </div>
                   <button onClick={() => setShowAddModal(false)} className="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all"><Icon name="x" size={24} /></button>
                </div>
                
-               <form onSubmit={handleAddLoan} className="p-10 space-y-6">
+               <form onSubmit={handleSaveLoan} className="p-10 space-y-6">
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">الموظف المقترض</label>
                      <select 

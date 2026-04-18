@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Icon } from './ui/Icon';
 import * as XLSX from 'xlsx';
 import { calculateDeduction, getShiftByAny } from '../lib/hr-logic';
+import Analytics from './Analytics';
 
 interface AttendanceProps {
   employees: any[];
@@ -10,12 +11,14 @@ interface AttendanceProps {
   shifts: any;
   rules: any;
   showToast: (msg: string, type?: any) => void;
+  askConfirm: (title: string, message: string, onConfirm: () => void) => void;
 }
 
-export default function Attendance({ employees, attendanceLog, setAttendanceLog, shifts, rules, showToast }: AttendanceProps) {
+export default function Attendance({ employees, attendanceLog, setAttendanceLog, shifts, rules, showToast, askConfirm }: AttendanceProps) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [previewData, setPreviewData] = useState<any[] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mode, setMode] = useState<'daily' | 'analytics'>('daily');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateRecord = (empId: string, field: string, value: any) => {
@@ -46,6 +49,19 @@ export default function Attendance({ employees, attendanceLog, setAttendanceLog,
       ...prev,
       [selectedDate]: { ...dateRecords, [empId]: updated }
     }));
+  };
+
+  const deleteRecord = (empId: string) => {
+    // @ts-ignore
+    askConfirm('حذف سجل البصمة؟', 'هل أنت متأكد من مسح بيانات الحضور لهذا الموظف في هذا اليوم؟', () => {
+      const daily = { ...(attendanceLog[selectedDate] || {}) };
+      delete daily[empId];
+      setAttendanceLog({
+        ...attendanceLog,
+        [selectedDate]: daily
+      });
+      showToast('تم مسح السجل');
+    });
   };
 
   const handleFingerprintUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,36 +215,63 @@ export default function Attendance({ employees, attendanceLog, setAttendanceLog,
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 no-print">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 no-print">
         <div className="space-y-2">
           <h2 className="text-3xl sm:text-4xl font-black text-slate-800 flex items-center gap-4 tracking-tighter">
-            <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg">
-              <Icon name="clock" size={32} />
+            <div className={`p-3 rounded-2xl shadow-lg text-white transition-all ${mode === 'daily' ? 'bg-blue-600' : 'bg-indigo-600'}`}>
+              <Icon name={mode === 'daily' ? 'clock' : 'pie-chart'} size={32} />
             </div>
-            الحضور والانصراف اليومي
+            {mode === 'daily' ? 'الحضور والانصراف اليومي' : 'تحليلات الحضور والقوى العاملة'}
           </h2>
-          <p className="text-slate-500 font-bold">تسجيل المواعيد وتطبيق اللائحة الذكية</p>
+          <p className="text-slate-500 font-bold">
+            {mode === 'daily' ? 'تسجيل المواعيد وتطبيق اللائحة' : 'تحليل إحصائي لمعدلات الالتزام والغياب'}
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleFingerprintUpload} />
+
+        <div className="flex bg-slate-100 p-1.5 rounded-2xl no-print shadow-inner">
           <button 
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-1 sm:flex-none justify-center bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl hover:bg-emerald-700 transition-all"
+            onClick={() => setMode('daily')}
+            className={`px-8 py-3 rounded-xl font-black transition-all flex items-center gap-3 ${mode === 'daily' ? 'bg-white text-blue-600 shadow-lg' : 'text-slate-500'}`}
           >
-            <Icon name="upload" size={22} className="ml-2 inline" /> 
-            رفع شيت بصمة
+            <Icon name="list" size={18} />
+            السجل اليومي
           </button>
-          <div className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-xl border border-slate-50">
-            <Icon name="calendar" className="text-slate-400" size={24} />
-            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="outline-none font-black text-slate-800 bg-transparent text-lg" />
-          </div>
-          <button onClick={() => window.print()} className="bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+          <button 
+            onClick={() => setMode('analytics')}
+            className={`px-8 py-3 rounded-xl font-black transition-all flex items-center gap-3 ${mode === 'analytics' ? 'bg-white text-blue-600 shadow-lg' : 'text-slate-500'}`}
+          >
+            <Icon name="pie-chart" size={18} />
+            التحليلات الذكية
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+          {mode === 'daily' && (
+            <>
+              <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleFingerprintUpload} />
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 sm:flex-none justify-center bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl hover:bg-emerald-700 transition-all"
+              >
+                <Icon name="upload" size={22} className="ml-2 inline" /> 
+                رفع شيت بصمة
+              </button>
+              <div className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-xl border border-slate-50">
+                <Icon name="calendar" className="text-slate-400" size={24} />
+                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="outline-none font-black text-slate-800 bg-transparent text-lg" />
+              </div>
+            </>
+          )}
+          <button onClick={() => window.print()} className="bg-slate-900 text-white px-6 py-4 rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
             <Icon name="printer" size={22} /> طباعة
           </button>
         </div>
       </div>
 
-      <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100 print:shadow-none print:border-none print:rounded-none">
+      {mode === 'analytics' ? (
+        <Analytics employees={employees} attendanceLog={attendanceLog} />
+      ) : (
+        <div className="rounded-[40px] shadow-2xl overflow-hidden border bg-white border-slate-100 print:shadow-none print:border-none print:rounded-none">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse">
             <thead className="bg-slate-800 text-white text-[11px] font-black uppercase border-b">
@@ -239,11 +282,14 @@ export default function Attendance({ employees, attendanceLog, setAttendanceLog,
                 <th className="px-4 py-5">انصراف</th>
                 <th className="px-4 py-5 text-center">خصم (س)</th>
                 <th className="px-4 py-5">ملاحظات</th>
+                <th className="px-4 py-5 text-center">إجراءات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {employees.map(emp => {
                 const record = (attendanceLog[selectedDate] && attendanceLog[selectedDate][emp.id]) || { arrivalTime: '', departureTime: '', deduction: 0, shift: emp.shift, notes: '' };
+                const hasData = record.arrivalTime || record.departureTime || record.notes;
+
                 return (
                   <tr key={emp.id} className="hover:bg-blue-50/50 transition-colors">
                     <td className="px-6 py-4">
@@ -275,6 +321,11 @@ export default function Attendance({ employees, attendanceLog, setAttendanceLog,
                     <td className="px-4 py-4">
                       <input type="text" value={record.notes} onChange={(e) => updateRecord(emp.id, 'notes', e.target.value)} className="w-full bg-slate-50 p-2 rounded-xl text-xs border border-slate-100" placeholder="..." />
                     </td>
+                    <td className="px-4 py-4 text-center">
+                       {hasData && (
+                         <button onClick={() => deleteRecord(emp.id)} className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all no-print"><Icon name="trash-2" size={14} /></button>
+                       )}
+                    </td>
                   </tr>
                 );
               })}
@@ -282,6 +333,7 @@ export default function Attendance({ employees, attendanceLog, setAttendanceLog,
           </table>
         </div>
       </div>
+      )}
     </div>
   );
 }

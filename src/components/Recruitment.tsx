@@ -79,7 +79,7 @@ export default function Recruitment({ employees, showToast, askConfirm }: Recrui
             onClick={() => setActiveSubTab('ats')}
             className={`px-8 py-3 rounded-xl font-black transition-all ${activeSubTab === 'ats' ? 'bg-white text-indigo-600 shadow-lg' : 'text-slate-500'}`}
           >
-            نظام ATS الذكي
+            نظام ATS
           </button>
         </div>
       </div>

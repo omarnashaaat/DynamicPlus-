@@ -29,15 +29,16 @@ import Assets from './components/Assets';
 import Goals from './components/Goals';
 import Surveys from './components/Surveys';
 import OrgChart from './components/OrgChart';
-import ActivityLog from './components/ActivityLog';
+import PolicyCenter from './components/PolicyCenter';
 import Gamification from './components/Gamification';
 import DocCenter from './components/DocCenter';
 import Announcements from './components/Announcements';
 import Complaints from './components/Complaints';
 import Analytics from './components/Analytics';
-import SmartChat from './components/SmartChat';
 import Tasks from './components/Tasks';
+import ActivityLog from './components/ActivityLog';
 import BranchManagement from './components/BranchManagement';
+import DeveloperPage from './components/DeveloperPage';
 import Login from './components/Login';
 
 export default function App() {
@@ -68,6 +69,10 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [appLoading, setAppLoading] = useState(true);
+  
+  const [showSearch, setShowSearch] = useState(false);
+  const [showNotifSidebar, setShowNotifSidebar] = useState(false);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
   const [isFullView, setIsFullView] = useState(false);
 
@@ -140,11 +145,57 @@ export default function App() {
       return {};
     }
   });
+  
+  const INITIAL_POLICY_CATEGORIES = [
+    { id: 'all', title: 'الكل', icon: 'layers' },
+    { id: 'administrative', title: 'إدارية', icon: 'file-text' },
+    { id: 'legal', title: 'قانونية', icon: 'scale' },
+    { id: 'financial', title: 'مالية', icon: 'banknote' },
+    { id: 'assets', title: 'العهدة', icon: 'package' },
+  ];
+  
+  const [policyCategories, setPolicyCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem('hr_policy_categories');
+      return saved ? JSON.parse(saved) : INITIAL_POLICY_CATEGORIES;
+    } catch (e) {
+      return INITIAL_POLICY_CATEGORIES;
+    }
+  });
+
+  const INITIAL_DOC_TYPES = [
+    { title: 'شهادة خبرة', sub: 'Experience Certificate', icon: 'award', color: 'bg-indigo-600' },
+    { title: 'بيان حالة وظيفية', sub: 'Job Status Report', icon: 'file-text', color: 'bg-sky-600' },
+    { title: 'نموذج إجازة سنوية', sub: 'Leave Request Form', icon: 'calendar-plus', color: 'bg-rose-500' },
+    { title: 'إقرار استلام العمل', sub: 'Job Acceptance Form', icon: 'clipboard-check', color: 'bg-emerald-600' },
+    { title: 'طلب استقالة', sub: 'Resignation Form', icon: 'log-out', color: 'bg-slate-800' },
+    { title: 'مفردات مرتب', sub: 'Detailed Salary Sheet', icon: 'banknote', color: 'bg-amber-600' },
+    { title: 'شهادة تقدير', sub: 'Certificate of Appreciation', icon: 'award', color: 'bg-amber-500' },
+  ];
+
+  const [docTypes, setDocTypes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('hr_doc_types');
+      return saved ? JSON.parse(saved) : INITIAL_DOC_TYPES;
+    } catch (e) {
+      return INITIAL_DOC_TYPES;
+    }
+  });
+
   const [calendarEvents, setCalendarEvents] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('hr_calendar') || '[]');
     } catch (e) {
       console.error('Error reading hr_calendar from localStorage', e);
+      return [];
+    }
+  });
+
+  const [issuedDocs, setIssuedDocs] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('hr_issued_docs') || '[]');
+    } catch (e) {
+      console.error('Error reading hr_issued_docs from localStorage', e);
       return [];
     }
   });
@@ -237,8 +288,23 @@ export default function App() {
   const [confirmState, setConfirmState] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'danger' as 'danger' | 'warning' });
 
   useEffect(() => {
-    const timer = setTimeout(() => setAppLoading(false), 1500);
-    return () => clearTimeout(timer);
+    const handleKD = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKD);
+    
+    // Safety timeout to end loading
+    const loader = setTimeout(() => {
+      setAppLoading(false);
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('keydown', handleKD);
+      clearTimeout(loader);
+    };
   }, []);
 
   useEffect(() => {
@@ -263,11 +329,14 @@ export default function App() {
       localStorage.setItem('hr_tasks', JSON.stringify(tasks));
       localStorage.setItem('hr_activity', JSON.stringify(activityLogs));
       localStorage.setItem('hr_docs', JSON.stringify(documents));
+      localStorage.setItem('hr_issued_docs', JSON.stringify(issuedDocs));
+      localStorage.setItem('hr_policy_categories', JSON.stringify(policyCategories));
+      localStorage.setItem('hr_doc_types', JSON.stringify(docTypes));
       localStorage.setItem('hr_userRole', userRole);
     } catch (e) {
       console.error('Error saving to localStorage', e);
     }
-  }, [employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, attendanceRules, assets, goals, surveys, trainingCourses, announcements, complaints, tasks, activityLogs, documents, userRole]);
+  }, [employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, attendanceRules, assets, goals, surveys, trainingCourses, announcements, complaints, tasks, activityLogs, documents, issuedDocs, policyCategories, docTypes, userRole]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     const id = Date.now();
@@ -356,7 +425,7 @@ export default function App() {
           </div>
         </div>
         <div className="text-center space-y-6">
-          <h2 className="text-4xl font-black text-white tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-white animate-pulse">عالم ال HR</h2>
+          <h2 className="text-4xl font-black text-white tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-white animate-pulse">عالم الـ HR</h2>
           <p className="text-indigo-400/60 font-black text-xs uppercase tracking-[0.5em]">Advanced Management System</p>
         </div>
       </div>
@@ -387,13 +456,13 @@ export default function App() {
     <div className={`min-h-screen bg-slate-50 font-['Cairo'] transition-all duration-300 ${isFullView ? '' : 'p-0 sm:p-2 md:p-4'}`} dir="rtl">
       
       {/* Top Navbar */}
-      <nav className="no-print bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm mb-6">
+      <nav className="no-print glass-effect sticky top-0 z-50 px-6 py-4 flex items-center justify-between shadow-2xl mb-8 border-b border-white/40">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg rotate-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-            <Icon name="shield-check" size={24} />
+            <Icon name="briefcase" size={24} />
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-lg font-black text-slate-800 leading-tight">عالم ال HR</h1>
+            <h1 className="text-lg font-black text-slate-800 leading-tight">عالم الـ HR</h1>
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Advanced HR Management</p>
           </div>
         </div>
@@ -401,20 +470,19 @@ export default function App() {
         <div className="flex items-center gap-2 overflow-x-auto px-2 py-1 no-scrollbar max-w-[60vw]">
           {[
             { id: 'dashboard', icon: 'layout-dashboard', label: 'الرئيسية' },
-            { id: 'employees', icon: 'users', label: 'الموظفين' },
-            { id: 'attendance', icon: 'chart-column-increasing', label: 'التحليل' },
-            { id: 'payroll', icon: 'banknote', label: 'الرواتب' },
-            { id: 'kpis', icon: 'chart-line', label: 'الأداء' },
-            { id: 'assets', icon: 'package', label: 'العهد' },
-            { id: 'org_chart', icon: 'network', label: 'الهيكل' },
-            { id: 'doc_center', icon: 'file-text', label: 'المستندات' },
-            { id: 'gamification', icon: 'trophy', label: 'التميز' },
-            { id: 'rewards', icon: 'trophy', label: 'التميز' },
-            { id: 'tasks', icon: 'check-square', label: 'المهام' },
-            { id: 'announcements', icon: 'megaphone', label: 'الإعلانات' },
-            { id: 'training', icon: 'graduation-cap', label: 'التدريب' },
-            { id: 'offices', icon: 'building-2', label: 'الفروع' },
-
+            { id: 'employees', icon: 'users', label: 'شؤون الموظفين' },
+            { id: 'attendance', icon: 'clock', label: 'الحضور والانصراف' },
+            { id: 'payroll', icon: 'banknote', label: 'الرواتب والأجور' },
+            { id: 'monthly_report', icon: 'file-chart-column', label: 'التقارير الشهرية' },
+            { id: 'kpis', icon: 'chart-line', label: 'تقييم الأداء' },
+            { id: 'assets', icon: 'package', label: 'إدارة العهد' },
+            { id: 'policies', icon: 'scroll-text', label: 'سياسات الشركة' },
+            { id: 'doc_center', icon: 'file-text', label: 'مركز النماذج' },
+            { id: 'digital_files', icon: 'cloud-upload', label: 'الأرشيف الرقمي' },
+            { id: 'tasks', icon: 'list-todo', label: 'المهام الإدارية' },
+            { id: 'announcements', icon: 'megaphone', label: 'أخبار الشركة' },
+            { id: 'offices', icon: 'building-2', label: 'المواقع والفروع' },
+            { id: 'developer', icon: 'award', label: 'عمر نشأت' },
           ].map(item => (
             <button
               key={item.id}
@@ -428,6 +496,15 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button onClick={() => setShowSearch(true)} className="w-10 h-10 hidden md:flex items-center justify-center text-slate-400 hover:bg-slate-100 rounded-xl transition-all border border-slate-100">
+            <Icon name="search" size={20} />
+          </button>
+          <div className="relative group">
+            <button onClick={() => setShowNotifSidebar(true)} className="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-xl transition-all relative">
+              <Icon name="bell" size={20} />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+            </button>
+          </div>
           <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-slate-50 border rounded-xl">
              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
              <span className="text-xs font-bold text-slate-600">{username}</span>
@@ -473,7 +550,7 @@ export default function App() {
             generateDummyData={generateDummyData}
           />}
           {activeTab === 'employees' && <EmployeeTable employees={employees} setEmployees={setEmployees} shifts={shifts} showToast={showToast} askConfirm={askConfirm} />}
-          {activeTab === 'attendance' && <Analytics employees={employees} attendanceLog={attendanceLog} />}
+          {activeTab === 'attendance' && <Attendance employees={employees} attendanceLog={attendanceLog} setAttendanceLog={setAttendanceLog} shifts={shifts} rules={attendanceRules} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'offices' && <BranchManagement askConfirm={askConfirm} showToast={showToast} />}
           {activeTab === 'monthly_report' && <MonthlyReport employees={employees} attendanceLog={attendanceLog} setAttendanceLog={setAttendanceLog} shifts={shifts} rules={attendanceRules} showToast={showToast} />}
           {activeTab === 'payroll' && <Payroll employees={employees} payrollRecords={payrollRecords} setPayrollRecords={setPayrollRecords} attendanceLog={attendanceLog} insuranceRecords={insuranceRecords} setActiveTab={setActiveTab} rules={attendanceRules} showToast={showToast} />}
@@ -496,15 +573,201 @@ export default function App() {
           {activeTab === 'goals' && <Goals goals={goals} setGoals={setGoals} employees={employees} showToast={showToast} />}
           {activeTab === 'surveys' && <Surveys surveys={surveys} setSurveys={setSurveys} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'org_chart' && <OrgChart employees={employees} />}
-          {activeTab === 'doc_center' && <DocCenter employees={employees} showToast={showToast} />}
+          {activeTab === 'doc_center' && <DocCenter employees={employees} showToast={showToast} issuedDocs={issuedDocs} setIssuedDocs={setIssuedDocs} askConfirm={askConfirm} docTypes={docTypes} />}
+          {activeTab === 'policies' && <PolicyCenter categories={policyCategories} />}
           {activeTab === 'gamification' && <Gamification employees={employees} />}
+          {activeTab === 'developer' && <DeveloperPage />}
           {activeTab === 'announcements' && <Announcements announcements={announcements} setAnnouncements={setAnnouncements} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'activity_log' && <ActivityLog logs={activityLogs} />}
           {activeTab === 'complaints' && <Complaints complaints={complaints} setComplaints={setComplaints} employees={employees} showToast={showToast} askConfirm={askConfirm} />}
           {activeTab === 'tasks' && <Tasks tasks={tasks} setTasks={setTasks} employees={employees} showToast={showToast} askConfirm={askConfirm} />}
-          {activeTab === 'settings' && <Settings appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, attendanceRules, loans, rewards, assets, goals, surveys, announcements, complaints, tasks }} onRestore={(d: any) => { setEmployees(d.employees || []); setAttendanceLog(d.attendanceLog || {}); setInsuranceRecords(d.insuranceRecords || {}); setContractRecords(d.contractRecords || {}); setPayrollRecords(d.payrollRecords || {}); setCalendarEvents(d.calendarEvents || []); setResignations(d.resignations || []); setShifts(d.shifts || INITIAL_SHIFTS); setAttendanceRules(d.attendanceRules || attendanceRules); setLoans(d.loans || []); setRewards(d.rewards || []); setAssets(d.assets || []); setGoals(d.goals || []); setSurveys(d.surveys || []); setAnnouncements(d.announcements || []); setComplaints(d.complaints || []); setTasks(d.tasks || []); }} onClear={() => { setEmployees([]); setAttendanceLog({}); setInsuranceRecords({}); setContractRecords({}); setPayrollRecords({}); setCalendarEvents([]); setResignations([]); setLoans([]); setRewards([]); setAssets([]); setGoals([]); setSurveys([]); setAnnouncements([]); setComplaints([]); setTasks([]); setShifts(INITIAL_SHIFTS); showToast('تم مسح البيانات', 'warning'); }} shifts={shifts} setShifts={setShifts} showToast={showToast} askConfirm={askConfirm} />}
+          {activeTab === 'settings' && <Settings 
+            appData={{ employees, attendanceLog, insuranceRecords, contractRecords, payrollRecords, calendarEvents, resignations, shifts, attendanceRules, loans, rewards, assets, goals, surveys, announcements, complaints, tasks, policyCategories, docTypes }} 
+            onRestore={(d: any) => { 
+              setEmployees(d.employees || []); 
+              setAttendanceLog(d.attendanceLog || {}); 
+              setInsuranceRecords(d.insuranceRecords || {}); 
+              setContractRecords(d.contractRecords || {}); 
+              setPayrollRecords(d.payrollRecords || {}); 
+              setCalendarEvents(d.calendarEvents || []); 
+              setResignations(d.resignations || []); 
+              setShifts(d.shifts || INITIAL_SHIFTS); 
+              setAttendanceRules(d.attendanceRules || attendanceRules); 
+              setLoans(d.loans || []); 
+              setRewards(d.rewards || []); 
+              setAssets(d.assets || []); 
+              setGoals(d.goals || []); 
+              setSurveys(d.surveys || []); 
+              setAnnouncements(d.announcements || []); 
+              setComplaints(d.complaints || []); 
+              setTasks(d.tasks || []); 
+              setPolicyCategories(d.policyCategories || INITIAL_POLICY_CATEGORIES);
+              setDocTypes(d.docTypes || INITIAL_DOC_TYPES);
+            }} 
+            onClear={() => { 
+              setEmployees([]); 
+              setAttendanceLog({}); 
+              setInsuranceRecords({}); 
+              setContractRecords({}); 
+              setPayrollRecords({}); 
+              setCalendarEvents([]); 
+              setResignations([]); 
+              setLoans([]); 
+              setRewards([]); 
+              setAssets([]); 
+              setGoals([]); 
+              setSurveys([]); 
+              setAnnouncements([]); 
+              setComplaints([]); 
+              setTasks([]); 
+              setShifts(INITIAL_SHIFTS); 
+              setPolicyCategories(INITIAL_POLICY_CATEGORIES);
+              setDocTypes(INITIAL_DOC_TYPES);
+              showToast('تم مسح البيانات', 'warning'); 
+            }} 
+            shifts={shifts} 
+            setShifts={setShifts} 
+            policyCategories={policyCategories}
+            setPolicyCategories={setPolicyCategories}
+            docTypes={docTypes}
+            setDocTypes={setDocTypes}
+            showToast={showToast} 
+            askConfirm={askConfirm} 
+          />}
         </main>
       </div>
+
+      {/* Search Palette */}
+      <AnimatePresence>
+        {showSearch && (
+          <div className="fixed inset-0 z-[600] flex items-start justify-center pt-[15vh] px-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setShowSearch(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              className="w-full max-w-2xl bg-white rounded-[40px] shadow-3xl overflow-hidden relative z-10 border border-white/20"
+            >
+              <div className="p-8 border-b border-slate-50 flex items-center gap-4 bg-slate-50/50">
+                <Icon name="search" size={24} className="text-indigo-600" />
+                <input 
+                  autoFocus
+                  type="text" 
+                  placeholder="ابحث عن موظف، مهمة، أو قسم... (Ctrl + K)" 
+                  className="w-full bg-transparent text-xl font-black text-slate-800 outline-none placeholder:text-slate-300"
+                  value={globalSearchQuery}
+                  onChange={e => setGlobalSearchQuery(e.target.value)}
+                />
+                <button onClick={() => setShowSearch(false)} className="p-2 bg-white rounded-xl shadow-sm text-slate-300 hover:text-slate-500">
+                  <Icon name="x" size={20} />
+                </button>
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto p-4 custom-scrollbar">
+                <div className="p-4 space-y-6">
+                  <div>
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2 italic">نتائج البحث المقترحة</h4>
+                    <div className="space-y-2">
+                       {employees.filter(e => e.name.toLowerCase().includes(globalSearchQuery.toLowerCase())).slice(0, 5).map(emp => (
+                         <button 
+                           key={emp.id}
+                           onClick={() => { setActiveTab('employees'); setShowSearch(false); }}
+                           className="w-full p-4 hover:bg-slate-50 rounded-3xl flex items-center justify-between group transition-all"
+                         >
+                            <div className="flex items-center gap-4">
+                               <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-black italic">
+                                  {emp.name[0]}
+                               </div>
+                               <div className="text-right">
+                                  <p className="font-black text-slate-800">{emp.name}</p>
+                                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{emp.dept} / {emp.position}</p>
+                               </div>
+                            </div>
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                               <Icon name="arrow-left" size={16} className="text-indigo-600" />
+                            </div>
+                         </button>
+                       ))}
+                       {globalSearchQuery && employees.filter(e => e.name.toLowerCase().includes(globalSearchQuery.toLowerCase())).length === 0 && (
+                         <div className="p-10 text-center text-slate-300 font-black italic">لا توجد نتائج مطابقة</div>
+                       )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Notification Sidebar */}
+      <AnimatePresence>
+        {showNotifSidebar && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNotifSidebar(false)}
+              className="fixed inset-0 z-[550] bg-slate-900/40 backdrop-blur-sm no-print" 
+            />
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed left-0 top-0 bottom-0 w-full max-w-[450px] bg-white z-[560] shadow-3xl no-print p-10 flex flex-col"
+            >
+               <div className="flex items-center justify-between mb-12">
+                  <div className="flex items-center gap-4">
+                     <div className="p-3 bg-indigo-100 text-indigo-600 rounded-2xl">
+                        <Icon name="bell" size={24} />
+                     </div>
+                     <h2 className="text-2xl font-black text-slate-900">التنبيهات الإدارية</h2>
+                  </div>
+                  <button onClick={() => setShowNotifSidebar(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:text-slate-900 transition-all">
+                     <Icon name="x" size={24} />
+                  </button>
+               </div>
+               
+               <div className="space-y-6 flex-1 overflow-y-auto no-scrollbar pb-10">
+                  {[
+                    { title: 'موعد تجديد عقد عمل', sub: 'الموظف أحمد محمد (بعد 3 أيام)', date: 'الآن', type: 'warning' },
+                    { title: 'طلب سلفة جديد', sub: 'طلب مقدم من سارة محمود بقيمة 5000 ج.م', date: 'منذ ساعة', type: 'info' },
+                    { title: 'اكتمال المسير المالي', sub: 'تم مراجعة كافة الرواتب لشهر أبريل', date: 'منذ ساعتين', type: 'success' },
+                    { title: 'تنبيه غياب متكرر', sub: 'ياسين علي (3 أيام متتالية)', date: 'اليوم', type: 'error' },
+                  ].map((notif, i) => (
+                    <div key={i} className="p-6 bg-slate-50/50 border border-slate-100 rounded-[35px] hover:bg-white hover:shadow-xl transition-all cursor-pointer group">
+                       <div className="flex gap-4">
+                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                            notif.type === 'warning' ? 'bg-amber-100 text-amber-600' :
+                            notif.type === 'info' ? 'bg-blue-100 text-blue-600' :
+                            notif.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+                          }`}>
+                             <Icon name={notif.type === 'warning' ? 'alert-triangle' : notif.type === 'info' ? 'info' : notif.type === 'success' ? 'circle-check' : 'circle-alert'} size={18} />
+                          </div>
+                          <div className="space-y-1">
+                             <p className="font-black text-slate-800 text-sm group-hover:text-indigo-600 transition-colors">{notif.title}</p>
+                             <p className="text-xs text-slate-500 font-bold leading-relaxed">{notif.sub}</p>
+                             <p className="text-[10px] text-slate-300 font-black uppercase mt-4 italic">{notif.date}</p>
+                          </div>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+               
+               <div className="pt-8 border-t border-slate-100">
+                  <button className="w-full py-5 bg-slate-900 text-white rounded-[25px] font-black text-sm shadow-xl hover:bg-indigo-600 transition-all">مشاهدة كافة السجلات</button>
+               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Notifications */}
       <div className="fixed bottom-10 left-10 z-[100] space-y-4 pointer-events-none no-print">
@@ -516,33 +779,6 @@ export default function App() {
             </motion.div>
           ))}
         </AnimatePresence>
-      </div>
-
-      {/* Smart Chat Overlay */}
-      <div className="no-print">
-         <div className="fixed bottom-10 right-10 z-[200]">
-            <motion.button 
-              whileHover={{ scale: 1.1, rotate: 12 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setActiveTab(activeTab === 'smart_chat' ? 'dashboard' : 'smart_chat')}
-              className={`w-20 h-20 rounded-[30px] shadow-2xl flex items-center justify-center transition-all duration-500 ${activeTab === 'smart_chat' ? 'bg-rose-500 text-white rotate-90' : 'bg-indigo-600 text-white'}`}
-            >
-               <Icon name={activeTab === 'smart_chat' ? 'x' : 'brain-circuit'} size={32} />
-            </motion.button>
-         </div>
-         
-         <AnimatePresence>
-            {activeTab === 'smart_chat' && (
-              <motion.div 
-                initial={{ opacity: 0, y: 100, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 100, scale: 0.9 }}
-                className="fixed bottom-36 left-10 right-10 lg:left-auto lg:right-10 lg:w-[450px] top-24 z-[150] shadow-3xl rounded-[50px] overflow-hidden border border-white/5"
-              >
-                 <SmartChat employees={employees} />
-              </motion.div>
-            )}
-         </AnimatePresence>
       </div>
 
       {/* Confirmation Modal */}

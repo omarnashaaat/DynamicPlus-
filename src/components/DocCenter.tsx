@@ -5,26 +5,47 @@ import { motion, AnimatePresence } from 'motion/react';
 interface DocCenterProps {
   employees: any[];
   showToast: (msg: string, type?: any) => void;
+  issuedDocs: any[];
+  setIssuedDocs: (val: any) => void;
+  askConfirm: (title: string, msg: string, onConfirm: () => void) => void;
+  docTypes: any[];
 }
 
-export default function DocCenter({ employees, showToast }: DocCenterProps) {
+export default function DocCenter({ employees, showToast, issuedDocs, setIssuedDocs, askConfirm, docTypes }: DocCenterProps) {
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
   const [selectedEmpId, setSelectedEmpId] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleGenerate = () => {
     if (!selectedEmpId) return showToast('يرجى اختيار الموظف أولاً', 'error');
-    showToast(`تم توليد ${selectedDoc.title} بنجاح`);
+    const emp = employees.find(e => e.id === selectedEmpId);
+    
+    const newRecord = {
+      id: Date.now().toString(),
+      empId: selectedEmpId,
+      empName: emp?.name || 'غير معروف',
+      docTitle: selectedDoc.title,
+      type: selectedDoc.title,
+      date: new Date().toISOString().split('T')[0],
+      status: 'عتمد',
+      notes: 'تم التوليد آلياً من النظام'
+    };
+
+    setIssuedDocs([newRecord, ...issuedDocs]);
+    showToast(`تم توليد ${selectedDoc.title} وحفظه في السجلات`);
     setSelectedDoc(null);
+    setSelectedEmpId('');
   };
 
-  const docs = [
-    { title: 'شهادة خبرة', sub: 'Experience Certificate', icon: 'award', color: 'bg-indigo-600' },
-    { title: 'بيان حالة وظيفية', sub: 'Job Status Report', icon: 'file-text', color: 'bg-sky-600' },
-    { title: 'نموذج إجازة سنوية', sub: 'Leave Request Form', icon: 'calendar-plus', color: 'bg-rose-500' },
-    { title: 'إقرار استلام العمل', sub: 'Job Acceptance Form', icon: 'clipboard-check', color: 'bg-emerald-600' },
-    { title: 'طلب استقالة', sub: 'Resignation Form', icon: 'log-out', color: 'bg-slate-800' },
-    { title: 'مفردات مرتب', sub: 'Detailed Salary Sheet', icon: 'banknote', color: 'bg-amber-600' },
-  ];
+  const deleteRecord = (id: string) => {
+    askConfirm('حذف السجل؟', 'هل أنت متأكد من حذف سجل هذا المستند؟', () => {
+      setIssuedDocs(issuedDocs.filter((r: any) => r.id !== id));
+      showToast('تم حذف السجل بنجاح', 'error');
+    });
+  };
+
+  // Dynamic docs list from props
+  const docs = docTypes || [];
 
   return (
     <div className="space-y-12 animate-fade-in relative px-4">
@@ -34,7 +55,7 @@ export default function DocCenter({ employees, showToast }: DocCenterProps) {
               <Icon name="files" size={40} />
            </div>
            <div>
-              <h2 className="text-4xl font-black text-slate-800 tracking-tighter">مركز النماذج والوثائق الذكي</h2>
+              <h2 className="text-4xl font-black text-slate-800 tracking-tighter">مركز النماذج والوثائق</h2>
               <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] italic">مستودع الشهادات والنماذج القياسية للشركة</p>
            </div>
         </div>
@@ -62,6 +83,89 @@ export default function DocCenter({ employees, showToast }: DocCenterProps) {
               <p className="text-xs font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">اكتشف النموذج الآن</p>
            </motion.button>
          ))}
+      </div>
+
+      <div className="bg-white rounded-[50px] shadow-2xl overflow-hidden border border-slate-100 no-print animate-slide-up">
+        <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-50/30">
+           <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-lg">
+                 <Icon name="history" size={24} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-800">سجل الوثائق الصادرة</h3>
+           </div>
+           
+           <div className="relative w-full md:w-96">
+              <Icon name="search" size={20} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="بحث باسم الموظف أو نوع الوثيقة..." 
+                className="w-full bg-white border-2 border-slate-100 rounded-3xl py-4 pr-14 pl-6 text-sm font-black text-slate-700 outline-none focus:border-indigo-500 transition-all shadow-sm"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+           </div>
+        </div>
+
+        <div className="overflow-x-auto">
+           <table className="w-full text-right border-collapse">
+              <thead className="bg-slate-900 text-white">
+                 <tr>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest border-l border-slate-800">الموظف</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest border-l border-slate-800">نوع الوثيقة</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest border-l border-slate-800">تاريخ الصدور</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest border-l border-slate-800">الحالة</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-center">العمليات</th>
+                 </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                 {issuedDocs.filter(d => 
+                   d.empName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                   d.docTitle.toLowerCase().includes(searchQuery.toLowerCase())
+                 ).length === 0 ? (
+                    <tr>
+                       <td colSpan={5} className="p-20 text-center">
+                          <div className="flex flex-col items-center gap-4 opacity-30">
+                             <Icon name="file-question" size={64} />
+                             <p className="text-xl font-black">لا توجد وثائق صادرة حالياً</p>
+                          </div>
+                       </td>
+                    </tr>
+                 ) : issuedDocs.filter(d => 
+                   d.empName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                   d.docTitle.toLowerCase().includes(searchQuery.toLowerCase())
+                 ).map(doc => (
+                    <tr key={doc.id} className="hover:bg-slate-50 transition-colors group">
+                       <td className="px-8 py-6">
+                          <p className="font-black text-slate-800">{doc.empName}</p>
+                          <p className="text-[10px] text-slate-400 font-bold">ID: {doc.empId.slice(0, 8)}</p>
+                       </td>
+                       <td className="px-8 py-6">
+                          <div className="flex items-center gap-3">
+                             <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                             <span className="font-black text-slate-700">{doc.docTitle}</span>
+                          </div>
+                       </td>
+                       <td className="px-8 py-6 font-bold text-slate-500">{doc.date}</td>
+                       <td className="px-8 py-6">
+                          <span className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100">
+                             {doc.status}
+                          </span>
+                       </td>
+                       <td className="px-8 py-6 text-center">
+                          <div className="flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button onClick={() => window.print()} className="p-3 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:text-indigo-600 hover:border-indigo-500 transition-all shadow-sm">
+                                <Icon name="printer" size={18} />
+                             </button>
+                             <button onClick={() => deleteRecord(doc.id)} className="p-3 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:text-rose-600 hover:border-rose-500 transition-all shadow-sm">
+                                <Icon name="trash-2" size={18} />
+                             </button>
+                          </div>
+                       </td>
+                    </tr>
+                 ))}
+              </tbody>
+           </table>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -106,7 +210,7 @@ export default function DocCenter({ employees, showToast }: DocCenterProps) {
                     </div>
 
                     <div className="space-y-4">
-                       <h4 className="text-2xl font-black text-slate-800">توليد مستند ذكي</h4>
+                       <h4 className="text-2xl font-black text-slate-800">توليد مستند</h4>
                        <p className="text-slate-500 font-bold max-w-md mx-auto leading-relaxed">سيقوم النظام بسحب بيانات الموظف المختار وتنسيقها في نموذج {selectedDoc.title} جاهز للطباعة والاعتماد.</p>
                     </div>
 

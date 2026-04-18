@@ -47,7 +47,7 @@ export default function Analytics({ employees, attendanceLog }: AnalyticsProps) 
 
   const exportAnalytics = () => {
     const data = [
-      ['تقرير تحليلات الموارد البشرية الذكي'],
+      ['تقرير تحليلات الموارد البشرية'],
       ['التاريخ', new Date().toLocaleDateString('ar-EG')],
       [''],
       ['إحصائيات عامة'],
@@ -87,7 +87,7 @@ export default function Analytics({ employees, attendanceLog }: AnalyticsProps) 
              className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black text-xs flex items-center gap-3 hover:bg-indigo-600 transition-all shadow-xl"
            >
               <Icon name="download" size={18} />
-              تصدير التقارير الذكية
+              تصدير التقارير
            </button>
            <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -133,7 +133,7 @@ export default function Analytics({ employees, attendanceLog }: AnalyticsProps) 
                  <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
                     <Icon name="zap" size={20} />
                  </div>
-                 <span className="font-black text-sm">توصية الذكاء الاصطناعي</span>
+                 <span className="font-black text-sm">توصية النظام</span>
               </div>
               <p className="text-indigo-200 text-xs font-bold leading-relaxed">استثمر أكثر في "برنامج التطوير التقني" لقسم الهندسة لتقليل الفجوة المهارية وزيادة الاستبقاء.</p>
            </div>
